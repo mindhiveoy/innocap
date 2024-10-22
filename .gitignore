@@ -26,7 +26,7 @@ coverage
 out/
 build
 dist
-
+archive
 
 # Debug
 npm-debug.log*
@@ -36,3 +36,29 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Ignore .env file containing sensitive information
+.env
+
+# Ignore Docker volumes
+postgres_data/
+
+# Ignore Playwright artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+*.out
+
+# Ignore yarn v4 local files
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Storybook logs
+*storybook.log
+storybook-static/

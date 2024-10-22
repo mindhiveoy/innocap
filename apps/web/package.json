@@ -10,9 +10,9 @@
   },
   "dependencies": {
     "@repo/ui": "*",
-    "next": "14.2.6",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "next": "15.0.0",
+    "react": "19.0.0-rc-65a56d0e-20241020",
+    "react-dom": "19.0.0-rc-65a56d0e-20241020"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
@@ -21,7 +21,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.6",
-    "typescript": "^5"
+    "eslint-config-next": "15.0.0",
+    "typescript": "5.6.3"
   }
 }

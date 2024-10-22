@@ -1,72 +1,52 @@
-# Turborepo starter
+# Innocap - Green and Digital Transition Indicator Dashboard
 
-This is an official starter Turborepo.
+This is a Turborepo-based monorepo for the Innocap project, which aims to visualize and analyze green and digital transition indicators for municipalities.
 
-## Using this example
+## Project Structure
 
-Run the following command:
+This Turborepo includes the following packages and apps:
 
-```sh
-npx create-turbo@latest
-```
+- `apps/web`: The main Next.js application for the Innocap dashboard
+- `packages/ui`: A shared React component library
+- `packages/eslint-config`: Shared ESLint configurations
+- `packages/typescript-config`: Shared TypeScript configurations
 
-## What's inside?
+## Key Features
 
-This Turborepo includes the following packages/apps:
+- Display 10 green transition and 10 digital transition indicators
+- Interactive map visualization for geospatial data
+- Transnational support (Finland, Ireland, Sweden)
+- Customizable indicators
+- Open data integration
 
-### Apps and Packages
+## Target Audience
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- Municipal decision-makers
+- Regional development planners
+- Sustainability researchers
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+## Getting Started
 
-### Utilities
+To get started with this Turborepo, follow these steps:
 
-This Turborepo has some additional tools already setup for you:
+1. Clone the repository
+2. Install dependencies:
+   ```
+   yarn install
+   ```
+3. Run the development server:
+   ```
+   yarn dev
+   ```
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+This will start the development servers for both the main application and any other parts of the monorepo.
 
-### Build
+## Building
 
 To build all apps and packages, run the following command:
 
 ```
-cd my-turborepo
-pnpm build
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
+yarn build
 ```
 
 ## Useful Links
