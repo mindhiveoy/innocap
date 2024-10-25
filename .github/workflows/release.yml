@@ -31,7 +31,7 @@ jobs:
       - name: Deploy to Vercel
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel --prod
+            vercel --prod --token $VERCEL_TOKEN
           else
-            vercel
+            vercel --token $VERCEL_TOKEN
           fi
