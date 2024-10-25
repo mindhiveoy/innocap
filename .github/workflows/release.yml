@@ -33,7 +33,8 @@ jobs:
           deploy_and_check() {
             vercel $@ 2>&1 | tee deployment-url.txt
             if [ ${PIPESTATUS[0]} -eq 0 ]; then
-              DEPLOY_URL=$(cat deployment-url.txt | tail -n 1)
+              # Look for the Preview: line specifically
+              DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
               echo "Deployment URL: $DEPLOY_URL"
               return 0
             else
@@ -49,7 +50,7 @@ jobs:
             fi
           else
             if deploy_and_check --token $VERCEL_TOKEN --cwd apps/web; then
-              DEPLOY_URL=$(cat deployment-url.txt | tail -n 1)
+              DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
               vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
             else
               exit 1
