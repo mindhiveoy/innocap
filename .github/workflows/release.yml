@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    env: 
+      TURBO_TELEMETRY_DISABLED: 1
+      TURBO_TEAM: ${{ vars.TURBO_TEAM_MH }}
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Build
+        run: yarn build
+
+      - name: Deploy to Vercel
+        run: |
+          deploy_and_check() {
+            vercel $@ 2>&1 | tee deployment-url.txt
+            if [ ${PIPESTATUS[0]} -eq 0 ]; then
+              # Look for the Preview: line specifically
+              DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
+              echo "Deployment URL: $DEPLOY_URL"
+              return 0
+            else
+              echo "Deployment failed! Error log:"
+              cat deployment-url.txt
+              return 1
+            fi
+          }
+
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            if ! deploy_and_check --prod --token $VERCEL_TOKEN --cwd apps/web; then
+              exit 1
+            fi
+          else
+            if deploy_and_check --token $VERCEL_TOKEN --cwd apps/web; then
+              DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
+              vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
+            else
+              exit 1
+            fi
+          fi
