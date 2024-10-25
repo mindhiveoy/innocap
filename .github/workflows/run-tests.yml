@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+    pull_request:
+      branches:
+        - develop
+
+jobs:
+  run-tests:
+    env: 
+      TURBO_TELEMETRY_DISABLED: 1
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM_MH }}
+      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Build the turborepo
+        run: yarn build

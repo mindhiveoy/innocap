@@ -1,0 +1,11 @@
+{
+  "orgId": "team_qs77GxOZiYmwzU0i72rjRk2y",
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_577A4ArMcs7OQeYrPwwCjcOTBCYc",
+      "name": "innocap-web",
+      "directory": "apps/web"
+    }
+  ]
+}
