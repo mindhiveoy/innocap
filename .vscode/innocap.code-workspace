@@ -1,0 +1,49 @@
+{
+  "folders": [
+    {
+      "name": "✨ Innocap (root)",
+      "path": ".."
+    },
+    {
+      "name": "🌐 Web App",
+      "path": "../apps/web"
+    },
+    {
+      "name": "📦 UI Library",
+      "path": "../packages/ui"
+    },
+    {
+      "name": "🔧 ESLint Config",
+      "path": "../packages/eslint-config"
+    },
+    {
+      "name": "📝 TypeScript Config",
+      "path": "../packages/typescript-config"
+    }
+  ],
+  "settings": {
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bower_components": true,
+      "**/*.code-search": true
+    },
+    "editor.formatOnSave": true,
+    "typescript.tsdk": "innocap (root)/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+    "eslint.workingDirectories": [
+      { "pattern": "apps/*/" },
+      { "pattern": "packages/*/" }
+    ],
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact"
+    ],
+    "jest.disabledWorkspaceFolders": [
+      "✨ Innocap (root)",
+      "🔧 ESLint Config",
+      "📝 TypeScript Config"
+    ]
+  }
+}
