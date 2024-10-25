@@ -10,7 +10,7 @@ jobs:
   deploy:
     env: 
       TURBO_TELEMETRY_DISABLED: 1
-      TURBO_TEAM: ${{ secrets.TURBO_TEAM_MH }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM_MH }}
       TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     runs-on: ubuntu-latest
@@ -30,8 +30,28 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
+          deploy_and_check() {
+            vercel $@ 2>&1 | tee deployment-url.txt
+            if [ ${PIPESTATUS[0]} -eq 0 ]; then
+              DEPLOY_URL=$(cat deployment-url.txt | tail -n 1)
+              echo "Deployment URL: $DEPLOY_URL"
+              return 0
+            else
+              echo "Deployment failed! Error log:"
+              cat deployment-url.txt
+              return 1
+            fi
+          }
+
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel --prod --token $VERCEL_TOKEN --cwd apps/web
+            if ! deploy_and_check --prod --token $VERCEL_TOKEN --cwd apps/web; then
+              exit 1
+            fi
           else
-            vercel --token $VERCEL_TOKEN --cwd apps/web
+            if deploy_and_check --token $VERCEL_TOKEN --cwd apps/web; then
+              DEPLOY_URL=$(cat deployment-url.txt | tail -n 1)
+              vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
+            else
+              exit 1
+            fi
           fi
