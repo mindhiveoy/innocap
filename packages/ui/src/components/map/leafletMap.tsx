@@ -2,7 +2,7 @@
 
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
-import { municipalityBoundaries } from './data/municipality-boundaries.js';
+import { municipalityBoundaries } from './data/municipality-boundaries';
 import 'leaflet/dist/leaflet.css';
 
 interface LeafletMapProps {

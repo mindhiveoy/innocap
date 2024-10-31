@@ -1,5 +1,5 @@
 import type { FeatureCollection } from 'geojson';
-import { southernSavoniaMunicipalities } from './southernSavoMunicipalityData.js';
+import { southernSavoniaMunicipalities } from './southernSavoMunicipalityData';
 
 /* 
 Southern Savonia (Etelä-Savo) municipality codes:
