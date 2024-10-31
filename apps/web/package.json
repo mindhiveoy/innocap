@@ -15,10 +15,10 @@
     "@mui/material": "6.1.5",
     "@repo/ui": "*",
     "leaflet": "^1.9.4",
-    "next": "15.0.0",
-    "react": "19.0.0-rc-65a56d0e-20241020",
-    "react-dom": "19.0.0-rc-65a56d0e-20241020",
-    "react-leaflet": "^4.2.1"
+    "next": "15.0.2",
+    "react": "19.0.0-rc-69d4b800-20241021",
+    "react-dom": "19.0.0-rc-69d4b800-20241021",
+    "react-leaflet": "5.0.0-rc.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

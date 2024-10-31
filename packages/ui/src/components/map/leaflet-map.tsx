@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import type { LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,28 +9,20 @@ interface LeafletMapProps {
   zoom: number;
 }
 
-export default function LeafletMap({ center, zoom }: LeafletMapProps) {
-  const mapRef = useRef<L.Map | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-      }
-    };
-  }, []);
+export function LeafletMap({ center, zoom }: LeafletMapProps) {
 
   return (
     <MapContainer
-      ref={mapRef}
       center={center}
-      zoom={zoom}
-      style={{ height: '100%', width: '100%' }}
+      zoom={zoom || 10}
+      scrollWheelZoom={false}
+      style={{ height: "100vh" }}
     >
       <TileLayer
+        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
+
     </MapContainer>
   );
 } 
