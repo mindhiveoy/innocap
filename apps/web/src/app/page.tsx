@@ -1,8 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import styles from './page.module.css';
-import { LatLngTuple } from 'leaflet';
+import { Box } from '@mui/material';
+import { SideNav } from '@/components/SideNav';
+import type { LatLngTuple } from 'leaflet';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
@@ -14,8 +15,11 @@ export default function Home() {
   const zoom = 10;
 
   return (
-    <main className={styles.main}>
-      <Map center={center} zoom={zoom} />
-    </main>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <SideNav />
+      <Box component="main" sx={{ flexGrow: 1 }}>
+        <Map center={center} zoom={zoom} />
+      </Box>
+    </Box>
   );
 }
