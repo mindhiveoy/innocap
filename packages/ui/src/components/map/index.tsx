@@ -1,1 +1,1 @@
-export { LeafletMap } from './leaflet-map.js';
+export { LeafletMap } from './leafletMap.js';
