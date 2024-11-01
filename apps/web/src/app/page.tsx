@@ -22,7 +22,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 
 export default function Home() {
   const center: LatLngTuple = [61.90, 27.70]; // Between Mikkeli and Savonlinna
-  const zoom = 8;
+  const zoom = 9;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -33,7 +33,7 @@ export default function Home() {
           zoom={zoom}
           maxBounds={MAP_BOUNDS}
           minZoom={8}
-          maxZoom={11}
+          maxZoom={10}
         />
       </Box>
     </Box>

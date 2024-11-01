@@ -52,6 +52,9 @@ declare module '@mui/material/Typography' {
 }
 
 export const theme = createTheme({
+  shape: {
+    borderRadius: 8,
+  },
   palette: {
     primary: {
       main: '#014B70',

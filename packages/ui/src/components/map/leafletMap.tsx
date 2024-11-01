@@ -35,6 +35,9 @@ export function LeafletMap({
     <MapContainer
       center={center}
       zoom={zoom || 10}
+      zoomControl={true}
+      zoomSnap={0.5}
+      zoomDelta={0.5}
       style={{ 
         height: "100vh",
         filter: "grayscale(90%)"
