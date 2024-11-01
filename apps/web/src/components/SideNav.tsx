@@ -11,6 +11,7 @@ import {
 import styled from '@emotion/styled';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
+import { IndicatorCard } from './IndicatorCard';
 
 const NAV_WIDTH = 80;
 const DRAWER_WIDTH = 340;
@@ -180,9 +181,24 @@ export function SideNav() {
             {selectedItem && menuItems.find(item => item.id === selectedItem)?.text}
           </Typography>
           <Divider sx={{ mb: 2 }} />
-          <Typography>
-            Content for {selectedItem} will go here
-          </Typography>
+          
+          <IndicatorCard
+            title="Public Transportation"
+            description="Profitability and coverage of public transportation routes in the region"
+            iconName="DirectionsBusIcon"
+          />
+          
+          <IndicatorCard
+            title="Building Emissions"
+            description="CO2 emissions from residential and commercial buildings"
+            iconName="MapsHomeWorkIcon"
+          />
+          
+          <IndicatorCard
+            title="Energy Consumption"
+            description="Regional energy consumption patterns and efficiency metrics"
+            iconName="MapsHomeWorkIcon"
+          />
         </Box>
       </ContentDrawer>
     </>
