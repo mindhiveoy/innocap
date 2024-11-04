@@ -7,7 +7,20 @@
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
     "./code": "./src/code.tsx",
-    "./components/map": "./src/components/map/index.tsx"
+    "./components/map": "./src/components/map/index.tsx",
+    "./types/indicators": "./src/types/indicators.ts",
+    "./types/*": "./src/types/*",
+    "./components/*": "./src/components/*"
+  },
+  "typesVersions": {
+    "*": {
+      "types/indicators": [
+        "./src/types/indicators.ts"
+      ],
+      "components/map": [
+        "./src/components/map/index.tsx"
+      ]
+    }
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",

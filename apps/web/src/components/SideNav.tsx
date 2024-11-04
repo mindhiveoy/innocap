@@ -186,9 +186,7 @@ export function SideNav() {
             indicators?.map(indicator => (
               <IndicatorCard
                 key={indicator.id}
-                title={indicator.indicatorNameEn}
-                description={indicator.category}
-                iconName={indicator.iconName || 'HomeIcon'}
+                indicator={indicator}
               />
             ))
           )}

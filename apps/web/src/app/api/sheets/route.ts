@@ -38,8 +38,9 @@ export async function GET() {
       dataSheet.getRows(),
     ]);
 
-    const indicators = indicatorRows.map((row, index) => {
+    const indicators = indicatorRows.map(row => {
       const [
+        id,
         indicatorNameEn,
         indicatorNameFi,
         category,
@@ -52,7 +53,7 @@ export async function GET() {
       ] = (row as any)._rawData as string[];
 
       return {
-        id: index + 1,
+        id,
         indicatorNameEn,
         indicatorNameFi,
         category,
@@ -65,8 +66,9 @@ export async function GET() {
       };
     });
 
-    const data = dataRows.map((row, index) => {
+    const data = dataRows.map(row => {
       const [
+        id,
         indicatorNameEn,
         descriptionEn,
         descriptionFi,
@@ -78,7 +80,7 @@ export async function GET() {
       ] = (row as any)._rawData as string[];
 
       return {
-        id: index + 1,
+        id,
         indicatorNameEn,
         descriptionEn,
         descriptionFi,

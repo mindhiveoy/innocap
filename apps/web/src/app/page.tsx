@@ -3,13 +3,14 @@
 import dynamic from 'next/dynamic';
 import { Box } from '@mui/material';
 import { SideNav } from '@/components/SideNav';
+import { useData } from '@/contexts/DataContext';
+import { useIndicator } from '@/contexts/IndicatorContext';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
   { ssr: false }
 );
-
 // Adjusted bounds based on municipality data:
 // Most western point: ~26.22 (Kangasniemi)
 // Most eastern point: ~29.69 (Savonlinna)
@@ -21,7 +22,9 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 ];
 
 export default function Home() {
-  const center: LatLngTuple = [61.90, 27.70]; // Between Mikkeli and Savonlinna
+  const { data } = useData();
+  const { selectedIndicator } = useIndicator();
+  const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
 
   return (
@@ -34,6 +37,8 @@ export default function Home() {
           maxBounds={MAP_BOUNDS}
           minZoom={8}
           maxZoom={10}
+          indicatorData={data}
+          selectedIndicator={selectedIndicator}
         />
       </Box>
     </Box>

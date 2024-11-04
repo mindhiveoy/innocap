@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import type { Indicator, IndicatorData } from '@/types/indicators';
+import type { Indicator, IndicatorData } from '@repo/ui/types/indicators';
 interface DataContextType {
   indicators: Indicator[];
   data: IndicatorData[];
@@ -28,7 +28,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
 
         const data = await response.json();
-      
         setIndicators(data.indicators);
         setData(data.data);
       } catch (err) {

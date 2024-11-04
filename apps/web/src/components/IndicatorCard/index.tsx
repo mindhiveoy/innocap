@@ -3,11 +3,11 @@ import { Typography, Box } from '@mui/material';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import MapsHomeWorkIcon from '@mui/icons-material/MapsHomeWork';
 import HomeIcon from '@mui/icons-material/Home';
+import { useIndicator } from '@/contexts/IndicatorContext';
+import type { Indicator } from '@repo/ui/types/indicators';
 
 interface IndicatorCardProps {
-  title: string;
-  description: string;
-  iconName: string;
+  indicator: Indicator;
 }
 
 const CardWrapper = styled.div(({ theme }) => `
@@ -20,6 +20,9 @@ const CardWrapper = styled.div(({ theme }) => `
 
   &:hover {
     border: 1px solid ${theme.palette.secondary.main};
+  }
+  &.selected {
+    border: 2px solid ${theme.palette.secondary.main};
   }
 `);
 
@@ -68,27 +71,31 @@ const GradientIcon = ({ iconName }: { iconName: string }) => {
   );
 };
 
-export function IndicatorCard({
-  title,
-  description,
-  iconName
-}: IndicatorCardProps) {
+export function IndicatorCard({ indicator }: IndicatorCardProps) {
+  const { selectedIndicator, setSelectedIndicator } = useIndicator();
+  const isSelected = selectedIndicator?.id === indicator?.id;
+
+  const handleClick = () => {
+    setSelectedIndicator(isSelected ? null : indicator);
+  };
+
+  if (!indicator) return null;
 
   return (
-    <CardWrapper>
+    <CardWrapper onClick={handleClick} className={isSelected ? 'selected' : ''}>
       <CardHeader>
         <TitleSection>
           <Typography variant="h2">
-            {title}
+            {indicator?.indicatorNameEn}
           </Typography>
           <IconWrapper>
-            <GradientIcon iconName={iconName} />
+            <GradientIcon iconName={indicator?.iconName} />
           </IconWrapper>
         </TitleSection>
       </CardHeader>
       <Box>
         <Typography variant="body2" color="text.secondary">
-          {description}
+          {indicator?.indicatorNameFi}
         </Typography>
       </Box>
     </CardWrapper>

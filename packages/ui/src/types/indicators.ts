@@ -1,5 +1,16 @@
+import { type Unit } from './units';
+
+export const INDICATORS = {
+  PUBLIC_TRANSPORT: 'PT_AREAS',
+  BUILDING_EMISSIONS: 'EMISSIONS',
+  ENERGY_CONSUMPTION: 'ENERGY',
+} as const;
+
+export type IndicatorId = typeof INDICATORS[keyof typeof INDICATORS];
+
 export interface Indicator {
-  id: number;
+  id: IndicatorId;
+  indicatorId: IndicatorId;
   indicatorNameEn: string;
   indicatorNameFi: string;
   category: string;
@@ -12,7 +23,8 @@ export interface Indicator {
 }
 
 export interface IndicatorData {
-  id: number;
+  id: IndicatorId;
+  indicatorId: IndicatorId;
   indicatorNameEn: string;
   descriptionEn: string;
   descriptionFi: string;
@@ -20,5 +32,5 @@ export interface IndicatorData {
   municipalityCode: string;
   year: number;
   value: number;
-  unit: string;
+  unit: Unit;
 } 
