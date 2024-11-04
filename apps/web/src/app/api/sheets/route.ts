@@ -50,6 +50,7 @@ export async function GET() {
         sourceName,
         showOnMap,
         iconName
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] = (row as any)._rawData as string[];
 
       return {
@@ -77,6 +78,7 @@ export async function GET() {
         year,
         value,
         unit
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ] = (row as any)._rawData as string[];
 
       return {
@@ -93,6 +95,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ indicators, data });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Detailed error in GET:', {
       name: error.name,
