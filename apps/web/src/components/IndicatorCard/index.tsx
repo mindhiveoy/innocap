@@ -56,6 +56,7 @@ const iconComponents = {
 type IconName = keyof typeof iconComponents;
 
 const GradientIcon = ({ iconName }: { iconName: string }) => {
+  if (!iconName) return null;
   const IconComponent = iconComponents[iconName as IconName];
   
   return (

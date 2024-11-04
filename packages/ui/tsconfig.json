@@ -2,8 +2,8 @@
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "outDir": "dist",
-    "moduleResolution": "bundler",
     "module": "ESNext",
+    "moduleResolution": "bundler",
     "allowJs": true,
     "isolatedModules": true,
     "target": "ES2017",
@@ -19,19 +19,29 @@
     "jsx": "react-jsx",
     "declaration": true,
     "declarationMap": true,
+    "composite": true,
+    "incremental": true,
+    "baseUrl": ".",
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@repo/shared": [
+        "../shared/src"
       ]
     }
   },
   "include": [
     "src",
-    "**/*.ts",
-    "**/*.tsx"
+    "../shared/src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    }
   ]
 }

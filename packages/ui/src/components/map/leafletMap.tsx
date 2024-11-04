@@ -2,10 +2,16 @@
 
 import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
+import L from 'leaflet';
+import { createRoot } from 'react-dom/client';
 import { municipalityBoundaries } from './data/municipality-boundaries';
 import type { IndicatorData, Indicator } from '@repo/ui/types/indicators';
 import { calculateOpacity, type Unit } from '../../types/units';
+import { MunicipalityTooltip } from './MunicipalityTooltip';
 import 'leaflet/dist/leaflet.css';
+import './leafletMap.css';
+import { ThemeProvider } from '@mui/material/styles';
+import { theme } from '@repo/shared';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -20,11 +26,10 @@ interface LeafletMapProps {
 
 const geoJSONStyle = {
   fillColor: 'transparent',
-  weight: 1.5,
+  weight: 1,
   opacity: 0.7,
   color: '#444',
   fillOpacity: 0,
-  dashArray: '3'
 };
 
 export function LeafletMap({
@@ -37,23 +42,28 @@ export function LeafletMap({
   indicatorData,
   selectedIndicator
 }: LeafletMapProps) {
+  const getFeatureData = (feature: any) => {
+    if (!selectedIndicator || !indicatorData) return null;
 
-  const getStyle = (feature: any) => {
-    if (!selectedIndicator || !indicatorData) return geoJSONStyle;
-
-    // Get all values for the selected indicator to calculate the scale
     const selectedIndicatorData = indicatorData.filter(
       d => d.id === selectedIndicator.id
     );
 
-    // Find data for this specific municipality
-    const municipalityData = selectedIndicatorData.find(
+    return selectedIndicatorData.find(
       d => d.municipalityCode === feature.properties.kunta
     );
+  };
 
-    if (!municipalityData) return geoJSONStyle;
+  const getStyle = (feature: any) => {
+    const municipalityData = getFeatureData(feature);
+    
+    if (!municipalityData || !selectedIndicator || !indicatorData) {
+      return geoJSONStyle;
+    }
 
-    // Get all values for this indicator to calculate the scale
+    const selectedIndicatorData = indicatorData.filter(
+      d => d.id === selectedIndicator.id
+    );
     const allValues = selectedIndicatorData.map(d => d.value);
 
     return {
@@ -66,6 +76,64 @@ export function LeafletMap({
       ),
     };
   };
+
+  const onEachFeature = (feature: any, layer: L.Layer) => {
+    // Create tooltip content using React
+    const getTooltipContent = () => {
+      const municipalityData = getFeatureData(feature);
+      
+      // Create a container for React rendering
+      const container = document.createElement('div');
+      
+      // Render React component to container
+      const root = createRoot(container);
+      root.render(
+        <ThemeProvider theme={theme}>
+          <MunicipalityTooltip 
+            name={feature.properties.name}
+            data={municipalityData || undefined}
+          />
+        </ThemeProvider>
+      );
+
+      return container;
+    };
+
+    // Add tooltip to the layer
+    const tooltip = L.tooltip({
+      permanent: false,
+      direction: 'center',
+      className: 'municipality-tooltip-container',
+      opacity: 0.9
+    });
+
+    layer.bindTooltip(tooltip);
+
+    layer.on({
+      mouseover: (e) => {
+        const layer = e.target;
+        
+        const currentStyle = getStyle(feature);
+        layer.setStyle({
+          ...currentStyle,
+          weight: 3,
+          color: '#666',
+          dashArray: ''
+        });
+        
+        layer.bringToFront();
+
+        // Update tooltip content
+        tooltip.setContent(getTooltipContent());
+      },
+      mouseout: (e) => {
+        const layer = e.target;
+        layer.setStyle(getStyle(feature));
+      }
+    });
+  };
+
+  const key = `geojson-${selectedIndicator?.id}-${JSON.stringify(indicatorData)}`;
 
   return (
     <MapContainer
@@ -86,8 +154,10 @@ export function LeafletMap({
         className="grayscale-tiles"
       />
       <GeoJSON 
+        key={key}
         data={municipalityBoundaries}
         style={getStyle}
+        onEachFeature={onEachFeature}
       />
       {children}
     </MapContainer>
