@@ -19,7 +19,7 @@ const CardWrapper = styled.div(({ theme }) => `
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    box-shadow: ${theme.shadows[2]};
+    border: 1px solid ${theme.palette.secondary.main};
   }
 `);
 
@@ -36,15 +36,14 @@ const TitleSection = styled.div(({ theme }) => `
   gap: ${theme.spacing(1)};
 `);
 
-const IconWrapper = styled.div(({ theme }) => `
+const IconWrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
-`);
+`;
 
-// Map of icon names to components
 const iconComponents = {
   HomeIcon,
   DirectionsBusIcon,
@@ -74,6 +73,7 @@ export function IndicatorCard({
   description,
   iconName
 }: IndicatorCardProps) {
+
   return (
     <CardWrapper>
       <CardHeader>

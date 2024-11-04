@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Open_Sans } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import 'leaflet/dist/leaflet.css';
+import { DataProvider } from '@/contexts/DataContext';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -23,7 +24,9 @@ export default function RootLayout({
     <html lang="en" className={openSans.className}>
       <body>
         <Providers>
-          {children}
+          <DataProvider>
+            {children}
+          </DataProvider>
         </Providers>
       </body>
     </html>

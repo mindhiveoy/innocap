@@ -6,12 +6,12 @@ import {
   Box,
   IconButton,
   Typography,
-  Divider,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
+import { useData } from '@/contexts/DataContext';
 
 const NAV_WIDTH = 80;
 const DRAWER_WIDTH = 340;
@@ -70,6 +70,7 @@ const ContentDrawer = styled.div(({ theme }) => `
 export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { indicators, loading, error } = useData();
 
   const menuItems = [
     { text: 'Welcome', icon: <HomeIcon />, id: 'welcome' },
@@ -177,28 +178,20 @@ export function SideNav() {
 
       <ContentDrawer className={drawerOpen ? 'open' : ''}>
         <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {selectedItem && menuItems.find(item => item.id === selectedItem)?.text}
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          
-          <IndicatorCard
-            title="Public Transportation"
-            description="Profitability and coverage of public transportation routes in the region"
-            iconName="DirectionsBusIcon"
-          />
-          
-          <IndicatorCard
-            title="Building Emissions"
-            description="CO2 emissions from residential and commercial buildings"
-            iconName="MapsHomeWorkIcon"
-          />
-          
-          <IndicatorCard
-            title="Energy Consumption"
-            description="Regional energy consumption patterns and efficiency metrics"
-            iconName="MapsHomeWorkIcon"
-          />
+          {loading ? (
+            <Typography>Loading indicators...</Typography>
+          ) : error ? (
+            <Typography color="error">Error loading indicators</Typography>
+          ) : (
+            indicators?.map(indicator => (
+              <IndicatorCard
+                key={indicator.id}
+                title={indicator.indicatorNameEn}
+                description={indicator.category}
+                iconName={indicator.iconName || 'HomeIcon'}
+              />
+            ))
+          )}
         </Box>
       </ContentDrawer>
     </>
