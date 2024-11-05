@@ -7,6 +7,7 @@ import { useData } from '@/contexts/DataContext';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
@@ -24,7 +25,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 ];
 
 export default function Home() {
-  const { municipalityData, markerData } = useData();
+  const { municipalityData, markerData, isLoading } = useData();
   const { selectedIndicator } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
@@ -34,11 +35,12 @@ export default function Home() {
       display: 'flex', 
       flexDirection: 'column', 
       height: '100vh',
-      pb: { xs: `${NAV_HEIGHT}px`, md: 0 }, // padding-bottom on mobile
-      pl: { xs: 0, md: `${NAV_WIDTH}px` },  // padding-left on desktop
+      pb: { xs: `${NAV_HEIGHT}px`, md: 0 }, 
+      pl: { xs: 0, md: `${NAV_WIDTH}px` },
     }}>
       <SideNav />
-      <Box component="main" sx={{ flexGrow: 1 }}>
+      <Box component="main" sx={{ flexGrow: 1, position: 'relative' }}>
+        {isLoading && <LoadingOverlay />}
         <Map 
           center={center} 
           zoom={zoom}

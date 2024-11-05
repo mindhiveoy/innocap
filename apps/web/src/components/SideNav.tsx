@@ -11,6 +11,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
 import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
+import { LoadingOverlay } from './LoadingOverlay';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -209,9 +210,7 @@ export function SideNav() {
       case 'green':
         return (
           <Box sx={{ p: 3 }}>
-            {loading ? (
-              <Typography>Loading indicators...</Typography>
-            ) : error ? (
+            {error ? (
               <Typography color="error">Error loading indicators</Typography>
             ) : (
               indicators?.map(indicator => (
