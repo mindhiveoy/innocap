@@ -4,28 +4,50 @@ import { useState } from 'react';
 import { 
   List, 
   Box,
-  IconButton,
   Typography,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
-
-const NAV_WIDTH = 80;
-const DRAWER_WIDTH = 340;
+import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
 
 const StyledNav = styled.nav(({ theme }) => `
-  width: ${NAV_WIDTH}px;
   background-color: ${theme.palette.background.paper};
   border-right: 1px solid ${theme.palette.divider};
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: ${theme.spacing(1)};
   position: fixed;
-  height: 100vh;
   z-index: 1200;
+
+  @media (min-width: 769px) {
+    top: 0;
+    left: 0;
+    width: ${NAV_WIDTH}px;
+    height: 100vh;
+    flex-direction: column;
+    padding: ${theme.spacing(1)};
+  }
+
+  @media (max-width: 768px) {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: ${NAV_HEIGHT}px;
+    border-right: none;
+    border-top: 1px solid ${theme.palette.divider};
+  }
+`);
+
+const NavList = styled(List)(({ theme }) => `
+  width: 100%;
+  padding: 0;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    height: 100%;
+  }
 `);
 
 const NavItem = styled.div(({ theme }) => `
@@ -46,24 +68,49 @@ const NavItem = styled.div(({ theme }) => `
     background: ${theme.palette.gradient.primary};
     color: ${theme.palette.common.white};
   }
+
+  @media (max-width: 768px) {
+    width: auto;
+    flex: 1;
+    justify-content: center;
+    margin: ${theme.spacing(0.75)};
+    padding: ${theme.spacing(0.5)};
+  }
 `);
 
 const ContentDrawer = styled.div(({ theme }) => `
   position: fixed;
-  left: ${NAV_WIDTH}px;
-  top: 0;
-  width: ${DRAWER_WIDTH}px;
-  height: 100vh;
-  background-color: ${theme.palette.background.paper};
-  border-right: 1px solid ${theme.palette.divider};
-  transform: translateX(-100%);
+  background-color: rgba(255, 255, 255, 0.70);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   transition: transform 225ms cubic-bezier(0, 0, 0.2, 1) 0ms;
   z-index: 1100;
   box-shadow: ${theme.shadows[3]};
   overflow: auto;
 
+  @media (max-width: 768px) {
+    left: 0;
+    bottom: ${NAV_HEIGHT}px;
+    width: 100%;
+    height: calc(100vh - ${NAV_HEIGHT}px);
+    max-height: calc(100vh - ${NAV_HEIGHT}px);
+    border-top: 1px solid ${theme.palette.divider};
+    transform: translateY(100%);
+    border-top-left-radius: ${theme.shape.borderRadius}px;
+    border-top-right-radius: ${theme.shape.borderRadius}px;
+  }
+
+  @media (min-width: 769px) {
+    left: ${NAV_WIDTH}px;
+    top: 0;
+    width: ${DRAWER_WIDTH}px;
+    height: 100vh;
+    border-right: 1px solid ${theme.palette.divider};
+    transform: translateX(-100%);
+  }
+
   &.open {
-    transform: translateX(0);
+    transform: translateX(0) translateY(0);
   }
 `);
 
@@ -230,27 +277,38 @@ export function SideNav() {
   return (
     <>
       <StyledNav>
-        <List sx={{ width: '100%', p: 0 }}>
+        <NavList>
           {menuItems.map((item) => (
             <NavItem
               key={item.id}
               onClick={() => handleItemClick(item.id)}
               className={selectedItem === item.id ? 'selected' : ''}
             >
-              {item.icon}
+              <Box
+                sx={{
+                  width: { xs: 20, md: 24 },
+                  height: { xs: 20, md: 24 },
+                  '& img': {
+                    width: '100%',
+                    height: '100%'
+                  }
+                }}
+              >
+                {item.icon}
+              </Box>
               <Typography
                 variant="caption"
                 sx={{
-                  mt: 0.5,
+                  mt: { xs: 0.25, md: 0.5 },
                   textAlign: 'center',
-                  fontSize: '0.75rem',
+                  fontSize: { xs: '0.65rem', md: '0.75rem' },
                 }}
               >
                 {item.text}
               </Typography>
             </NavItem>
           ))}
-        </List>
+        </NavList>
       </StyledNav>
 
       <ContentDrawer className={drawerOpen ? 'open' : ''}>

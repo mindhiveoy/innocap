@@ -6,6 +6,7 @@ import { SideNav } from '@/components/SideNav';
 import { useData } from '@/contexts/DataContext';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
+import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
@@ -29,7 +30,13 @@ export default function Home() {
   const zoom = 9;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      height: '100vh',
+      pb: { xs: `${NAV_HEIGHT}px`, md: 0 }, // padding-bottom on mobile
+      pl: { xs: 0, md: `${NAV_WIDTH}px` },  // padding-left on desktop
+    }}>
       <SideNav />
       <Box component="main" sx={{ flexGrow: 1 }}>
         <Map 
