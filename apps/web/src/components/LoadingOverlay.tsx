@@ -1,7 +1,7 @@
 import { Box, CircularProgress } from '@mui/material';
 import styled from '@emotion/styled';
 
-const OverlayContainer = styled(Box)(({ theme }) => `
+const OverlayContainer = styled(Box)`
   position: fixed;
   top: 0;
   left: 0;
@@ -13,7 +13,7 @@ const OverlayContainer = styled(Box)(({ theme }) => `
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   z-index: 1150;
-`);
+`;
 
 export function LoadingOverlay() {
   return (

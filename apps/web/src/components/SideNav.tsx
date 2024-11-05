@@ -11,7 +11,6 @@ import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
 import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
-import { LoadingOverlay } from './LoadingOverlay';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -39,7 +38,7 @@ const StyledNav = styled.nav(({ theme }) => `
   }
 `);
 
-const NavList = styled(List)(({ theme }) => `
+const NavList = styled(List)`
   width: 100%;
   padding: 0;
   
@@ -49,7 +48,7 @@ const NavList = styled(List)(({ theme }) => `
     justify-content: space-around;
     height: 100%;
   }
-`);
+`;
 
 const NavItem = styled.div(({ theme }) => `
   display: flex;
@@ -118,7 +117,7 @@ const ContentDrawer = styled.div(({ theme }) => `
 export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { indicators, isLoading: loading, error } = useData();
+  const { indicators, error } = useData();
 
   const menuItems = [
     { text: 'Welcome', icon: <HomeIcon />, id: 'welcome' },

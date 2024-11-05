@@ -262,6 +262,8 @@ export function LeafletMap({
         data={municipalityBoundaries}
         style={geoJsonStyle}
         onEachFeature={onEachFeatureCallback}
+        interactive={selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel}
+        bubblingMouseEvents={false}
       />
       {markerElements}
       {children}
