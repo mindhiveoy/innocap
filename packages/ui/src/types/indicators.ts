@@ -25,8 +25,6 @@ export interface Indicator {
 export enum IndicatorType {
   MunicipalityLevel = "Municipality Level Data",
   Marker = "Marker",
-  /*   BarChart = "Bar Chart",
-    Municipalities = "Municipalities", */
 }
 
 export interface BaseIndicatorData {

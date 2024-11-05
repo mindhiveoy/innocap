@@ -1,8 +1,11 @@
 import styled from '@emotion/styled';
 import { Typography, Box } from '@mui/material';
-import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
-import MapsHomeWorkIcon from '@mui/icons-material/MapsHomeWork';
-import HomeIcon from '@mui/icons-material/Home';
+import DirectionsBus from '@mui/icons-material/DirectionsBus';
+import MapsHomeWork from '@mui/icons-material/MapsHomeWork';
+import Home from '@mui/icons-material/Home';
+import SolarPower from '@mui/icons-material/SolarPower';
+import WaterDrop from '@mui/icons-material/WaterDrop';
+import EnergySavingsLeaf from '@mui/icons-material/EnergySavingsLeaf';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { Indicator } from '@repo/ui/types/indicators';
 
@@ -48,16 +51,26 @@ const IconWrapper = styled.div`
 `;
 
 const iconComponents = {
-  HomeIcon,
-  DirectionsBusIcon,
-  MapsHomeWorkIcon,
+  'DirectionsBus': DirectionsBus,
+  'MapsHomeWork': MapsHomeWork,
+  'Home': Home,
+  'SolarPower': SolarPower,
+  'WaterDrop': WaterDrop,
+  'EnergySavingsLeaf': EnergySavingsLeaf,
+  'HomeIcon': Home  // Fallback for HomeIcon
 } as const;
 
 type IconName = keyof typeof iconComponents;
 
-const GradientIcon = ({ iconName }: { iconName: string }) => {
-  if (!iconName) return null;
-  const IconComponent = iconComponents[iconName as IconName];
+const GradientIcon = ({ iconName }: { iconName: string }) => {  
+  // Remove 'Icon' suffix if it exists
+  const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
+  const IconComponent = iconComponents[cleanIconName] || iconComponents.Home;
+  
+  if (!IconComponent) {
+    console.warn(`Icon not found for name: ${iconName}, using Home icon as fallback`);
+    return <Home sx={{ fill: "url(#primaryGradient)" }} />;
+  }
   
   return (
     <>
@@ -90,7 +103,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             {indicator?.indicatorNameEn}
           </Typography>
           <IconWrapper>
-            <GradientIcon iconName={indicator?.iconName} />
+            <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
           </IconWrapper>
         </TitleSection>
       </CardHeader>

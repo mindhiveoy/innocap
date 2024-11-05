@@ -143,14 +143,15 @@ function processMarkerRows(rows: any[]) {
       year,
       value,
       unit,
-      latitude,
-      longitude,
+      location,
       theme,
       markerIcon,
       phase,
       sourceUrl,
       info
     ] = row._rawData;
+
+    const [latitude, longitude] = location.split(',').map((coord: string) => parseFloat(coord.trim()));
 
     return {
       id,
@@ -162,7 +163,7 @@ function processMarkerRows(rows: any[]) {
       year: parseInt(year),
       value: parseFloat(value.replace(',', '.')),
       unit,
-      location: [parseFloat(latitude), parseFloat(longitude)] as [number, number],
+      location: [latitude, longitude] as [number, number],
       theme,
       markerIcon,
       phase,

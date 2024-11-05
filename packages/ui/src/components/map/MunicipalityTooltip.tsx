@@ -21,6 +21,7 @@ const ColorIndicator = styled.div<ColorIndicatorProps>(({ color, opacity, theme 
   width: 38px;
   height: 38px;
   border-radius: 50%;
+  border: 1px solid ${color};
   background-color: ${color};
   opacity: ${opacity};
 `);

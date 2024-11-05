@@ -32,7 +32,6 @@
   padding: 0;
 }
 
-/* Add these styles to your existing CSS */
 .leaflet-interactive {
   transition: all 0.2s ease-out;
   will-change: transform;
@@ -41,4 +40,25 @@
 .municipality-tooltip-container {
   transition: opacity 0.2s ease-out;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-marker-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: none !important;
+  border: none !important;
+}
+
+.custom-marker-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-marker-icon svg {
+  width: 24px;
+  height: 24px;
 }

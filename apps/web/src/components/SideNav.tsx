@@ -8,7 +8,6 @@ import {
   Typography,
 } from '@mui/material';
 import styled from '@emotion/styled';
-import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
@@ -61,6 +60,7 @@ const ContentDrawer = styled.div(({ theme }) => `
   transition: transform 225ms cubic-bezier(0, 0, 0.2, 1) 0ms;
   z-index: 1100;
   box-shadow: ${theme.shadows[3]};
+  overflow: auto;
 
   &.open {
     transform: translateX(0);
@@ -70,7 +70,7 @@ const ContentDrawer = styled.div(({ theme }) => `
 export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { indicators, loading, error } = useData();
+  const { indicators, isLoading: loading, error } = useData();
 
   const menuItems = [
     { text: 'Welcome', icon: <HomeIcon />, id: 'welcome' },
@@ -148,11 +148,6 @@ export function SideNav() {
   return (
     <>
       <StyledNav>
-        <Box sx={{ mb: 2 }}>
-          <IconButton>
-            <MenuIcon />
-          </IconButton>
-        </Box>
         <List sx={{ width: '100%', p: 0 }}>
           {menuItems.map((item) => (
             <NavItem

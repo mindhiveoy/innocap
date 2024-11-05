@@ -31,10 +31,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
 
         const responseData = await response.json();
-        setIndicators(responseData.indicators);
+   setIndicators(responseData.indicators);
         
-        // Destructure the data more cleanly
         const { data } = responseData;
+
         setMunicipalityData(data['Municipality Level Data'] || []);
         setMarkerData(data['Marker'] || []);
       } catch (err) {
