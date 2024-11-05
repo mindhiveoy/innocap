@@ -62,3 +62,42 @@
   width: 24px;
   height: 24px;
 }
+
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: inherit;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}
+
+.leaflet-popup {
+  margin-bottom: 0;
+}
+
+/* Optimize choropleth rendering */
+.leaflet-choropleth-pane {
+  pointer-events: none;
+}
+
+.leaflet-choropleth-pane path {
+  transition: fill-opacity 0.1s linear;
+  will-change: fill-opacity;
+}
+
+/* Disable default Leaflet animations */
+.leaflet-fade-anim .leaflet-tile,
+.leaflet-fade-anim .leaflet-popup {
+  opacity: 1 !important;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+  transition: none !important;
+}

@@ -145,6 +145,88 @@ export function SideNav() {
     }
   };
 
+  const renderDrawerContent = () => {
+    switch (selectedItem) {
+      case 'welcome':
+        return (
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Welcome to Innocap
+            </Typography>
+            <Typography variant="body1">
+              Explore sustainability and digital innovation indicators across municipalities in South Savo region.
+            </Typography>
+          </Box>
+        );
+
+      case 'green':
+        return (
+          <Box sx={{ p: 3 }}>
+            {loading ? (
+              <Typography>Loading indicators...</Typography>
+            ) : error ? (
+              <Typography color="error">Error loading indicators</Typography>
+            ) : (
+              indicators?.map(indicator => (
+                <IndicatorCard
+                  key={indicator.id}
+                  indicator={indicator}
+                />
+              ))
+            )}
+          </Box>
+        );
+
+      case 'digital':
+        return (
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Digital Indicators
+            </Typography>
+            <Typography variant="body1">
+              Coming soon: Explore digital transformation indicators across the region.
+            </Typography>
+          </Box>
+        );
+
+      case 'ai':
+        return (
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              Ask AI
+            </Typography>
+            <Typography variant="body1">
+              Coming soon: Get AI-powered insights about regional development and sustainability.
+            </Typography>
+          </Box>
+        );
+
+      case 'guide':
+        return (
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+              User Guide
+            </Typography>
+            <Typography variant="body1">
+              Learn how to use the platform and understand the indicators.
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              • Click on municipalities to see detailed information
+            </Typography>
+            <Typography variant="body2">
+              • Use the tabs to switch between different indicator categories
+            </Typography>
+            <Typography variant="body2">
+              • Explore the map to understand regional patterns
+            </Typography>
+          </Box>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <StyledNav>
@@ -172,20 +254,7 @@ export function SideNav() {
       </StyledNav>
 
       <ContentDrawer className={drawerOpen ? 'open' : ''}>
-        <Box sx={{ p: 3 }}>
-          {loading ? (
-            <Typography>Loading indicators...</Typography>
-          ) : error ? (
-            <Typography color="error">Error loading indicators</Typography>
-          ) : (
-            indicators?.map(indicator => (
-              <IndicatorCard
-                key={indicator.id}
-                indicator={indicator}
-              />
-            ))
-          )}
-        </Box>
+        {renderDrawerContent()}
       </ContentDrawer>
     </>
   );
