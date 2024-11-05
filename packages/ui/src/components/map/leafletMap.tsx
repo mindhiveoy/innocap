@@ -82,68 +82,70 @@ export function LeafletMap({
   const getStyle = (feature: any) => {
     const featureData = getFeatureData(feature);
     
-    if (!featureData || !selectedIndicator || !municipalityData) {
-      return geoJSONStyle;
+    if (featureData && selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel) {
+      const allValues = municipalityData
+        .filter(d => d.id === selectedIndicator.id)
+        .map(d => d.value);
+
+      return {
+        ...geoJSONStyle,
+        fillColor: selectedIndicator.color,
+        fillOpacity: calculateOpacity(
+          featureData.value,
+          allValues,
+          featureData.unit as Unit
+        ),
+      };
     }
 
-    const allValues = municipalityData
-      .filter(d => d.id === selectedIndicator.id)
-      .map(d => d.value);
-
-    return {
-      ...geoJSONStyle,
-      fillColor: selectedIndicator.color,
-      fillOpacity: calculateOpacity(
-        featureData.value,
-        allValues,
-        featureData.unit as Unit
-      ),
-    };
+    return geoJSONStyle;
   };
 
   const onEachFeature = (feature: any, layer: L.Layer) => {
-    const municipalityData = getFeatureData(feature);
-    
-    if (municipalityData) {
-      const tooltip = L.tooltip({
-        permanent: false,
-        direction: 'center',
-        className: 'municipality-tooltip-container',
-        opacity: 0.9
-      });
+    if (selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel) {
+      const municipalityData = getFeatureData(feature);
+      
+      if (municipalityData) {
+        const tooltip = L.tooltip({
+          permanent: false,
+          direction: 'center',
+          className: 'municipality-tooltip-container',
+          opacity: 0.9
+        });
 
-      layer.bindTooltip(tooltip);
+        layer.bindTooltip(tooltip);
 
-      layer.on({
-        mouseover: (e) => {
-          const layer = e.target;
-          const currentStyle = getStyle(feature);
-          layer.setStyle({
-            ...currentStyle,
-            weight: 2,
-            color: '#666',
-          });
-          layer.bringToFront();
+        layer.on({
+          mouseover: (e) => {
+            const layer = e.target;
+            const currentStyle = getStyle(feature);
+            layer.setStyle({
+              ...currentStyle,
+              weight: 2,
+              color: '#666',
+            });
+            layer.bringToFront();
 
-          const container = document.createElement('div');
-          const root = createRoot(container);
-          root.render(
-            <ThemeProvider theme={theme}>
-              <MunicipalityTooltip 
-                name={feature.properties.name}
-                data={municipalityData}
-                color={selectedIndicator?.color}
-                opacity={currentStyle.fillOpacity}
-              />
-            </ThemeProvider>
-          );
-          tooltip.setContent(container);
-        },
-        mouseout: (e) => {
-          const layer = e.target;
-          layer.setStyle(getStyle(feature));
-        }
-      });
+            const container = document.createElement('div');
+            const root = createRoot(container);
+            root.render(
+              <ThemeProvider theme={theme}>
+                <MunicipalityTooltip 
+                  name={feature.properties.name}
+                  data={municipalityData}
+                  color={selectedIndicator?.color}
+                  opacity={currentStyle.fillOpacity}
+                />
+              </ThemeProvider>
+            );
+            tooltip.setContent(container);
+          },
+          mouseout: (e) => {
+            const layer = e.target;
+            layer.setStyle(getStyle(feature));
+          }
+        });
+      }
     }
   };
 
@@ -192,14 +194,12 @@ export function LeafletMap({
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
         className="grayscale-tiles"
       />
-      {selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel && (
-        <GeoJSON 
-          key={`geojson-${selectedIndicator?.id}`}
-          data={municipalityBoundaries}
-          style={getStyle}
-          onEachFeature={onEachFeature}
-        />
-      )}
+      <GeoJSON 
+        key={`geojson-${selectedIndicator?.id || 'base'}`}
+        data={municipalityBoundaries}
+        style={getStyle}
+        onEachFeature={onEachFeature}
+      />
       {markerElements}
       {children}
     </MapContainer>
