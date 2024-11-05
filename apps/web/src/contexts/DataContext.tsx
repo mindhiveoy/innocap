@@ -1,11 +1,13 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import type { Indicator, IndicatorData } from '@repo/ui/types/indicators';
+import { Indicator, MunicipalityLevelData, MarkerData } from '@repo/ui/types/indicators';
+
 interface DataContextType {
   indicators: Indicator[];
-  data: IndicatorData[];
-  loading: boolean;
+  municipalityData: MunicipalityLevelData[];
+  markerData: MarkerData[];
+  isLoading: boolean;
   error: Error | null;
 }
 
@@ -13,8 +15,9 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
-  const [data, setData] = useState<IndicatorData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [municipalityData, setMunicipalityData] = useState<MunicipalityLevelData[]>([]);
+  const [markerData, setMarkerData] = useState<MarkerData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
@@ -27,14 +30,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           throw new Error(errorData.details || 'Failed to fetch data');
         }
 
-        const data = await response.json();
-        setIndicators(data.indicators);
-        setData(data.data);
+        const responseData = await response.json();
+        setIndicators(responseData.indicators);
+        
+        // Destructure the data more cleanly
+        const { data } = responseData;
+        setMunicipalityData(data['Municipality Level Data'] || []);
+        setMarkerData(data['Marker'] || []);
       } catch (err) {
         console.error('Error in DataProvider:', err);
         setError(err as Error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -42,7 +49,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <DataContext.Provider value={{ indicators, data, loading, error }}>
+    <DataContext.Provider value={{ 
+      indicators, 
+      municipalityData, 
+      markerData, 
+      isLoading, 
+      error 
+    }}>
       {children}
     </DataContext.Provider>
   );

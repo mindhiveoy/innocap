@@ -1,3 +1,4 @@
+import { LatLngTuple } from 'leaflet';
 import { type Unit } from './units';
 
 export const INDICATORS = {
@@ -9,12 +10,11 @@ export const INDICATORS = {
 export type IndicatorId = typeof INDICATORS[keyof typeof INDICATORS];
 
 export interface Indicator {
-  id: IndicatorId;
-  indicatorId: IndicatorId;
+  id: string;
   indicatorNameEn: string;
   indicatorNameFi: string;
   category: string;
-  indicatorType: string;
+  indicatorType: IndicatorType;
   color: string;
   sourceUrl: string;
   sourceName: string;
@@ -22,15 +22,42 @@ export interface Indicator {
   iconName: string;
 }
 
-export interface IndicatorData {
-  id: IndicatorId;
-  indicatorId: IndicatorId;
+export enum IndicatorType {
+  MunicipalityLevel = "Municipality Level Data",
+  Marker = "Marker",
+  /*   BarChart = "Bar Chart",
+    Municipalities = "Municipalities", */
+}
+
+export interface BaseIndicatorData {
+  id: string;
   indicatorNameEn: string;
+  descriptionEn: string;
+  descriptionFi: string;
+}
+
+export interface MunicipalityLevelData extends BaseIndicatorData {
+  municipalityName: string;
+  municipalityCode: string;
+  year: number;
+  value: number;
+  unit: string;
+}
+
+export interface MarkerData extends BaseIndicatorData {
+  location: LatLngTuple;
   descriptionEn: string;
   descriptionFi: string;
   municipalityName: string;
   municipalityCode: string;
   year: number;
   value: number;
-  unit: Unit;
-} 
+  unit: string;
+  theme: string;
+  markerIcon: string;
+  phase: string;
+  sourceUrl: string;
+  info: string;
+}
+
+export type IndicatorData = MunicipalityLevelData | MarkerData; 

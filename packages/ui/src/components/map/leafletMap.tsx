@@ -1,17 +1,18 @@
 'use client';
 
-import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup } from 'react-leaflet';
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
 import { municipalityBoundaries } from './data/municipality-boundaries';
-import type { IndicatorData, Indicator } from '@repo/ui/types/indicators';
-import { calculateOpacity, type Unit } from '../../types/units';
+import { Indicator, MunicipalityLevelData, MarkerData } from '@repo/ui/types/indicators';
+import { calculateOpacity, Unit } from '../../types/units';
 import { MunicipalityTooltip } from './MunicipalityTooltip';
-import 'leaflet/dist/leaflet.css';
-import './leafletMap.css';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
+import { useMemo, useCallback } from 'react';
+import 'leaflet/dist/leaflet.css';
+import './leafletMap.css';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -20,7 +21,8 @@ interface LeafletMapProps {
   maxBounds?: LatLngBoundsExpression;
   minZoom?: number;
   maxZoom?: number;
-  indicatorData?: IndicatorData[];
+  municipalityData?: MunicipalityLevelData[];
+  markerData?: MarkerData[];
   selectedIndicator?: Indicator | null;
 }
 
@@ -39,106 +41,146 @@ export function LeafletMap({
   maxBounds,
   minZoom,
   maxZoom,
-  indicatorData,
+  municipalityData = [],
+  markerData = [],
   selectedIndicator
 }: LeafletMapProps) {
-  const getFeatureData = (feature: any) => {
-    if (!selectedIndicator || !indicatorData) return null;
+  // Memoize the filtered data for the selected indicator
+  const selectedMunicipalityData = useMemo(() => {
+    if (!selectedIndicator || !municipalityData) return [];
+    return municipalityData.filter(d => d.id === selectedIndicator.id);
+  }, [selectedIndicator?.id, municipalityData]);
 
-    const selectedIndicatorData = indicatorData.filter(
-      d => d.id === selectedIndicator.id
-    );
+  // Memoize all values for opacity calculation
+  const allValues = useMemo(() => {
+    return selectedMunicipalityData.map(d => d.value);
+  }, [selectedMunicipalityData]);
 
-    return selectedIndicatorData.find(
+  const getFeatureData = useCallback((feature: any) => {
+    if (!selectedMunicipalityData.length) return null;
+    return selectedMunicipalityData.find(
       d => d.municipalityCode === feature.properties.kunta
     );
-  };
+  }, [selectedMunicipalityData]);
 
-  const getStyle = (feature: any) => {
-    const municipalityData = getFeatureData(feature);
+  const calculateFeatureOpacity = useCallback((feature: any) => {
+    const featureData = getFeatureData(feature);
     
-    if (!municipalityData || !selectedIndicator || !indicatorData) {
-      return geoJSONStyle;
+    if (!featureData || !selectedIndicator || !allValues.length) {
+      return 0;
     }
 
-    const selectedIndicatorData = indicatorData.filter(
-      d => d.id === selectedIndicator.id
+    return calculateOpacity(
+      featureData.value,
+      allValues,
+      featureData.unit as Unit
     );
-    const allValues = selectedIndicatorData.map(d => d.value);
+  }, [getFeatureData, selectedIndicator, allValues]);
+
+  const getStyle = useCallback((feature: any) => {
+    if (!selectedIndicator || !getFeatureData(feature)) {
+      return geoJSONStyle;
+    }
 
     return {
       ...geoJSONStyle,
       fillColor: selectedIndicator.color,
-      fillOpacity: calculateOpacity(
-        municipalityData.value,
-        allValues,
-        municipalityData.unit as Unit
-      ),
+      fillOpacity: calculateFeatureOpacity(feature),
     };
-  };
+  }, [selectedIndicator, getFeatureData, calculateFeatureOpacity]);
 
-  const onEachFeature = (feature: any, layer: L.Layer) => {
-    // Create tooltip content using React
-    const getTooltipContent = () => {
-      const municipalityData = getFeatureData(feature);
-      
-      // Create a container for React rendering
-      const container = document.createElement('div');
-      
-      // Render React component to container
-      const root = createRoot(container);
-      root.render(
-        <ThemeProvider theme={theme}>
-          <MunicipalityTooltip 
-            name={feature.properties.name}
-            data={municipalityData || undefined}
-          />
-        </ThemeProvider>
-      );
+  const createTooltipContent = useCallback((feature: any) => {
+    const municipalityData = getFeatureData(feature);
+    const opacity = calculateFeatureOpacity(feature);
+    
+    const container = document.createElement('div');
+    
+    const root = createRoot(container);
+    root.render(
+      <ThemeProvider theme={theme}>
+        <MunicipalityTooltip 
+          name={feature.properties.name}
+          data={municipalityData || undefined}
+          color={selectedIndicator?.color || '#ccc'}
+          opacity={opacity}
+        />
+      </ThemeProvider>
+    );
 
-      return container;
-    };
+    return container;
+  }, [getFeatureData, calculateFeatureOpacity, selectedIndicator?.color]);
 
-    // Add tooltip to the layer
-    const tooltip = L.tooltip({
-      permanent: false,
-      direction: 'center',
-      className: 'municipality-tooltip-container',
-      opacity: 0.9
-    });
+  const onEachFeature = useCallback((feature: any, layer: L.Layer) => {
+    const municipalityData = getFeatureData(feature);
+    
+    if (municipalityData) {
+      const tooltip = L.tooltip({
+        permanent: false,
+        direction: 'center',
+        className: 'municipality-tooltip-container',
+        opacity: 1
+      });
 
-    layer.bindTooltip(tooltip);
+      layer.bindTooltip(tooltip);
 
-    layer.on({
-      mouseover: (e) => {
-        const layer = e.target;
-        
-        const currentStyle = getStyle(feature);
-        layer.setStyle({
-          ...currentStyle,
-          weight: 3,
-          color: '#666',
-          dashArray: ''
-        });
-        
-        layer.bringToFront();
+      layer.on({
+        mouseover: (e) => {
+          const layer = e.target;
+          
+          const currentStyle = getStyle(feature);
+          layer.setStyle({
+            ...currentStyle,
+            weight: 3,
+            color: selectedIndicator?.color || '#666',
+            dashArray: ''
+          });
+          
+          layer.bringToFront();
+          tooltip.setContent(createTooltipContent(feature));
+        },
+        mouseout: (e) => {
+          const layer = e.target;
+          layer.setStyle(getStyle(feature));
+        }
+      });
+    }
+  }, [getStyle, createTooltipContent, getFeatureData]);
 
-        // Update tooltip content
-        tooltip.setContent(getTooltipContent());
-      },
-      mouseout: (e) => {
-        const layer = e.target;
-        layer.setStyle(getStyle(feature));
-      }
-    });
-  };
-
-  const key = `geojson-${selectedIndicator?.id}-${JSON.stringify(indicatorData)}`;
+  // Memoize marker data rendering
+  const markerElements = useMemo(() => {
+    if (selectedIndicator?.indicatorType !== 'Marker') return null;
+    
+    return markerData?.map((marker) => (
+      <Marker
+        key={`marker-${marker.id}`}
+        position={marker.location}
+        icon={L.icon({
+          iconUrl: `/icons/${marker.markerIcon}.svg`,
+          iconSize: [25, 25],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -12],
+        })}
+      >
+        <Popup>
+          <div>
+            <h3>{marker.indicatorNameEn}</h3>
+            <p>{marker.descriptionEn}</p>
+            {marker.info && <p>{marker.info}</p>}
+            {marker.sourceUrl && (
+              <a href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
+                Learn more
+              </a>
+            )}
+          </div>
+        </Popup>
+      </Marker>
+    ));
+  }, [markerData, selectedIndicator?.indicatorType]);
 
   return (
     <MapContainer
       center={center}
-      zoom={zoom || 10}
+      zoom={zoom}
       zoomControl={true}
       zoomSnap={0.5}
       zoomDelta={0.5}
@@ -154,11 +196,12 @@ export function LeafletMap({
         className="grayscale-tiles"
       />
       <GeoJSON 
-        key={key}
+        key={`geojson-${selectedIndicator?.id}`}
         data={municipalityBoundaries}
         style={getStyle}
         onEachFeature={onEachFeature}
       />
+      {markerElements}
       {children}
     </MapContainer>
   );

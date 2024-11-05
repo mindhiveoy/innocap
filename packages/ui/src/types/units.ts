@@ -2,13 +2,12 @@
  * Available unit types for measurements
  * @constant
  */
-export const UNITS = {
-  PERCENTAGE: '%',
-  EMISSIONS: 'kg CO2-ekv/k-m2]',
-  ENERGY: 'MWh/k-m2'
-} as const;
-
-export type Unit = typeof UNITS[keyof typeof UNITS];
+export enum Unit {
+  Number = 'number',
+  Percentage = 'percentage',
+  Emissions = 'kg CO2-ekv/k-m2',
+  Energy = 'MWh/k-m2'
+}
 
 /** Represents a range of numeric data with minimum and maximum values */
 interface DataRange {
@@ -57,11 +56,11 @@ const createScale = (value: number, range: DataRange, type: 'linear' | 'logarith
  */
 export const getScaleType = (unit: Unit): 'linear' | 'logarithmic' | 'quantile' => {
   switch (unit) {
-    case UNITS.PERCENTAGE:
+    case Unit.Percentage:
       return 'linear';
-    case UNITS.EMISSIONS:
+    case Unit.Emissions:
       return 'quantile';
-    case UNITS.ENERGY:
+    case Unit.Energy:
       return 'logarithmic';
     default:
       return 'linear';

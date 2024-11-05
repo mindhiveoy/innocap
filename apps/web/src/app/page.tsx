@@ -11,6 +11,7 @@ const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
   { ssr: false }
 );
+
 // Adjusted bounds based on municipality data:
 // Most western point: ~26.22 (Kangasniemi)
 // Most eastern point: ~29.69 (Savonlinna)
@@ -22,7 +23,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 ];
 
 export default function Home() {
-  const { data } = useData();
+  const { municipalityData, markerData } = useData();
   const { selectedIndicator } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
@@ -37,7 +38,8 @@ export default function Home() {
           maxBounds={MAP_BOUNDS}
           minZoom={8}
           maxZoom={10}
-          indicatorData={data}
+          municipalityData={municipalityData}
+          markerData={markerData}
           selectedIndicator={selectedIndicator}
         />
       </Box>
