@@ -18,7 +18,11 @@
   },
   "packageManager": "yarn@4.5.1",
   "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+    "packages/*",
+    "apps/*"
+  ],
+  "dependencies": {
+    "@emotion/styled": "^11.13.0",
+    "google-auth-library": "^9.14.2"
+  }
 }
