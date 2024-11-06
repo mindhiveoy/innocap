@@ -1,0 +1,94 @@
+.info {
+  padding: 6px 8px;
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+.info h4 {
+  margin: 0 0 5px;
+  color: #777;
+  font-weight: bold;
+}
+
+.municipality-tooltip-container {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* Remove the tooltip arrow */
+.municipality-tooltip-container:before {
+  display: none;
+}
+
+/* Remove default leaflet tooltip padding */
+.municipality-tooltip-container .leaflet-tooltip-content {
+  padding: 0;
+}
+
+.leaflet-interactive {
+  transition: all 0.2s ease-out;
+  will-change: transform;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.municipality-tooltip-container {
+  transition: opacity 0.2s ease-out;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-marker-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: none !important;
+  border: none !important;
+}
+
+.custom-marker-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-marker-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: inherit;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}
+
+.leaflet-popup {
+  margin-bottom: 0;
+}
+
+.leaflet-container {
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+}
+
+.leaflet-pane {
+  outline: none !important;
+}
