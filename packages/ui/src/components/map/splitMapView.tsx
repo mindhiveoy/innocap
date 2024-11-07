@@ -6,7 +6,7 @@ import { LeafletMap } from './leafletMap';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 import { MunicipalityLevelData, MarkerData, Indicator } from '../../types/indicators';
 import styled from '@emotion/styled';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import 'leaflet';
 import 'leaflet.sync';
 
@@ -20,9 +20,13 @@ interface SplitMapViewProps {
   maxBounds: LatLngBoundsExpression;
 }
 
-const INITIAL_SPLIT = 25;
-const MIN_SPLIT = 5; // Allow more extreme splits but prevent going outside viewport
-const MAX_SPLIT = 45;
+/**
+ * Constraints for the split view divider position.
+ * Percentage of the viewport height.
+ */
+const INITIAL_SPLIT = 50;
+const MIN_SPLIT = 10;
+const MAX_SPLIT = 90;
 
 const DragHandle = styled.div`
   position: absolute;
@@ -50,6 +54,11 @@ const DragHandle = styled.div`
   }
 `;
 
+/**
+ * Calculates map center and bounds adjustments based on split position.
+ * When a map section becomes very small, adjusts its center point and bounds
+ * to maintain visibility of the important areas.
+ */
 const calculateMapAdjustments = (splitPosition: number, isTopMap: boolean, defaultBounds: LatLngBoundsExpression) => {
   const mapHeight = isTopMap ? splitPosition : (100 - splitPosition);
 
@@ -155,7 +164,6 @@ export function SplitMapView({
     position: 'relative' as const,
     overflow: 'hidden'
   }), [splitPosition]);
-  console.log("🚀 ~ bottomContainerStyle ~ bottomContainerStyle:", bottomContainerStyle)
 
   const dragHandleStyle = useMemo(() => ({
     top: `${splitPosition}%`,
@@ -177,14 +185,16 @@ export function SplitMapView({
   const topMapRef = useRef<L.Map | null>(null);
   const bottomMapRef = useRef<L.Map | null>(null);
 
-  // Sync maps when they're both available
+  /**
+   * Synchronizes both map instances to share pan and zoom operations.
+   * Maps are synced when both instances are available and unsynced on unmount.
+   */
   useEffect(() => {
     if (topMapRef.current && bottomMapRef.current) {
       topMapRef.current.sync(bottomMapRef.current);
       bottomMapRef.current.sync(topMapRef.current);
     }
 
-    // Cleanup sync when component unmounts
     return () => {
       if (topMapRef.current && bottomMapRef.current) {
         topMapRef.current.unsync(bottomMapRef.current);
@@ -192,6 +202,19 @@ export function SplitMapView({
       }
     };
   }, [topMapRef.current, bottomMapRef.current]);
+
+  /**
+   * Forces maps to recalculate their container sizes when split position changes.
+   * This prevents rendering issues when resizing map containers.
+   */
+  useEffect(() => {
+    if (topMapRef.current) {
+      topMapRef.current.invalidateSize();
+    }
+    if (bottomMapRef.current) {
+      bottomMapRef.current.invalidateSize();
+    }
+  }, [splitPosition]);
 
   return (
     <Box sx={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
@@ -213,7 +236,7 @@ export function SplitMapView({
         onTouchStart={handleDragStart}
         style={dragHandleStyle}
       >
-        <DragIndicatorIcon />
+        <DragHandleIcon />
       </DragHandle>
 
       <Box sx={bottomContainerStyle}>

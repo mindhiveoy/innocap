@@ -245,7 +245,7 @@ export function LeafletMap({
     <MapContainer
       center={center}
       zoom={zoom}
-      style={{ height: "100vh" }}
+      style={{ height: "100%" }}
       maxBounds={maxBounds}
       minZoom={minZoom}
       maxZoom={maxZoom}
