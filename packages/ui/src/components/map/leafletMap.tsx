@@ -27,6 +27,7 @@ interface LeafletMapProps {
   municipalityData?: MunicipalityLevelData[];
   markerData?: MarkerData[];
   selectedIndicator?: Indicator | null;
+  onMapMount?: (map: L.Map) => void;
 }
 
 const geoJSONStyle = {
@@ -117,7 +118,8 @@ export function LeafletMap({
   maxZoom,
   municipalityData = [],
   markerData = [],
-  selectedIndicator
+  selectedIndicator,
+  onMapMount,
 }: LeafletMapProps) {
 
   const filteredMarkerData = useMemo(() => {
@@ -135,7 +137,7 @@ export function LeafletMap({
   const geoJsonStyle = useMemo(() => {
     return (feature: any) => {
       const featureData = getFeatureData(feature);
-      
+
       if (featureData && selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel) {
         const allValues = municipalityData
           .filter(d => d.id === selectedIndicator.id)
@@ -160,7 +162,7 @@ export function LeafletMap({
     return (feature: any, layer: L.Layer) => {
       if (selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel) {
         const municipalityData = getFeatureData(feature);
-        
+
         if (municipalityData) {
           const tooltip = L.tooltip({
             permanent: false,
@@ -186,7 +188,7 @@ export function LeafletMap({
               const root = createRoot(container);
               root.render(
                 <ThemeProvider theme={theme}>
-                  <MunicipalityTooltip 
+                  <MunicipalityTooltip
                     name={feature.properties.name}
                     data={municipalityData}
                     color={selectedIndicator?.color}
@@ -227,8 +229,8 @@ export function LeafletMap({
                   {marker.sourceUrl &&
                     <PopupLink href={marker.sourceUrl}
                       target="_blank"
-                      rel="noopener noreferrer"> Source <OpenInNewIcon fontSize='small'/>
-                    </PopupLink> }
+                      rel="noopener noreferrer"> Source <OpenInNewIcon fontSize='small' />
+                    </PopupLink>}
                 </PopupContent>
               </PopupContainer>
             </Popup>
@@ -251,13 +253,19 @@ export function LeafletMap({
       zoomControl={true}
       zoomSnap={0.25}
       zoomDelta={1}
+      attributionControl={false}
+      ref={map => {
+        if (map && onMapMount) {
+          onMapMount(map);
+        }
+      }}
     >
       <TileLayer
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
         className="grayscale-tiles"
       />
-      <GeoJSON 
+      <GeoJSON
         key={`geojson-${selectedIndicator?.id || 'base'}`}
         data={municipalityBoundaries}
         style={geoJsonStyle}

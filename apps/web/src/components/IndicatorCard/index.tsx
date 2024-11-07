@@ -1,11 +1,13 @@
 import styled from '@emotion/styled';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, IconButton } from '@mui/material';
 import DirectionsBus from '@mui/icons-material/DirectionsBus';
 import MapsHomeWork from '@mui/icons-material/MapsHomeWork';
 import Home from '@mui/icons-material/Home';
 import SolarPower from '@mui/icons-material/SolarPower';
 import WaterDrop from '@mui/icons-material/WaterDrop';
 import EnergySavingsLeaf from '@mui/icons-material/EnergySavingsLeaf';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { Indicator } from '@repo/ui/types/indicators';
 
@@ -86,11 +88,17 @@ const GradientIcon = ({ iconName }: { iconName: string }) => {
 };
 
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
-  const { selectedIndicator, setSelectedIndicator } = useIndicator();
+  const { selectedIndicator, setSelectedIndicator, isPinned, togglePin } = useIndicator();
   const isSelected = selectedIndicator?.id === indicator?.id;
+  const pinned = isPinned(indicator);
 
   const handleClick = () => {
     setSelectedIndicator(isSelected ? null : indicator);
+  };
+
+  const handlePinClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click when clicking pin
+    togglePin(indicator);
   };
 
   if (!indicator) return null;
@@ -106,6 +114,16 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
           </IconWrapper>
         </TitleSection>
+        <IconButton 
+          onClick={handlePinClick}
+          sx={{ 
+            color: pinned ? 'primary.main' : 'text.secondary',
+            transform: pinned ? 'rotate(-45deg)' : 'none',
+            transition: 'transform 0.2s ease-in-out'
+          }}
+        >
+          {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+        </IconButton>
       </CardHeader>
       <Box>
         <Typography variant="body2" color="text.secondary">
