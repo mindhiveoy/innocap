@@ -23,49 +23,58 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   const [comparisonIndicator, setComparisonIndicator] = useState<Indicator | null>(null);
   const [isCompareMode, setIsCompareMode] = useState(false);
   const [selectedYears, setSelectedYears] = useState<Record<string, string>>({});
+  const [pinnedIndicators, setPinnedIndicators] = useState<Set<string>>(new Set());
 
   const isPinned = (indicator: Indicator) => {
-    return selectedIndicator?.id === indicator.id || comparisonIndicator?.id === indicator.id;
+    return pinnedIndicators.has(indicator.id);
   };
 
   const togglePin = (indicator: Indicator) => {
-    if (isPinned(indicator)) {
-      // Unpin: Remove from either selected or comparison
-      if (selectedIndicator?.id === indicator.id) {
-        setSelectedIndicator(comparisonIndicator);
-        setComparisonIndicator(null);
-      } else {
-        setComparisonIndicator(null);
-      }
+    setPinnedIndicators(prev => {
+      const newPinned = new Set(prev);
       
-      // If unpinning leaves only one indicator, exit compare mode
-      setIsCompareMode(false);
-    } else {
-      // Pin: Add to either selected or comparison slot
-      if (!selectedIndicator) {
-        setSelectedIndicator(indicator);
-      } else if (!comparisonIndicator) {
-        setComparisonIndicator(indicator);
-        setIsCompareMode(true);
+      if (newPinned.has(indicator.id)) {
+        // Unpin: Remove from pinned set and comparison if needed
+        newPinned.delete(indicator.id);
+        if (comparisonIndicator?.id === indicator.id) {
+          setComparisonIndicator(null);
+        }
+        if (selectedIndicator?.id === indicator.id) {
+          setSelectedIndicator(null);
+        }
+        setIsCompareMode(false);
+      } else {
+        // Pin: Add to pinned set
+        newPinned.add(indicator.id);
+        
+        // Clear any existing selection
+        if (selectedIndicator?.id === indicator.id) {
+          // If pinning the currently selected indicator, move it to primary position
+          setSelectedIndicator(indicator);
+          setComparisonIndicator(null);
+        } else if (!selectedIndicator) {
+          // If nothing selected, set as primary
+          setSelectedIndicator(indicator);
+        } else {
+          // If something else selected, set as comparison
+          setComparisonIndicator(indicator);
+          setIsCompareMode(true);
+        }
       }
-      // If both slots are full, do nothing
-    }
-  };
-
-  const setSelectedYear = (indicatorId: string, year: string) => {
-    setSelectedYears(prev => ({
-      ...prev,
-      [indicatorId]: year
-    }));
+      return newPinned;
+    });
   };
 
   const handleSetSelectedIndicator = (indicator: Indicator | null) => {
-    setSelectedIndicator(indicator);
-    if (indicator) {
-      setSelectedYears(prev => ({
-        ...prev,
-        [indicator.id]: 'all'
-      }));
+    // Only allow selection of unpinned indicators
+    if (!indicator || !isPinned(indicator)) {
+      setSelectedIndicator(indicator);
+      if (indicator) {
+        setSelectedYears(prev => ({
+          ...prev,
+          [indicator.id]: 'all'
+        }));
+      }
     }
   };
 
@@ -77,6 +86,13 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
         [indicator.id]: 'all'
       }));
     }
+  };
+
+  const setSelectedYear = (indicatorId: string, year: string) => {
+    setSelectedYears(prev => ({
+      ...prev,
+      [indicatorId]: year
+    }));
   };
 
   return (

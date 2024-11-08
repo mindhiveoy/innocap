@@ -232,8 +232,8 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     selectedYears, 
     setSelectedYear,
     selectedIndicator, 
-    comparisonIndicator, 
-    setSelectedIndicator, 
+    comparisonIndicator,
+    setSelectedIndicator,
     isPinned, 
     togglePin 
   } = useIndicator();
@@ -267,17 +267,13 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   }, [indicator, municipalityData]);
 
   const handleClick = useCallback(() => {
-    if (!pinned) {
-      setSelectedIndicator(isSelected ? null : indicator);
-    }
-  }, [pinned, isSelected, indicator, setSelectedIndicator]);
+    setSelectedIndicator(isSelected ? null : indicator);
+  }, [isSelected, indicator, setSelectedIndicator]);
 
   const handlePinClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isPinningDisabled) {
-      togglePin(indicator);
-    }
-  }, [isPinningDisabled, togglePin, indicator]);
+    togglePin(indicator);
+  }, [togglePin, indicator]);
 
   const handleYearChange = useCallback((
     _event: React.MouseEvent<HTMLElement>,
@@ -359,7 +355,6 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             }
           </PinText>
         </PinButton>
-        {pinned && (
           <YearSelector
             value={selectedYears[indicator.id] || 'all'}
             exclusive
@@ -372,7 +367,6 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
               </ToggleButton>
             ))}
           </YearSelector>
-        )}
 {/*         <Typography variant="body2" color="text.secondary">
           {indicator?.indicatorNameFi}
         </Typography> */}
