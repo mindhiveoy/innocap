@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Typography, Box, IconButton, Tooltip } from '@mui/material';
+import { Typography, Box, IconButton, Tooltip, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import DirectionsBus from '@mui/icons-material/DirectionsBus';
 import TerrainIcon from '@mui/icons-material/Terrain';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -13,7 +13,8 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { Indicator } from '@repo/ui/types/indicators';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
+import { useData } from '@/contexts/DataContext';
 
 interface IndicatorCardProps {
   indicator: Indicator;
@@ -196,11 +197,50 @@ const IndicatorTypeIcon = ({ iconName }: { iconName: string }) => {
   );
 };
 
+const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
+  margin-top: ${theme.spacing(2)};
+  background: ${theme.palette.background.paper};
+  border-radius: 24px;
+  padding: ${theme.spacing(0.5)};
+  width: fit-content;
+  border: 1px solid ${theme.palette.divider};
+  
+  .MuiToggleButton-root {
+    border: none;
+    border-radius: 20px;
+    padding: ${theme.spacing(0.5, 2)};
+    text-transform: none;
+    font-size: 0.75rem;
+    color: ${theme.palette.text.secondary};
+    
+    &:hover {
+      background: ${theme.palette.action.hover};
+    }
+    
+    &.Mui-selected {
+      background: ${theme.palette.primary.main};
+      color: ${theme.palette.common.white};
+      &:hover {
+        background: ${theme.palette.primary.dark};
+      }
+    }
+  }
+`);
+
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
-  const { selectedIndicator, comparisonIndicator, setSelectedIndicator, isPinned, togglePin } = useIndicator();
+  const { 
+    selectedYears, 
+    setSelectedYear,
+    selectedIndicator, 
+    comparisonIndicator, 
+    setSelectedIndicator, 
+    isPinned, 
+    togglePin 
+  } = useIndicator();
+  const { municipalityData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState(false);
-  
+
   const isSelected = selectedIndicator?.id === indicator?.id || comparisonIndicator?.id === indicator?.id;
   const pinned = isPinned(indicator);
   const isPinningDisabled = !pinned && selectedIndicator && comparisonIndicator;
@@ -224,6 +264,25 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
       setIsTextTruncated(element.scrollWidth > element.clientWidth);
     }
   }, [indicator?.sourceEn]);
+
+  const years = useMemo(() => {
+    if (!indicator) return [];
+    const uniqueYears = new Set(
+      municipalityData
+        ?.filter(d => d.id === indicator.id)
+        .map(d => d.year.toString())
+    );
+    return ['all', ...Array.from(uniqueYears)].sort();
+  }, [indicator, municipalityData]);
+
+  const handleYearChange = (
+    _event: React.MouseEvent<HTMLElement>,
+    newYear: string | null,
+  ) => {
+    if (newYear !== null) {
+      setSelectedYear(indicator.id, newYear);
+    }
+  };
 
   if (!indicator) return null;
 
@@ -284,6 +343,20 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             }
           </PinText>
         </PinButton>
+        {pinned && (
+          <YearSelector
+            value={selectedYears[indicator.id] || 'all'}
+            exclusive
+            onChange={handleYearChange}
+            aria-label="Select year"
+          >
+            {years.map((year) => (
+              <ToggleButton key={year} value={year}>
+                {year === 'all' ? 'All' : year}
+              </ToggleButton>
+            ))}
+          </YearSelector>
+        )}
         <Typography variant="body2" color="text.secondary">
           {indicator?.indicatorNameFi}
         </Typography>

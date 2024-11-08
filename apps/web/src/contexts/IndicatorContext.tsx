@@ -12,6 +12,8 @@ export interface IndicatorContextType {
   toggleCompareMode: () => void;
   isPinned: (indicator: Indicator) => boolean;
   togglePin: (indicator: Indicator) => void;
+  selectedYears: Record<string, string>;
+  setSelectedYear: (indicatorId: string, year: string) => void;
 }
 
 const IndicatorContext = createContext<IndicatorContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [comparisonIndicator, setComparisonIndicator] = useState<Indicator | null>(null);
   const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedYears, setSelectedYears] = useState<Record<string, string>>({});
 
   const isPinned = (indicator: Indicator) => {
     return selectedIndicator?.id === indicator.id || comparisonIndicator?.id === indicator.id;
@@ -49,17 +52,48 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const setSelectedYear = (indicatorId: string, year: string) => {
+    setSelectedYears(prev => ({
+      ...prev,
+      [indicatorId]: year
+    }));
+  };
+
+  // Initialize 'all' as default when selecting an indicator
+  const handleSetSelectedIndicator = (indicator: Indicator | null) => {
+    setSelectedIndicator(indicator);
+    if (indicator) {
+      setSelectedYears(prev => ({
+        ...prev,
+        [indicator.id]: 'all'
+      }));
+    }
+  };
+
+  // Same for comparison indicator
+  const handleSetComparisonIndicator = (indicator: Indicator | null) => {
+    setComparisonIndicator(indicator);
+    if (indicator) {
+      setSelectedYears(prev => ({
+        ...prev,
+        [indicator.id]: 'all'
+      }));
+    }
+  };
+
   return (
     <IndicatorContext.Provider 
       value={{ 
         selectedIndicator, 
         comparisonIndicator,
         isCompareMode,
-        setSelectedIndicator,
-        setComparisonIndicator,
+        setSelectedIndicator: handleSetSelectedIndicator,
+        setComparisonIndicator: handleSetComparisonIndicator,
         toggleCompareMode: () => setIsCompareMode(prev => !prev),
         isPinned,
         togglePin,
+        selectedYears,
+        setSelectedYear,
       }}
     >
       {children}
