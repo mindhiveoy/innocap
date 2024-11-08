@@ -59,7 +59,6 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
-  // Initialize 'all' as default when selecting an indicator
   const handleSetSelectedIndicator = (indicator: Indicator | null) => {
     setSelectedIndicator(indicator);
     if (indicator) {
@@ -70,7 +69,6 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Same for comparison indicator
   const handleSetComparisonIndicator = (indicator: Indicator | null) => {
     setComparisonIndicator(indicator);
     if (indicator) {

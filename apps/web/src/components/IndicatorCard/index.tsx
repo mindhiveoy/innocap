@@ -13,7 +13,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { Indicator } from '@repo/ui/types/indicators';
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useData } from '@/contexts/DataContext';
 
 interface IndicatorCardProps {
@@ -198,7 +198,7 @@ const IndicatorTypeIcon = ({ iconName }: { iconName: string }) => {
 };
 
 const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
-  margin-top: ${theme.spacing(2)};
+  margin-bottom: ${theme.spacing(2)};
   background: ${theme.palette.background.paper};
   border-radius: 24px;
   padding: ${theme.spacing(0.5)};
@@ -241,29 +241,20 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState(false);
 
-  const isSelected = selectedIndicator?.id === indicator?.id || comparisonIndicator?.id === indicator?.id;
-  const pinned = isPinned(indicator);
-  const isPinningDisabled = !pinned && selectedIndicator && comparisonIndicator;
+  const isSelected = useMemo(() => 
+    selectedIndicator?.id === indicator?.id || comparisonIndicator?.id === indicator?.id,
+    [selectedIndicator?.id, comparisonIndicator?.id, indicator?.id]
+  );
 
-  const handleClick = () => {
-    if (!pinned) {
-      setSelectedIndicator(isSelected ? null : indicator);
-    }
-  };
+  const pinned = useMemo(() => 
+    isPinned(indicator),
+    [isPinned, indicator]
+  );
 
-  const handlePinClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!isPinningDisabled) {
-      togglePin(indicator);
-    }
-  };
-
-  useEffect(() => {
-    const element = sourceRef.current;
-    if (element) {
-      setIsTextTruncated(element.scrollWidth > element.clientWidth);
-    }
-  }, [indicator?.sourceEn]);
+  const isPinningDisabled = useMemo(() => 
+    !pinned && selectedIndicator && comparisonIndicator,
+    [pinned, selectedIndicator, comparisonIndicator]
+  );
 
   const years = useMemo(() => {
     if (!indicator) return [];
@@ -275,14 +266,39 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     return ['all', ...Array.from(uniqueYears)].sort();
   }, [indicator, municipalityData]);
 
-  const handleYearChange = (
+  const handleClick = useCallback(() => {
+    if (!pinned) {
+      setSelectedIndicator(isSelected ? null : indicator);
+    }
+  }, [pinned, isSelected, indicator, setSelectedIndicator]);
+
+  const handlePinClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isPinningDisabled) {
+      togglePin(indicator);
+    }
+  }, [isPinningDisabled, togglePin, indicator]);
+
+  const handleYearChange = useCallback((
     _event: React.MouseEvent<HTMLElement>,
     newYear: string | null,
   ) => {
-    if (newYear !== null) {
+    if (newYear !== null && indicator) {
       setSelectedYear(indicator.id, newYear);
     }
-  };
+  }, [indicator, setSelectedYear]);
+
+  useEffect(() => {
+    const element = sourceRef.current;
+    if (element) {
+      setIsTextTruncated(element.scrollWidth > element.clientWidth);
+    }
+  }, [indicator?.sourceEn]);
+
+  const tooltipContent = useMemo(() => 
+    indicator?.sourceEn || '',
+    [indicator?.sourceEn]
+  );
 
   if (!indicator) return null;
 
@@ -308,7 +324,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
         </TitleSection>
       </CardHeader>
       {isTextTruncated ? (
-        <Tooltip title={indicator?.sourceEn || ''} placement="right">
+        <Tooltip title={tooltipContent} placement="right">
           <SourceTextWrapper>
             <SourceText ref={sourceRef} variant='paragraph'>
               {indicator?.sourceEn}
@@ -357,9 +373,9 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             ))}
           </YearSelector>
         )}
-        <Typography variant="body2" color="text.secondary">
+{/*         <Typography variant="body2" color="text.secondary">
           {indicator?.indicatorNameFi}
-        </Typography>
+        </Typography> */}
       </Box>
     </CardWrapper>
   );
