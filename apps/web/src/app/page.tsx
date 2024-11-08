@@ -26,7 +26,7 @@ const SplitMap = dynamic(
 // Most northern point: ~62.65 (Heinävesi)
 const MAP_BOUNDS: LatLngBoundsExpression = [
   [61.10, 25.70], // Southwest corner
-  [62.70, 29.75]  // Northeast corner
+  [62.60, 29.75]  // Northeast corner
 ];
 
 export default function Home() {

@@ -11,6 +11,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
 import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
+import { Indicator } from '@repo/ui/types/indicators';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -114,13 +115,50 @@ const ContentDrawer = styled.div(({ theme }) => `
   }
 `);
 
+const GroupTitle = styled(Typography)(({ theme }) => `
+  color: ${theme.palette.text.secondary};
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: ${theme.spacing(1)};
+`);
+
+const DrawerContent = styled(Box)(({ theme }) => `
+  display: flex;
+  flex-direction: column;
+  padding: ${theme.spacing(3, 2)};
+  gap: ${theme.spacing(2)};
+`);
+
+interface GroupedIndicators {
+  [key: string]: {
+    group: string;
+    groupFI: string;
+    indicators: Indicator[];
+  };
+}
+
+
+
+
+interface MenuItem {
+  text: string;
+  icon: React.ReactNode;
+  id: string;
+}
+
 export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { indicators, error } = useData();
 
-  const menuItems = [
-    { text: 'Welcome', icon: <HomeIcon />, id: 'welcome' },
+  const menuItems: MenuItem[] = [
+    { 
+      text: 'Welcome', 
+      icon: <HomeIcon />, 
+      id: 'welcome' 
+    },
     { 
       text: 'Green', 
       icon: (
@@ -183,6 +221,22 @@ export function SideNav() {
     },
   ];
 
+  // Group indicators by their group property
+  const groupedIndicators = indicators?.reduce<GroupedIndicators>((acc, indicator) => {
+    if (!indicator.group) return acc;
+    
+    if (!acc[indicator.group]) {
+      acc[indicator.group] = {
+        group: indicator.group,
+        groupFI: indicator.groupFI,
+        indicators: []
+      };
+    }
+    
+    acc[indicator.group].indicators.push(indicator);
+    return acc;
+  }, {});
+
   const handleItemClick = (itemId: string) => {
     if (selectedItem === itemId) {
       setDrawerOpen(!drawerOpen);
@@ -194,32 +248,29 @@ export function SideNav() {
 
   const renderDrawerContent = () => {
     switch (selectedItem) {
-      case 'welcome':
-        return (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Welcome to Innocap
-            </Typography>
-            <Typography variant="body1">
-              Explore sustainability and digital innovation indicators across municipalities in South Savo region.
-            </Typography>
-          </Box>
-        );
-
       case 'green':
         return (
-          <Box sx={{ p: 3 }}>
+          <DrawerContent>
             {error ? (
               <Typography color="error">Error loading indicators</Typography>
             ) : (
-              indicators?.map(indicator => (
-                <IndicatorCard
-                  key={indicator.id}
-                  indicator={indicator}
-                />
-              ))
+                Object.values(groupedIndicators || {}).map(({ group, indicators }) => (
+                  <span key={group}>
+                    <GroupTitle variant='h2'>
+                      {group}
+                    </GroupTitle>
+                    <Box key={group}>
+                      {indicators.map(indicator => (
+                    <IndicatorCard
+                      key={indicator.id}
+                      indicator={indicator}
+                    />
+                      ))}
+                    </Box>
+                  </span>
+                ))
             )}
-          </Box>
+          </DrawerContent>
         );
 
       case 'digital':

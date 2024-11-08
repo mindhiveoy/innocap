@@ -1,6 +1,9 @@
 import styled from '@emotion/styled';
-import { Typography, Box, IconButton } from '@mui/material';
+import { Typography, Box, IconButton, Tooltip } from '@mui/material';
 import DirectionsBus from '@mui/icons-material/DirectionsBus';
+import TerrainIcon from '@mui/icons-material/Terrain';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import MapsHomeWork from '@mui/icons-material/MapsHomeWork';
 import Home from '@mui/icons-material/Home';
 import SolarPower from '@mui/icons-material/SolarPower';
@@ -10,6 +13,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import type { Indicator } from '@repo/ui/types/indicators';
+import { useRef, useState, useEffect } from 'react';
 
 interface IndicatorCardProps {
   indicator: Indicator;
@@ -19,7 +23,7 @@ const CardWrapper = styled.div(({ theme }) => `
   background: ${theme.palette.background.paper};
   border: 1px solid ${theme.palette.divider};
   border-radius: ${theme.shape.borderRadius}px;
-  padding: ${theme.spacing(2)};
+  padding: ${theme.spacing(3)};
   margin-bottom: ${theme.spacing(2)};
   transition: all 0.2s ease-in-out;
 
@@ -28,6 +32,7 @@ const CardWrapper = styled.div(({ theme }) => `
   }
   &.selected {
     border: 2px solid ${theme.palette.secondary.main};
+    box-shadow: rgba(230, 137, 57, 0.24) 0px 3px 8px;
   }
 `);
 
@@ -40,17 +45,91 @@ const CardHeader = styled.div(({ theme }) => `
 
 const TitleSection = styled.div(({ theme }) => `
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  flex: 1;
+  color: ${theme.palette.primary.darkest};
+`);
+
+const TitleRow = styled.div(({ theme }) => `
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: ${theme.spacing(1)};
 `);
 
 const IconWrapper = styled.div`
   display: flex;
+  flex: 1;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   width: 32px;
   height: 32px;
 `;
+
+const PinButton = styled(IconButton)(({ theme }) => `
+  display: flex;
+  justify-self: flex-start;
+  justify-content: flex-start;
+  align-items: center;
+  gap: ${theme.spacing(1)};
+  padding: 0;
+  border-radius: ${theme.shape.borderRadius}px;
+  margin-left: -1;
+  width: 100%;
+  
+  &:hover {
+    background-color: transparent;
+  }
+  
+  .pin-icon {
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .MuiSvgIcon-root[data-testid="PushPinOutlinedIcon"] {
+    margin-left: -5px !important;
+    margin-right: 5px !important;
+  }
+  
+  &.pinned .pin-icon {
+    transform: rotate(-45deg);
+    color: ${theme.palette.primary.main};
+
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    &:hover {
+      background-color: transparent;
+    }
+
+    .MuiTypography-root {
+      color: ${theme.palette.text.disabled};
+    }
+  }
+`);
+
+const PinText = styled(Typography)(({ theme }) => `
+  font-size: 0.75rem;
+  color: ${theme.palette.primary.darkest};
+  margin: ${theme.spacing(2, 0, 3, 0)};
+`);
+
+const SourceTextWrapper = styled.div`
+  width: 100%;
+`;
+
+const SourceText = styled(Typography)(({ theme }) => `
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  width: 100%;
+  color: ${theme.palette.text.secondary};
+`);
 
 const iconComponents = {
   'DirectionsBus': DirectionsBus,
@@ -87,45 +166,124 @@ const GradientIcon = ({ iconName }: { iconName: string }) => {
   );
 };
 
+const indicatorTypeIcons = {
+  'Terrain': TerrainIcon,
+  'LocationOn': LocationOnIcon,
+  'BarChart': BarChartIcon,
+} as const;
+
+type IndicatorIconName = keyof typeof indicatorTypeIcons;
+
+const IconContainer = styled.div(({ theme }) => `
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing(1)};
+  color: ${theme.palette.primary.darkest};
+
+  .MuiSvgIcon-root[data-testid="LocationOnIcon"] {
+    margin-left: -4px;
+    margin-right: 4px;
+  }
+`);
+
+const IndicatorTypeIcon = ({ iconName }: { iconName: string }) => {
+  const IconComponent = indicatorTypeIcons[iconName as IndicatorIconName] || TerrainIcon;
+  
+  return (
+    <IconContainer>
+      <IconComponent />
+    </IconContainer>
+  );
+};
+
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
-  const { selectedIndicator, setSelectedIndicator, isPinned, togglePin } = useIndicator();
-  const isSelected = selectedIndicator?.id === indicator?.id;
+  const { selectedIndicator, comparisonIndicator, setSelectedIndicator, isPinned, togglePin } = useIndicator();
+  const sourceRef = useRef<HTMLDivElement>(null);
+  const [isTextTruncated, setIsTextTruncated] = useState(false);
+  
+  const isSelected = selectedIndicator?.id === indicator?.id || comparisonIndicator?.id === indicator?.id;
   const pinned = isPinned(indicator);
+  const isPinningDisabled = !pinned && selectedIndicator && comparisonIndicator;
 
   const handleClick = () => {
-    setSelectedIndicator(isSelected ? null : indicator);
+    if (!pinned) {
+      setSelectedIndicator(isSelected ? null : indicator);
+    }
   };
 
   const handlePinClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking pin
-    togglePin(indicator);
+    e.stopPropagation();
+    if (!isPinningDisabled) {
+      togglePin(indicator);
+    }
   };
+
+  useEffect(() => {
+    const element = sourceRef.current;
+    if (element) {
+      setIsTextTruncated(element.scrollWidth > element.clientWidth);
+    }
+  }, [indicator?.sourceEn]);
 
   if (!indicator) return null;
 
   return (
-    <CardWrapper onClick={handleClick} className={isSelected ? 'selected' : ''}>
+    <CardWrapper 
+      onClick={handleClick} 
+      className={isSelected ? 'selected' : ''}
+    >
       <CardHeader>
         <TitleSection>
-          <Typography variant="h2">
-            {indicator?.indicatorNameEn}
-          </Typography>
-          <IconWrapper>
-            <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
-          </IconWrapper>
+          <Box display='flex' alignItems='center' gap={1}>
+            <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
+            <Typography variant='paragraph' color='text.secondary'>Green transfer</Typography>
+            <IconWrapper>
+              <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
+            </IconWrapper>
+          </Box>
+          <TitleRow>
+            <Typography variant="label">
+              {indicator?.indicatorNameEn}
+            </Typography>
+          </TitleRow>
         </TitleSection>
-        <IconButton 
+      </CardHeader>
+      {isTextTruncated ? (
+        <Tooltip title={indicator?.sourceEn || ''} placement="right">
+          <SourceTextWrapper>
+            <SourceText ref={sourceRef} variant='paragraph'>
+              {indicator?.sourceEn}
+            </SourceText>
+          </SourceTextWrapper>
+        </Tooltip>
+      ) : (
+        <SourceTextWrapper>
+          <SourceText ref={sourceRef} variant='paragraph'>
+            {indicator?.sourceEn}
+          </SourceText>
+        </SourceTextWrapper>
+      )}
+      <Box>
+        <PinButton
+          disableRipple
           onClick={handlePinClick}
-          sx={{ 
-            color: pinned ? 'primary.main' : 'text.secondary',
-            transform: pinned ? 'rotate(-45deg)' : 'none',
-            transition: 'transform 0.2s ease-in-out'
+          className={`${pinned ? 'pinned' : ''} ${isPinningDisabled ? 'disabled' : ''}`}
+          sx={{
+            color: pinned ? 'primary.main' : 'primary.darkest',
           }}
         >
-          {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
-        </IconButton>
-      </CardHeader>
-      <Box>
+          <span className="pin-icon">
+            {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+          </span>
+          <PinText>
+            {pinned 
+              ? 'Unpin from map' 
+              : isPinningDisabled 
+                ? 'Maximum pins reached' 
+                : 'Pin to map'
+            }
+          </PinText>
+        </PinButton>
         <Typography variant="body2" color="text.secondary">
           {indicator?.indicatorNameFi}
         </Typography>

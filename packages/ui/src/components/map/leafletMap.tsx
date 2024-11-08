@@ -10,7 +10,7 @@ import { calculateOpacity, Unit } from '../../types/units';
 import { MunicipalityTooltip } from './MunicipalityTooltip';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './leafletMap.css';
 import styled from '@emotion/styled';
@@ -121,18 +121,17 @@ export function LeafletMap({
   selectedIndicator,
   onMapMount,
 }: LeafletMapProps) {
-
   const filteredMarkerData = useMemo(() => {
     if (!selectedIndicator || !markerData) return [];
     return markerData.filter(marker => marker.id === selectedIndicator.id);
   }, [selectedIndicator?.id, markerData]);
 
-  const getFeatureData = (feature: any) => {
+  const getFeatureData = useCallback((feature: any) => {
     if (!selectedIndicator || !municipalityData) return null;
     return municipalityData
       .filter(d => d.id === selectedIndicator.id)
       .find(d => d.municipalityCode === feature.properties.kunta);
-  };
+  }, [selectedIndicator, municipalityData]);
 
   const geoJsonStyle = useMemo(() => {
     return (feature: any) => {
@@ -144,19 +143,59 @@ export function LeafletMap({
           .map(d => d.value);
 
         return {
-          ...geoJSONStyle,
           fillColor: selectedIndicator.color,
+          weight: 1,
+          opacity: 0.7,
+          color: '#444',
           fillOpacity: calculateOpacity(
             featureData.value,
             allValues,
             featureData.unit as Unit
           ),
+          pane: 'overlayPane',
+          className: 'geojson-feature'
         };
       }
 
-      return geoJSONStyle;
+      return {
+        ...geoJSONStyle,
+        pane: 'overlayPane',
+        className: 'geojson-feature'
+      };
     };
-  }, [selectedIndicator, municipalityData]);
+  }, [selectedIndicator, municipalityData, getFeatureData]);
+
+  const handleMouseover = useCallback((e: L.LeafletEvent, feature: any, tooltip: L.Tooltip, currentStyle: any) => {
+    const layer = e.target;
+    layer.setStyle({
+      ...currentStyle,
+      weight: 2,
+      color: '#666',
+    });
+    layer.bringToFront();
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    const tooltipData = getFeatureData(feature);
+
+    root.render(
+      <ThemeProvider theme={theme}>
+        <MunicipalityTooltip
+          name={feature.properties.name}
+          data={tooltipData || undefined}
+          color={selectedIndicator?.color}
+          opacity={currentStyle.fillOpacity}
+        />
+      </ThemeProvider>
+    );
+    tooltip.setContent(container);
+  }, [selectedIndicator?.color, getFeatureData]);
+
+  const handleMouseout = useCallback((e: L.LeafletEvent, feature: any) => {
+    const layer = e.target;
+    layer.setStyle(geoJsonStyle(feature));
+  }, [geoJsonStyle]);
 
   const onEachFeatureCallback = useMemo(() => {
     return (feature: any, layer: L.Layer) => {
@@ -174,41 +213,14 @@ export function LeafletMap({
           layer.bindTooltip(tooltip);
 
           layer.on({
-            mouseover: (e) => {
-              const layer = e.target;
-              const currentStyle = geoJsonStyle(feature);
-              layer.setStyle({
-                ...currentStyle,
-                weight: 2,
-                color: '#666',
-              });
-              layer.bringToFront();
-
-              const container = document.createElement('div');
-              const root = createRoot(container);
-              root.render(
-                <ThemeProvider theme={theme}>
-                  <MunicipalityTooltip
-                    name={feature.properties.name}
-                    data={municipalityData}
-                    color={selectedIndicator?.color}
-                    opacity={currentStyle.fillOpacity}
-                  />
-                </ThemeProvider>
-              );
-              tooltip.setContent(container);
-            },
-            mouseout: (e) => {
-              const layer = e.target;
-              layer.setStyle(geoJsonStyle(feature));
-            }
+            mouseover: (e) => handleMouseover(e, feature, tooltip, geoJsonStyle(feature)),
+            mouseout: (e) => handleMouseout(e, feature)
           });
         }
       }
     };
-  }, [selectedIndicator, municipalityData, geoJsonStyle]);
+  }, [selectedIndicator?.indicatorType, getFeatureData, handleMouseover, handleMouseout, geoJsonStyle]);
 
-  // Render markers
   const markerElements = useMemo(() => {
     if (selectedIndicator?.indicatorType !== IndicatorType.Marker || !filteredMarkerData.length) {
       return null;
@@ -224,13 +236,13 @@ export function LeafletMap({
             <Popup>
               <PopupContainer>
                 <PopupContent>
-                  <PopupDescription variant='label'> {marker.descriptionEn}</PopupDescription>
+                  <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>
                   {marker.info && <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
-                  {marker.sourceUrl &&
-                    <PopupLink href={marker.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"> Source <OpenInNewIcon fontSize='small' />
-                    </PopupLink>}
+                  {marker.sourceUrl && (
+                    <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
+                      Source <OpenInNewIcon fontSize='small' />
+                    </PopupLink>
+                  )}
                 </PopupContent>
               </PopupContainer>
             </Popup>
@@ -240,20 +252,23 @@ export function LeafletMap({
     );
   }, [filteredMarkerData, selectedIndicator?.indicatorType]);
 
+  // Memoize map container props
+  const mapContainerProps = useMemo(() => ({
+    center,
+    zoom,
+    style: { height: "100%" },
+    maxBounds,
+    minZoom,
+    maxZoom,
+    inertia: false,
+    zoomControl: true,
+    zoomSnap: 0.5,
+    zoomDelta: 1,
+  }), [center, zoom, maxBounds, minZoom, maxZoom]);
 
   return (
     <MapContainer
-      center={center}
-      zoom={zoom}
-      style={{ height: "100%" }}
-      maxBounds={maxBounds}
-      minZoom={minZoom}
-      maxZoom={maxZoom}
-      maxBoundsViscosity={1.0}
-      zoomControl={true}
-      zoomSnap={0.25}
-      zoomDelta={1}
-      attributionControl={false}
+      {...mapContainerProps}
       ref={map => {
         if (map && onMapMount) {
           onMapMount(map);

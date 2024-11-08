@@ -15,11 +15,14 @@ export interface Indicator {
   indicatorNameFi: string;
   category: string;
   indicatorType: IndicatorType;
+  indicatorTypeIcon: string;
   color: string;
-  sourceUrl: string;
-  sourceName: string;
+  sourceEn: string;
+  sourceFi: string;
   showOnMap: string;
   iconName: string;
+  group: string;
+  groupFI: string;
 }
 
 export enum IndicatorType {
