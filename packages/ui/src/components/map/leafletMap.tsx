@@ -122,60 +122,55 @@ function DraggablePopupContent({
   data: BarChartData;
   index: number;
   popupRefs: React.MutableRefObject<(L.Popup | null)[]>;
-  dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null }[]>;
+  dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
 }) {
   const map = useMap();
+  const dragAreaRef = useRef<HTMLDivElement>(null);
 
   const handlePopupMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent text selection
     const popup = popupRefs.current[index];
     if (!popup) return;
 
-    const point = map.mouseEventToContainerPoint({
-      clientX: e.clientX,
-      clientY: e.clientY
-    } as MouseEvent);
-
     dragRefs.current[index] = {
       isDragging: true,
-      startPos: point
+      startPos: map.mouseEventToContainerPoint({
+        clientX: e.clientX,
+        clientY: e.clientY
+      } as MouseEvent),
+      initialLatLng: popup.getLatLng() ?? null
     };
 
+    // Add dragging class to the entire popup
     popup.getElement()?.classList.add('is-dragging');
     map.dragging.disable();
+
+    // Capture mouse events
+    document.addEventListener('mousemove', handlePopupMouseMove);
+    document.addEventListener('mouseup', handlePopupMouseUp);
   }, [map, index, popupRefs, dragRefs]);
 
-  const handlePopupMouseMove = useCallback((e: React.MouseEvent) => {
+  const handlePopupMouseMove = useCallback((e: MouseEvent) => {
+    e.preventDefault();
     const popup = popupRefs.current[index];
     const dragRef = dragRefs.current[index];
-    if (!popup || !dragRef?.isDragging) return;
+    if (!popup || !dragRef?.isDragging || !dragRef.startPos || !dragRef.initialLatLng) return;
 
     const currentPoint = map.mouseEventToContainerPoint({
       clientX: e.clientX,
       clientY: e.clientY
     } as MouseEvent);
 
-    if (!dragRef.startPos) {
-      dragRef.startPos = currentPoint;
-      return;
-    }
-
-    const dx = currentPoint.x - dragRef.startPos.x;
-    const dy = currentPoint.y - dragRef.startPos.y;
-
-    const startLatLng = popup.getLatLng();
-    if (!startLatLng) return;
-
-    const newPoint = map.latLngToContainerPoint(startLatLng);
-    const newLatLng = map.containerPointToLatLng([
-      newPoint.x + dx,
-      newPoint.y + dy
-    ]);
+    const offset = currentPoint.subtract(dragRef.startPos);
+    const initialPoint = map.latLngToContainerPoint(dragRef.initialLatLng);
+    const newPoint = initialPoint.add(offset);
+    const newLatLng = map.containerPointToLatLng(newPoint);
 
     popup.setLatLng(newLatLng);
-    dragRef.startPos = currentPoint;
   }, [map, index, popupRefs, dragRefs]);
 
-  const handlePopupMouseUp = useCallback(() => {
+  const handlePopupMouseUp = useCallback((e: MouseEvent) => {
+    e.preventDefault();
     const popup = popupRefs.current[index];
     if (!popup) return;
 
@@ -186,14 +181,22 @@ function DraggablePopupContent({
 
     popup.getElement()?.classList.remove('is-dragging');
     map.dragging.enable();
+
+    // Remove event listeners
+    document.removeEventListener('mousemove', handlePopupMouseMove);
+    document.removeEventListener('mouseup', handlePopupMouseUp);
   }, [map, index, popupRefs, dragRefs]);
 
   return (
     <div
+      ref={dragAreaRef}
       onMouseDown={handlePopupMouseDown}
-      onMouseMove={handlePopupMouseMove}
-      onMouseUp={handlePopupMouseUp}
-      onMouseLeave={handlePopupMouseUp}
+      style={{
+        cursor: 'move',
+        userSelect: 'none',
+        width: '100%',
+        height: '100%'
+      }}
     >
       <BarChartPopup data={data} />
     </div>
@@ -346,7 +349,7 @@ export function LeafletMap({
 
   // Create refs for popups
   const popupRefs = useRef<(L.Popup | null)[]>([]);
-  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null }[]>([]);
+  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
 
   const barChartElements = useMemo(() => {
     if (selectedIndicator?.indicatorType !== IndicatorType.BarChart || !barChartData) {
@@ -361,7 +364,8 @@ export function LeafletMap({
       popupRefs.current = new Array(filteredBarChartData.length).fill(null);
       dragRefs.current = new Array(filteredBarChartData.length).fill({
         isDragging: false,
-        startPos: null
+        startPos: null,
+        initialLatLng: null
       });
     }
 
