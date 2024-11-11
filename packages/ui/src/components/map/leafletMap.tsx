@@ -1,11 +1,12 @@
 'use client';
 
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup, useMap } from 'react-leaflet';
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
+import { useRef } from 'react';
 import { municipalityBoundaries } from './data/municipality-boundaries';
-import { Indicator, MunicipalityLevelData, MarkerData, IndicatorType } from '@repo/ui/types/indicators';
+import { Indicator, MunicipalityLevelData, MarkerData, IndicatorType, BarChartData } from '@repo/ui/types/indicators';
 import { calculateOpacity, Unit } from '../../types/units';
 import { MunicipalityTooltip } from './MunicipalityTooltip';
 import { ThemeProvider } from '@mui/material/styles';
@@ -16,6 +17,8 @@ import './leafletMap.css';
 import styled from '@emotion/styled';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Typography } from '@mui/material';
+import { BarChartPopup } from './BarChartPopup';
+import { getMunicipalityCenter } from './data/municipality-centers';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -26,6 +29,7 @@ interface LeafletMapProps {
   maxZoom?: number;
   municipalityData?: MunicipalityLevelData[];
   markerData?: MarkerData[];
+  barChartData?: BarChartData[];
   selectedIndicator?: Indicator | null;
   onMapMount?: (map: L.Map) => void;
 }
@@ -109,6 +113,98 @@ const PopupLink = styled.a(({
 
 `);
 
+function DraggablePopupContent({
+  data,
+  index,
+  popupRefs,
+  dragRefs,
+  color,
+}: {
+  data: BarChartData;
+  index: number;
+  popupRefs: React.MutableRefObject<(L.Popup | null)[]>;
+  dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
+  color?: string;
+}) {
+  const map = useMap();
+  const dragAreaRef = useRef<HTMLDivElement>(null);
+
+  const handlePopupMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent text selection
+    const popup = popupRefs.current[index];
+    if (!popup) return;
+
+    dragRefs.current[index] = {
+      isDragging: true,
+      startPos: map.mouseEventToContainerPoint({
+        clientX: e.clientX,
+        clientY: e.clientY
+      } as MouseEvent),
+      initialLatLng: popup.getLatLng() ?? null
+    };
+
+    // Add dragging class to the entire popup
+    popup.getElement()?.classList.add('is-dragging');
+    map.dragging.disable();
+
+    // Capture mouse events
+    document.addEventListener('mousemove', handlePopupMouseMove);
+    document.addEventListener('mouseup', handlePopupMouseUp);
+  }, [map, index, popupRefs, dragRefs]);
+
+  const handlePopupMouseMove = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    const popup = popupRefs.current[index];
+    const dragRef = dragRefs.current[index];
+    if (!popup || !dragRef?.isDragging || !dragRef.startPos || !dragRef.initialLatLng) return;
+
+    const currentPoint = map.mouseEventToContainerPoint({
+      clientX: e.clientX,
+      clientY: e.clientY
+    } as MouseEvent);
+
+    const offset = currentPoint.subtract(dragRef.startPos);
+    const initialPoint = map.latLngToContainerPoint(dragRef.initialLatLng);
+    const newPoint = initialPoint.add(offset);
+    const newLatLng = map.containerPointToLatLng(newPoint);
+
+    popup.setLatLng(newLatLng);
+  }, [map, index, popupRefs, dragRefs]);
+
+  const handlePopupMouseUp = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    const popup = popupRefs.current[index];
+    if (!popup) return;
+
+    if (dragRefs.current[index]) {
+      dragRefs.current[index].isDragging = false;
+      dragRefs.current[index].startPos = null;
+    }
+
+    popup.getElement()?.classList.remove('is-dragging');
+    map.dragging.enable();
+
+    // Remove event listeners
+    document.removeEventListener('mousemove', handlePopupMouseMove);
+    document.removeEventListener('mouseup', handlePopupMouseUp);
+  }, [map, index, popupRefs, dragRefs]);
+
+  return (
+    <div
+      ref={dragAreaRef}
+      onMouseDown={handlePopupMouseDown}
+      style={{
+        cursor: 'move',
+        userSelect: 'none',
+        width: '100%',
+        height: '100%'
+      }}
+    >
+      <BarChartPopup data={data} color={color} />
+    </div>
+  );
+}
+
 export function LeafletMap({
   center,
   zoom,
@@ -118,6 +214,7 @@ export function LeafletMap({
   maxZoom,
   municipalityData = [],
   markerData = [],
+  barChartData = [],
   selectedIndicator,
   onMapMount,
 }: LeafletMapProps) {
@@ -252,6 +349,60 @@ export function LeafletMap({
     );
   }, [filteredMarkerData, selectedIndicator?.indicatorType]);
 
+  // Create refs for popups
+  const popupRefs = useRef<(L.Popup | null)[]>([]);
+  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
+
+  const barChartElements = useMemo(() => {
+    if (selectedIndicator?.indicatorType !== IndicatorType.BarChart || !barChartData) {
+      return null;
+    }
+
+    const filteredBarChartData = barChartData.filter(
+      d => d.id === selectedIndicator.id
+    );
+
+    if (popupRefs.current.length !== filteredBarChartData.length) {
+      popupRefs.current = new Array(filteredBarChartData.length).fill(null);
+      dragRefs.current = new Array(filteredBarChartData.length).fill({
+        isDragging: false,
+        startPos: null,
+        initialLatLng: null
+      });
+    }
+
+    return (
+      <LayerGroup>
+        {filteredBarChartData.map((data, index) => (
+          <Marker
+            key={`${data.id}-${data.municipalityName}-${index}`}
+            position={getMunicipalityCenter(data.municipalityCode)}
+            icon={defaultIcon}
+          >
+            <Popup
+              ref={popup => {
+                popupRefs.current[index] = popup;
+              }}
+              closeButton={true}
+              closeOnClick={false}
+              autoClose={false}
+              className="draggable-popup"
+              autoPan={false}
+            >
+              <DraggablePopupContent
+                data={data}
+                index={index}
+                popupRefs={popupRefs}
+                dragRefs={dragRefs}
+                color={selectedIndicator.color}
+              />
+            </Popup>
+          </Marker>
+        ))}
+      </LayerGroup>
+    );
+  }, [selectedIndicator, barChartData]);
+
   // Memoize map container props
   const mapContainerProps = useMemo(() => ({
     center,
@@ -268,6 +419,7 @@ export function LeafletMap({
 
   return (
     <MapContainer
+      attributionControl={false}
       {...mapContainerProps}
       ref={map => {
         if (map && onMapMount) {
@@ -289,6 +441,7 @@ export function LeafletMap({
         bubblingMouseEvents={false}
       />
       {markerElements}
+      {barChartElements}
       {children}
     </MapContainer>
   );
