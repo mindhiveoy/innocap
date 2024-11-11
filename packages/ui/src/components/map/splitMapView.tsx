@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Box } from '@mui/material';
 import { LeafletMap } from './leafletMap';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
-import { MunicipalityLevelData, MarkerData, Indicator } from '../../types/indicators';
+import { MunicipalityLevelData, MarkerData, Indicator, BarChartData } from '../../types/indicators';
 import styled from '@emotion/styled';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import 'leaflet';
@@ -23,6 +23,7 @@ interface SplitMapViewProps {
   bottomIndicator: Indicator;
   municipalityData: MunicipalityLevelData[];
   markerData: MarkerData[];
+  barChartData: BarChartData[];
   center: LatLngTuple;
   zoom: number;
   maxBounds: LatLngBoundsExpression;
@@ -93,6 +94,7 @@ export function SplitMapView({
   bottomIndicator,
   municipalityData,
   markerData,
+  barChartData,
   center,
   zoom,
   maxBounds
@@ -109,7 +111,8 @@ export function SplitMapView({
     maxZoom: 10,
     municipalityData,
     markerData,
-  }), [center, zoom, maxBounds, municipalityData, markerData]);
+    barChartData,
+  }), [center, zoom, maxBounds, municipalityData, markerData, barChartData]);
 
   const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const clientY = 'touches' in e ? e.touches[0]?.clientY ?? window.innerHeight / 2 : e.clientY;
@@ -199,8 +202,14 @@ export function SplitMapView({
    */
   useEffect(() => {
     if (topMapRef.current && bottomMapRef.current) {
-      (topMapRef.current as any).sync(bottomMapRef.current);
-      (bottomMapRef.current as any).sync(topMapRef.current);
+      (topMapRef.current as any).sync(bottomMapRef.current, {
+        syncCursor: false,
+        syncPopups: false
+      });
+      (bottomMapRef.current as any).sync(topMapRef.current, {
+        syncCursor: false,
+        syncPopups: false
+      });
     }
 
     return () => {
@@ -216,12 +225,20 @@ export function SplitMapView({
    * This prevents rendering issues when resizing map containers.
    */
   useEffect(() => {
-    if (topMapRef.current) {
-      topMapRef.current.invalidateSize();
-    }
-    if (bottomMapRef.current) {
-      bottomMapRef.current.invalidateSize();
-    }
+    const timeout = setTimeout(() => {
+      if (topMapRef.current) {
+        topMapRef.current.invalidateSize();
+        // Close any open popups when resizing
+        topMapRef.current.closePopup();
+      }
+      if (bottomMapRef.current) {
+        bottomMapRef.current.invalidateSize();
+        // Close any open popups when resizing
+        bottomMapRef.current.closePopup();
+      }
+    }, 100); // Small delay to ensure smooth resizing
+
+    return () => clearTimeout(timeout);
   }, [splitPosition]);
 
   return (

@@ -56,6 +56,7 @@ export default function Home() {
             bottomIndicator={comparisonIndicator}
             municipalityData={municipalityData}
             markerData={markerData}
+            barChartData={barChartData}
             center={center}
             zoom={zoom}
             maxBounds={MAP_BOUNDS}
