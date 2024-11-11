@@ -10,6 +10,14 @@ import DragHandleIcon from '@mui/icons-material/DragHandle';
 import 'leaflet';
 import 'leaflet.sync';
 
+// Add this type declaration at the top of the file
+declare module 'leaflet' {
+  interface Map {
+    sync(map: L.Map): this;
+    unsync(map: L.Map): this;
+  }
+}
+
 interface SplitMapViewProps {
   topIndicator: Indicator;
   bottomIndicator: Indicator;
@@ -191,14 +199,14 @@ export function SplitMapView({
    */
   useEffect(() => {
     if (topMapRef.current && bottomMapRef.current) {
-      topMapRef.current.sync(bottomMapRef.current);
-      bottomMapRef.current.sync(topMapRef.current);
+      (topMapRef.current as any).sync(bottomMapRef.current);
+      (bottomMapRef.current as any).sync(topMapRef.current);
     }
 
     return () => {
       if (topMapRef.current && bottomMapRef.current) {
-        topMapRef.current.unsync(bottomMapRef.current);
-        bottomMapRef.current.unsync(topMapRef.current);
+        (topMapRef.current as any).unsync(bottomMapRef.current);
+        (bottomMapRef.current as any).unsync(topMapRef.current);
       }
     };
   }, [topMapRef.current, bottomMapRef.current]);

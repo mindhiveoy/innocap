@@ -239,23 +239,27 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   } = useIndicator();
   const { municipalityData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
-  const [isTextTruncated, setIsTextTruncated] = useState(false);
+  const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
 
+  // Determine if this indicator is currently normally selected for display
   const isSelected = useMemo(() => 
     selectedIndicator?.id === indicator?.id || comparisonIndicator?.id === indicator?.id,
     [selectedIndicator?.id, comparisonIndicator?.id, indicator?.id]
   );
 
+  // Track pinned state for split view comparison
   const pinned = useMemo(() => 
     isPinned(indicator),
     [isPinned, indicator]
   );
 
+  // Prevent pinning more than two indicators
   const isPinningDisabled = useMemo(() => 
     !pinned && selectedIndicator && comparisonIndicator,
     [pinned, selectedIndicator, comparisonIndicator]
   );
 
+  // Get unique years available for this indicator's data
   const years = useMemo(() => {
     if (!indicator) return [];
     const uniqueYears = new Set(
