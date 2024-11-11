@@ -1,5 +1,7 @@
 import styled from '@emotion/styled';
 import { Typography, Box, IconButton, Tooltip, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import Co2 from '@mui/icons-material/Co2';
+import Recycling from '@mui/icons-material/Recycling';
 import DirectionsBus from '@mui/icons-material/DirectionsBus';
 import TerrainIcon from '@mui/icons-material/Terrain';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -139,7 +141,9 @@ const iconComponents = {
   'SolarPower': SolarPower,
   'WaterDrop': WaterDrop,
   'EnergySavingsLeaf': EnergySavingsLeaf,
-  'HomeIcon': Home  // Fallback for HomeIcon
+  'Co2': Co2,
+  'Recycling': Recycling,
+  'HomeIcon': Home,  // Fallback for HomeIcon
 } as const;
 
 type IconName = keyof typeof iconComponents;

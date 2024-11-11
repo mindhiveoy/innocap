@@ -419,6 +419,7 @@ export function LeafletMap({
 
   return (
     <MapContainer
+      attributionControl={false}
       {...mapContainerProps}
       ref={map => {
         if (map && onMapMount) {
