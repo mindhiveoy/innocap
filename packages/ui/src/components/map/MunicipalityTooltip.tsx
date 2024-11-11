@@ -1,5 +1,5 @@
 import { Box, Typography } from '@mui/material';
-import type { IndicatorData } from '@repo/ui/types/indicators';
+import type { IndicatorData, MunicipalityLevelData } from '@repo/ui/types/indicators';
 import styled from '@emotion/styled';
 
 const TooltipContainer = styled.div(({ theme }) => `
@@ -55,12 +55,16 @@ interface MunicipalityTooltipProps {
   opacity?: number;
 }
 
-export function MunicipalityTooltip({ 
-  name, 
-  data, 
+export function MunicipalityTooltip({
+  name,
+  data,
   color = '#ccc',
-  opacity = 0.8 
+  opacity = 0.8
 }: MunicipalityTooltipProps) {
+  const isMunicipalityData = (data: IndicatorData | undefined): data is MunicipalityLevelData => {
+    return data !== undefined && 'value' in data;
+  };
+
   return (
     <TooltipContainer>
       <LeftColumn>
@@ -71,7 +75,7 @@ export function MunicipalityTooltip({
           <Typography variant="label" fontWeight='medium'>
             {name}
           </Typography>
-          {data?.value !== undefined && (
+          {isMunicipalityData(data) && (
             <Typography variant="label" fontWeight='medium'>
               {data.value} {data.unit || ''}
             </Typography>
