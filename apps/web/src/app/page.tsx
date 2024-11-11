@@ -30,7 +30,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 ];
 
 export default function Home() {
-  const { municipalityData, markerData, isLoading } = useData();
+  const { municipalityData, markerData, barChartData, isLoading } = useData();
   const { selectedIndicator, comparisonIndicator, isCompareMode } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
@@ -69,6 +69,7 @@ export default function Home() {
             maxZoom={10}
             municipalityData={municipalityData}
             markerData={markerData}
+            barChartData={barChartData}
             selectedIndicator={selectedIndicator}
           />
         )}

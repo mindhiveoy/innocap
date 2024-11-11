@@ -109,3 +109,50 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
+
+/* Bar chart popup drag styles */
+.draggable-popup .leaflet-popup-content-wrapper {
+  cursor: move;
+}
+
+.draggable-popup {
+  transition: none !important;
+  /* Disable transitions during drag */
+}
+
+/* Add a subtle visual cue for draggable state */
+.draggable-popup .leaflet-popup-content-wrapper:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Draggable popup styles */
+.draggable-popup {
+  transition: transform 0.1s ease-out !important;
+}
+
+.draggable-popup .leaflet-popup-content-wrapper {
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Visual feedback for dragging state */
+.draggable-popup.is-dragging {
+  opacity: 0.9;
+  transform-origin: bottom center;
+  cursor: grabbing !important;
+}
+
+.draggable-popup.is-dragging .leaflet-popup-content-wrapper {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Bring active popup to front */
+.draggable-popup:hover {
+  z-index: 1000 !important;
+}
+
+/* Remove default popup animations */
+.leaflet-fade-anim .leaflet-popup {
+  transition: none;
+}

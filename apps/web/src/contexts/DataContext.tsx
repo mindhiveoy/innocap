@@ -1,12 +1,13 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Indicator, MunicipalityLevelData, MarkerData } from '@repo/ui/types/indicators';
+import { Indicator, MunicipalityLevelData, MarkerData, BarChartData } from '@repo/ui/types/indicators';
 
 interface DataContextType {
   indicators: Indicator[];
   municipalityData: MunicipalityLevelData[];
   markerData: MarkerData[];
+  barChartData: BarChartData[];
   isLoading: boolean;
   error: Error | null;
 }
@@ -17,6 +18,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
   const [municipalityData, setMunicipalityData] = useState<MunicipalityLevelData[]>([]);
   const [markerData, setMarkerData] = useState<MarkerData[]>([]);
+  const [barChartData, setBarChartData] = useState<BarChartData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -31,12 +33,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
 
         const responseData = await response.json();
-   setIndicators(responseData.indicators);
+        setIndicators(responseData.indicators);
         
         const { data } = responseData;
-
         setMunicipalityData(data['Municipality Level Data'] || []);
         setMarkerData(data['Marker'] || []);
+        setBarChartData(data['Bar Chart'] || []);
       } catch (err) {
         console.error('Error in DataProvider:', err);
         setError(err as Error);
@@ -53,6 +55,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       indicators, 
       municipalityData, 
       markerData, 
+      barChartData,
       isLoading, 
       error 
     }}>
