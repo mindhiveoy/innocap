@@ -5,6 +5,7 @@ import { BarChartData } from '../../types/indicators';
 
 interface BarChartPopupProps {
   data: BarChartData;
+  color?: string;
 }
 
 const PopupContainer = styled(Box)(({ theme }) => `
@@ -22,7 +23,7 @@ const ChartContainer = styled(Box)`
   padding: 8px 0;
 `;
 
-export function BarChartPopup({ data }: BarChartPopupProps) {
+export function BarChartPopup({ data, color = '#8884d8' }: BarChartPopupProps) {
   const chartData = data.labels.map((label, index) => ({
     name: label,
     value: data.values[index],
@@ -47,14 +48,14 @@ export function BarChartPopup({ data }: BarChartPopupProps) {
           >
             <XAxis
               dataKey="name"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11 }}
               interval={0}
               angle={-45}
               textAnchor="end"
               height={60}
             />
             <YAxis
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11 }}
               label={{
                 value: data.unit,
                 angle: -90,
@@ -67,7 +68,7 @@ export function BarChartPopup({ data }: BarChartPopupProps) {
             />
             <Bar
               dataKey="value"
-              fill="#8884d8"
+              fill={color}
               radius={[4, 4, 0, 0]}
               maxBarSize={40}
             />

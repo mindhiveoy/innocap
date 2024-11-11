@@ -118,11 +118,13 @@ function DraggablePopupContent({
   index,
   popupRefs,
   dragRefs,
+  color,
 }: {
   data: BarChartData;
   index: number;
   popupRefs: React.MutableRefObject<(L.Popup | null)[]>;
   dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
+  color?: string;
 }) {
   const map = useMap();
   const dragAreaRef = useRef<HTMLDivElement>(null);
@@ -198,7 +200,7 @@ function DraggablePopupContent({
         height: '100%'
       }}
     >
-      <BarChartPopup data={data} />
+      <BarChartPopup data={data} color={color} />
     </div>
   );
 }
@@ -392,6 +394,7 @@ export function LeafletMap({
                 index={index}
                 popupRefs={popupRefs}
                 dragRefs={dragRefs}
+                color={selectedIndicator.color}
               />
             </Popup>
           </Marker>

@@ -24,8 +24,8 @@ const CardWrapper = styled.div(({ theme }) => `
   background: ${theme.palette.background.paper};
   border: 1px solid ${theme.palette.divider};
   border-radius: ${theme.shape.borderRadius}px;
-  padding: ${theme.spacing(3)};
-  margin-bottom: ${theme.spacing(2)};
+  padding: ${theme.spacing(1,2)};
+  margin-bottom: ${theme.spacing(1)};
   transition: all 0.2s ease-in-out;
 
   &:hover {
