@@ -28,49 +28,88 @@ export async function GET() {
   try {
     const doc = await getAuthenticatedDoc();
 
-    // Log all available sheets
-    console.log("Available sheets:", Object.keys(doc.sheetsByTitle));
-
     // Get all required sheets
     const indicatorsSheet = doc.sheetsByTitle['Indicators'];
     const municipalityDataSheet = doc.sheetsByTitle['Municipality Level Data'];
     const markerDataSheet = doc.sheetsByTitle['Marker'];
+    const barChartSheet = doc.sheetsByTitle['Bar Chart'];
 
-    // Modify the error check to be more informative
     if (!indicatorsSheet || !municipalityDataSheet) {
       throw new Error('Required sheets not found');
     }
 
-    // Fetch all data in parallel for sheets that exist
-    const [indicatorRows, municipalityRows] = await Promise.all([
+    // Fetch all data in parallel
+    const [indicatorRows, municipalityRows, barChartRows] = await Promise.all([
       indicatorsSheet.getRows(),
       municipalityDataSheet.getRows(),
+      barChartSheet?.getRows() || Promise.resolve([]),
     ]);
 
-    // Process indicators and municipality data
+    // Process all data
     const indicators = processIndicatorRows(indicatorRows);
     const municipalityData = processMunicipalityRows(municipalityRows);
-
-    // Initialize empty marker data array
     const markerData = markerDataSheet ? await processMarkerRows(await markerDataSheet.getRows()) : [];
+    const barChartData = processBarChartRows(barChartRows);
 
-    // Combine all data with their types
     const data = {
       [IndicatorType.MunicipalityLevel]: municipalityData,
       [IndicatorType.Marker]: markerData,
+      [IndicatorType.BarChart]: barChartData,
     };
 
     return NextResponse.json({ indicators, data });
   } catch (error: any) {
-    console.error('Detailed error in GET:', {
-      message: error.message,
-      availableSheets: error.doc?.sheetsByTitle ? Object.keys(error.doc.sheetsByTitle) : 'No sheets available'
-    });
+    console.error('Error in GET:', error);
     return NextResponse.json(
       { error: 'Failed to fetch data', details: error.message },
       { status: 500 }
     );
   }
+}
+
+function processBarChartRows(rows: any[]) {
+  // Group data by municipality and indicator
+  const groupedData = rows.reduce((acc, row) => {
+    const [
+      id,
+      indicatorNameEn,
+      descriptionEn,
+      descriptionFi,
+      label,
+      labelFi,
+      municipalityName,
+      municipalityCode,
+      year,
+      value,
+      unit
+    ] = row._rawData;
+
+    const key = `${id}-${municipalityCode}-${year}`;
+
+    if (!acc[key]) {
+      acc[key] = {
+        id,
+        indicatorNameEn,
+        descriptionEn,
+        descriptionFi,
+        municipalityName,
+        municipalityCode,
+        year: parseInt(year),
+        unit,
+        labels: [],
+        labelsFi: [],
+        values: [],
+      };
+    }
+
+    acc[key].labels.push(label);
+    acc[key].labelsFi.push(labelFi);
+    acc[key].values.push(parseFloat(value.replace(',', '.')));
+
+    return acc;
+  }, {});
+
+  return Object.values(groupedData);
 }
 
 function processIndicatorRows(rows: any[]) {

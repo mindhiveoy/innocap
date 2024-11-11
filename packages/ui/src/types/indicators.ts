@@ -28,6 +28,7 @@ export interface Indicator {
 export enum IndicatorType {
   MunicipalityLevel = "Municipality Level Data",
   Marker = "Marker",
+  BarChart = "Bar Chart"
 }
 
 export interface BaseIndicatorData {
@@ -61,4 +62,14 @@ export interface MarkerData extends BaseIndicatorData {
   info: string;
 }
 
-export type IndicatorData = MunicipalityLevelData | MarkerData; 
+export interface BarChartData extends BaseIndicatorData {
+  labels: string[];
+  labelsFi: string[];
+  values: number[];
+  municipalityName: string;
+  municipalityCode: string;
+  year: number;
+  unit: string;
+}
+
+export type IndicatorData = MunicipalityLevelData | MarkerData | BarChartData; 

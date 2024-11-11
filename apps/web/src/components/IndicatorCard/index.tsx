@@ -1,5 +1,7 @@
 import styled from '@emotion/styled';
 import { Typography, Box, IconButton, Tooltip, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import Co2 from '@mui/icons-material/Co2';
+import Recycling from '@mui/icons-material/Recycling';
 import DirectionsBus from '@mui/icons-material/DirectionsBus';
 import TerrainIcon from '@mui/icons-material/Terrain';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -24,8 +26,8 @@ const CardWrapper = styled.div(({ theme }) => `
   background: ${theme.palette.background.paper};
   border: 1px solid ${theme.palette.divider};
   border-radius: ${theme.shape.borderRadius}px;
-  padding: ${theme.spacing(3)};
-  margin-bottom: ${theme.spacing(2)};
+  padding: ${theme.spacing(1,2)};
+  margin-bottom: ${theme.spacing(1)};
   transition: all 0.2s ease-in-out;
 
   &:hover {
@@ -139,7 +141,9 @@ const iconComponents = {
   'SolarPower': SolarPower,
   'WaterDrop': WaterDrop,
   'EnergySavingsLeaf': EnergySavingsLeaf,
-  'HomeIcon': Home  // Fallback for HomeIcon
+  'Co2': Co2,
+  'Recycling': Recycling,
+  'HomeIcon': Home,  // Fallback for HomeIcon
 } as const;
 
 type IconName = keyof typeof iconComponents;
