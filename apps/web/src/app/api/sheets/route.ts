@@ -81,11 +81,14 @@ function processIndicatorRows(rows: any[]) {
       indicatorNameFi,
       category,
       indicatorType,
+      indicatorTypeIcon,
       color,
-      sourceUrl,
-      sourceName,
+      sourceEn,
+      sourceFi,
       showOnMap,
-      iconName
+      iconName,
+      group,
+      groupFI
     ] = row._rawData;
 
     return {
@@ -94,11 +97,14 @@ function processIndicatorRows(rows: any[]) {
       indicatorNameFi,
       category,
       indicatorType,
+      indicatorTypeIcon,
       color,
-      sourceUrl,
-      sourceName,
+      sourceEn,
+      sourceFi,
       showOnMap,
-      iconName
+      iconName,
+      group,
+      groupFI
     };
   });
 }

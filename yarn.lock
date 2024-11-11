@@ -2204,6 +2204,7 @@ __metadata:
     "@types/react-dom": "npm:^18.2.19"
     eslint: "npm:^8.57.0"
     leaflet: "npm:^1.9.4"
+    leaflet.sync: "npm:^0.2.4"
     react: "npm:19.0.0-rc-69d4b800-20241021"
     react-leaflet: "npm:5.0.0-rc.1"
     typescript: "npm:^5.3.3"
@@ -7404,6 +7405,13 @@ __metadata:
   dependencies:
     language-subtag-registry: "npm:^0.3.20"
   checksum: 10c0/9ab911213c4bd8bd583c850201c17794e52cb0660d1ab6e32558aadc8324abebf6844e46f92b80a5d600d0fbba7eface2c207bfaf270a1c7fd539e4c3a880bff
+  languageName: node
+  linkType: hard
+
+"leaflet.sync@npm:^0.2.4":
+  version: 0.2.4
+  resolution: "leaflet.sync@npm:0.2.4"
+  checksum: 10c0/8e756f82cd3d826202359149935a6e223ff22c9b90750630de5b9530c056ba33573b062e6c727c1ee25891addc6aca99ead89a63a00708bb2c0cc410c294bcd2
   languageName: node
   linkType: hard
 
