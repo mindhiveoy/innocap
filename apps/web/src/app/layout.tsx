@@ -3,6 +3,7 @@ import { Open_Sans } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import { DataProvider } from '@/contexts/DataContext';
 import { IndicatorProvider } from '@/contexts/IndicatorContext';
+import { ChatBubble } from './components/ChatBubble'
 import 'leaflet/dist/leaflet.css';
 
 const openSans = Open_Sans({
@@ -31,6 +32,7 @@ export default function RootLayout({
             </IndicatorProvider>
           </DataProvider>
         </Providers>
+        <ChatBubble />
       </body>
     </html>
   );
