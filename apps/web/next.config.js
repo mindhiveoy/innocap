@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    turbo: {
+      enabled: true,
+    },
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,
