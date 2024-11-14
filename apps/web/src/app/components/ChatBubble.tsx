@@ -96,11 +96,11 @@ const getChatWindowConfig = (): ChatWindowConfig => ({
   height: CHATBOT_CONFIG.WINDOW.HEIGHT,
   width: CHATBOT_CONFIG.WINDOW.WIDTH,
   fontSize: CHATBOT_CONFIG.WINDOW.FONT_SIZE,
-  starterPrompts: ['Can you summarize the strategies?'],
+  starterPrompts: ['Can you summarize the strategies?', 'How will strategies impact the environment?', 'What are the main drivers for the strategies?'],
   starterPromptFontSize: CHATBOT_CONFIG.WINDOW.STARTER_PROMPT_SIZE,
   clearChatOnReload: false,
   botMessage: {
-    backgroundColor: '#f7f8ff',
+    backgroundColor: theme.palette.primary.light + '1A',
     textColor: '#303235',
     showAvatar: true,
     avatarSrc: CHATBOT_CONFIG.ASSETS.BOT_AVATAR,
@@ -128,7 +128,6 @@ const getChatWindowConfig = (): ChatWindowConfig => ({
     text: 'Powered by',
     company: 'Mindhive',
     companyLink: 'https://mindhive.fi',
-    fontSize: 10,
   },
 })
 
