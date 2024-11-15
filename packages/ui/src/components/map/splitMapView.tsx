@@ -19,8 +19,8 @@ declare module 'leaflet' {
 }
 
 interface SplitMapViewProps {
-  topIndicator: Indicator;
-  bottomIndicator: Indicator;
+  pinnedIndicator: Indicator | null;
+  selectedIndicator: Indicator | null;
   municipalityData: MunicipalityLevelData[];
   markerData: MarkerData[];
   barChartData: BarChartData[];
@@ -90,8 +90,8 @@ const calculateMapAdjustments = (splitPosition: number, isTopMap: boolean, defau
 };
 
 export function SplitMapView({
-  topIndicator,
-  bottomIndicator,
+  pinnedIndicator,
+  selectedIndicator,
   municipalityData,
   markerData,
   barChartData,
@@ -248,7 +248,7 @@ export function SplitMapView({
           {...commonMapProps}
           center={topMapAdjustments.center}
           maxBounds={topMapAdjustments.maxBounds}
-          selectedIndicator={topIndicator}
+          selectedIndicator={pinnedIndicator}
           onMapMount={(map) => {
             topMapRef.current = map;
           }}
@@ -269,7 +269,7 @@ export function SplitMapView({
           {...commonMapProps}
           center={bottomMapAdjustments.center}
           maxBounds={bottomMapAdjustments.maxBounds}
-          selectedIndicator={bottomIndicator}
+          selectedIndicator={selectedIndicator}
           onMapMount={(map) => {
             bottomMapRef.current = map;
           }}

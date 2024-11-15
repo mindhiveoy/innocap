@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Typography, Box, IconButton, Tooltip, ToggleButtonGroup, ToggleButton } from '@mui/material';
+import { Typography, Box, Tooltip, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import Co2 from '@mui/icons-material/Co2';
 import Recycling from '@mui/icons-material/Recycling';
 import DirectionsBus from '@mui/icons-material/DirectionsBus';
@@ -71,16 +71,39 @@ const IconWrapper = styled.div`
   height: 32px;
 `;
 
-const PinButton = styled(IconButton)(({ theme }) => `
+const PinButton = styled.div(({ theme }) => `
   display: flex;
-  justify-self: flex-start;
-  justify-content: flex-start;
+  flex-direction: row;
   align-items: center;
-  gap: ${theme.spacing(1)};
   padding: 0;
   border-radius: ${theme.shape.borderRadius}px;
   margin-left: -1;
   width: 100%;
+  
+  &.pinned .pin-icon {
+    transform: rotate(-45deg);
+    color: ${theme.palette.primary.main};
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    
+    .MuiTypography-root {
+      color: ${theme.palette.text.disabled};
+    }
+  }
+`);
+
+const PinButtonContent = styled.button(({ theme }) => `
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing(1)};
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
   
   &:hover {
     background-color: transparent;
@@ -94,24 +117,9 @@ const PinButton = styled(IconButton)(({ theme }) => `
     margin-left: -5px !important;
     margin-right: 5px !important;
   }
-  
-  &.pinned .pin-icon {
-    transform: rotate(-45deg);
-    color: ${theme.palette.primary.main};
 
-  }
-
-  &.disabled {
-    opacity: 0.5;
+  &:disabled {
     cursor: not-allowed;
-    
-    &:hover {
-      background-color: transparent;
-    }
-
-    .MuiTypography-root {
-      color: ${theme.palette.text.disabled};
-    }
   }
 `);
 
@@ -233,35 +241,28 @@ const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
 
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
   const { 
-    selectedYears, 
-    setSelectedYear,
-    selectedIndicator, 
-    comparisonIndicator,
+    selectedIndicator,
     setSelectedIndicator,
-    isPinned, 
-    togglePin 
+    isPinned,
+    togglePin,
   } = useIndicator();
   const { municipalityData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
 
-  // Determine if this indicator is currently normally selected for display
+  // Remove comparisonIndicator references since we're not using it anymore
   const isSelected = useMemo(() => 
-    selectedIndicator?.id === indicator?.id || comparisonIndicator?.id === indicator?.id,
-    [selectedIndicator?.id, comparisonIndicator?.id, indicator?.id]
+    selectedIndicator?.id === indicator?.id,
+    [selectedIndicator?.id, indicator?.id]
   );
 
-  // Track pinned state for split view comparison
   const pinned = useMemo(() => 
     isPinned(indicator),
     [isPinned, indicator]
   );
 
-  // Prevent pinning more than two indicators
-  const isPinningDisabled = useMemo(() => 
-    !pinned && selectedIndicator && comparisonIndicator,
-    [pinned, selectedIndicator, comparisonIndicator]
-  );
+  // Update the pinning disabled logic
+  const isPinningDisabled = false; // Remove the old logic since we only allow one pin now
 
   // Get unique years available for this indicator's data
   const years = useMemo(() => {
@@ -284,13 +285,11 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   }, [togglePin, indicator]);
 
   const handleYearChange = useCallback((
-    _event: React.MouseEvent<HTMLElement>,
-    newYear: string | null,
+ /*    _event: React.MouseEvent<HTMLElement>,
+    newYear: string | null, */
   ) => {
-    if (newYear !== null && indicator) {
-      setSelectedYear(indicator.id, newYear);
-    }
-  }, [indicator, setSelectedYear]);
+console.log('coming soon')
+  }, []);
 
   useEffect(() => {
     const element = sourceRef.current;
@@ -343,28 +342,29 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
         </SourceTextWrapper>
       )}
       <Box>
-        <PinButton
-          disableRipple
-          onClick={handlePinClick}
-          className={`${pinned ? 'pinned' : ''} ${isPinningDisabled ? 'disabled' : ''}`}
-          sx={{
-            color: pinned ? 'primary.main' : 'primary.darkest',
-          }}
-        >
-          <span className="pin-icon">
-            {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
-          </span>
-          <PinText>
-            {pinned 
-              ? 'Unpin from map' 
-              : isPinningDisabled 
-                ? 'Maximum pins reached' 
-                : 'Pin to map'
-            }
-          </PinText>
+        <PinButton className={`${pinned ? 'pinned' : ''} ${isPinningDisabled ? 'disabled' : ''}`}>
+          <PinButtonContent
+            onClick={handlePinClick}
+            disabled={isPinningDisabled}
+            style={{
+              color: pinned ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-primary-darkest)',
+            }}
+          >
+            <span className="pin-icon">
+              {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
+            </span>
+            <PinText>
+              {pinned 
+                ? 'Unpin from map' 
+                : isPinningDisabled 
+                  ? 'Maximum pins reached' 
+                  : 'Pin to map'
+              }
+            </PinText>
+          </PinButtonContent>
         </PinButton>
           <YearSelector
-            value={selectedYears[indicator.id] || 'all'}
+            value={'all'}
             exclusive
             onChange={handleYearChange}
             aria-label="Select year"

@@ -1,115 +1,76 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 import type { Indicator } from '@repo/ui/types/indicators';
 
 export interface IndicatorContextType {
   selectedIndicator: Indicator | null;
-  comparisonIndicator: Indicator | null;
+  pinnedIndicator: Indicator | null;
   isCompareMode: boolean;
   setSelectedIndicator: (indicator: Indicator | null) => void;
-  setComparisonIndicator: (indicator: Indicator | null) => void;
-  toggleCompareMode: () => void;
+  setPinnedIndicator: (indicator: Indicator | null) => void;
+  setIsCompareMode: (isCompare: boolean) => void;
   isPinned: (indicator: Indicator) => boolean;
   togglePin: (indicator: Indicator) => void;
-  selectedYears: Record<string, string>;
-  setSelectedYear: (indicatorId: string, year: string) => void;
 }
 
 const IndicatorContext = createContext<IndicatorContextType | undefined>(undefined);
 
 export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
-  const [comparisonIndicator, setComparisonIndicator] = useState<Indicator | null>(null);
-  const [isCompareMode, setIsCompareMode] = useState(false);
-  const [selectedYears, setSelectedYears] = useState<Record<string, string>>({});
-  const [pinnedIndicators, setPinnedIndicators] = useState<Set<string>>(new Set());
+  const [pinnedIndicator, setPinnedIndicator] = useState<Indicator | null>(null);
+  const [isCompareMode, setIsCompareMode] = useState<boolean>(false);
 
-  const isPinned = (indicator: Indicator) => {
-    return pinnedIndicators.has(indicator.id);
-  };
+  const isPinned = useCallback((indicator: Indicator) => {
+    return pinnedIndicator?.id === indicator.id;
+  }, [pinnedIndicator]);
 
-  const togglePin = (indicator: Indicator) => {
-    setPinnedIndicators(prev => {
-      const newPinned = new Set(prev);
-      
-      if (newPinned.has(indicator.id)) {
-        // Unpin: Remove from pinned set and comparison if needed
-        newPinned.delete(indicator.id);
-        if (comparisonIndicator?.id === indicator.id) {
-          setComparisonIndicator(null);
-        }
-        if (selectedIndicator?.id === indicator.id) {
-          setSelectedIndicator(null);
-        }
+  const togglePin = useCallback((indicator: Indicator) => {
+    console.log("🚀 ~ togglePin ~ indicator:", indicator)
+    setPinnedIndicator(current => {
+      console.log("🚀 ~ togglePin ~ current:", current)
+      console.log('selectedIndicator ===> ', selectedIndicator)
+
+      if (indicator.id === selectedIndicator?.id) {
+        setSelectedIndicator(null);
+      }
+
+      // If we're unpinning (current indicator is already pinned)
+      if (current?.id === indicator.id) {
+        // When unpinning, set the pinned indicator as the selected one
+        setSelectedIndicator(current);
         setIsCompareMode(false);
+        return null;
+      }
+      
+      // If we're pinning a new indicator
+      if (selectedIndicator?.id === indicator.id) {
+        // If the indicator being pinned is the currently selected one,
+        // keep it as selected for the bottom map
+        setIsCompareMode(true);
+        return indicator;
       } else {
-        // Pin: Add to pinned set
-        newPinned.add(indicator.id);
-        
-        // Clear any existing selection
-        if (selectedIndicator?.id === indicator.id) {
-          // If pinning the currently selected indicator, move it to primary position
-          setSelectedIndicator(indicator);
-          setComparisonIndicator(null);
-        } else if (!selectedIndicator) {
-          // If nothing selected, set as primary
-          setSelectedIndicator(indicator);
-        } else {
-          // If something else selected, set as comparison
-          setComparisonIndicator(indicator);
-          setIsCompareMode(true);
-        }
+        // If we're pinning a different indicator than the selected one,
+        // maintain the current selection for comparison
+        setIsCompareMode(true);
+        return indicator;
       }
-      return newPinned;
     });
-  };
+  }, [selectedIndicator]);
 
-  const handleSetSelectedIndicator = (indicator: Indicator | null) => {
-    // Only allow selection of unpinned indicators
-    if (!indicator || !isPinned(indicator)) {
-      setSelectedIndicator(indicator);
-      if (indicator) {
-        setSelectedYears(prev => ({
-          ...prev,
-          [indicator.id]: 'all'
-        }));
-      }
-    }
-  };
-
-  const handleSetComparisonIndicator = (indicator: Indicator | null) => {
-    setComparisonIndicator(indicator);
-    if (indicator) {
-      setSelectedYears(prev => ({
-        ...prev,
-        [indicator.id]: 'all'
-      }));
-    }
-  };
-
-  const setSelectedYear = (indicatorId: string, year: string) => {
-    setSelectedYears(prev => ({
-      ...prev,
-      [indicatorId]: year
-    }));
+  const value = {
+    selectedIndicator,
+    pinnedIndicator,
+    isCompareMode,
+    setSelectedIndicator,
+    setPinnedIndicator,
+    setIsCompareMode,
+    isPinned,
+    togglePin
   };
 
   return (
-    <IndicatorContext.Provider 
-      value={{ 
-        selectedIndicator, 
-        comparisonIndicator,
-        isCompareMode,
-        setSelectedIndicator: handleSetSelectedIndicator,
-        setComparisonIndicator: handleSetComparisonIndicator,
-        toggleCompareMode: () => setIsCompareMode(prev => !prev),
-        isPinned,
-        togglePin,
-        selectedYears,
-        setSelectedYear,
-      }}
-    >
+    <IndicatorContext.Provider value={value}>
       {children}
     </IndicatorContext.Provider>
   );

@@ -31,12 +31,11 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 
 export default function Home() {
   const { municipalityData, markerData, barChartData, isLoading } = useData();
-  const { selectedIndicator, comparisonIndicator, isCompareMode } = useIndicator();
+  const { selectedIndicator, pinnedIndicator, isCompareMode } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
 
-  // Only show split view when we have both indicators and compare mode is active
-  const showSplitView = isCompareMode && selectedIndicator && comparisonIndicator;
+  const showSplitView = isCompareMode && pinnedIndicator;
 
   return (
     <Box sx={{ 
@@ -52,8 +51,8 @@ export default function Home() {
         
         {showSplitView ? (
           <SplitMap
-            topIndicator={selectedIndicator}
-            bottomIndicator={comparisonIndicator}
+            pinnedIndicator={pinnedIndicator}
+            selectedIndicator={selectedIndicator || null}
             municipalityData={municipalityData}
             markerData={markerData}
             barChartData={barChartData}
