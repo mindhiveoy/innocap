@@ -19,6 +19,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Typography } from '@mui/material';
 import { BarChartPopup } from './BarChartPopup';
 import { getMunicipalityCenter } from './data/municipality-centers';
+import PushPinIcon from '@mui/icons-material/PushPin';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -32,6 +33,7 @@ interface LeafletMapProps {
   barChartData?: BarChartData[];
   selectedIndicator?: Indicator | null;
   onMapMount?: (map: L.Map) => void;
+  isPinned?: boolean;
 }
 
 const geoJSONStyle = {
@@ -125,6 +127,16 @@ const IndicatorOverlay = styled.div(({ theme }) => `
   pointer-events: none;
   max-width: 80%;
   text-align: center;
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing(1)};
+  
+  .pin-icon {
+    position: relative;
+    top: 3px;
+    transform: rotate(-45deg);
+    color: ${theme.palette.primary.main};
+  }
   
   @media (max-width: 600px) {
     font-size: 12px;
@@ -236,6 +248,7 @@ export function LeafletMap({
   barChartData = [],
   selectedIndicator,
   onMapMount,
+  isPinned = false,
 }: LeafletMapProps) {
   const filteredMarkerData = useMemo(() => {
     if (!selectedIndicator || !markerData) return [];
@@ -428,6 +441,7 @@ export function LeafletMap({
     zoom,
     style: { height: "100%" },
     maxBounds,
+    maxBoundsViscosity: 1,
     minZoom,
     maxZoom,
     inertia: false,
@@ -440,6 +454,11 @@ export function LeafletMap({
     <>
       {selectedIndicator && (
         <IndicatorOverlay>
+          {isPinned && (
+            <span className="pin-icon">
+              <PushPinIcon fontSize="small" />
+            </span>
+          )}
           <Typography variant='label'>{selectedIndicator.indicatorNameEn}</Typography>
         </IndicatorOverlay>
       )}

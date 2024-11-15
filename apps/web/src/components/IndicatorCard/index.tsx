@@ -81,6 +81,8 @@ const PinButton = styled.div(({ theme }) => `
   width: 100%;
   
   &.pinned .pin-icon {
+    position: relative;
+    top: -1px;
     transform: rotate(-45deg);
     color: ${theme.palette.primary.main};
   }

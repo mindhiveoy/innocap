@@ -26,19 +26,11 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   }, [pinnedIndicator]);
 
   const togglePin = useCallback((indicator: Indicator) => {
-    console.log("🚀 ~ togglePin ~ indicator:", indicator)
     setPinnedIndicator(current => {
-      console.log("🚀 ~ togglePin ~ current:", current)
-      console.log('selectedIndicator ===> ', selectedIndicator)
-
-      if (indicator.id === selectedIndicator?.id) {
-        setSelectedIndicator(null);
-      }
-
-      // If we're unpinning (current indicator is already pinned)
+      // Unpinning (current indicator is already pinned)
       if (current?.id === indicator.id) {
-        // When unpinning, set the pinned indicator as the selected one
-        setSelectedIndicator(current);
+        // When unpinning, keep the currently selected indicator (if any)
+        // Don't change the selected indicator, just remove the pin
         setIsCompareMode(false);
         return null;
       }
@@ -46,7 +38,8 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
       // If we're pinning a new indicator
       if (selectedIndicator?.id === indicator.id) {
         // If the indicator being pinned is the currently selected one,
-        // keep it as selected for the bottom map
+        // clear the selection since it's moving to the top
+        setSelectedIndicator(null);
         setIsCompareMode(true);
         return indicator;
       } else {

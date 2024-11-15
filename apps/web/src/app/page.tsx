@@ -52,7 +52,7 @@ export default function Home() {
         {showSplitView ? (
           <SplitMap
             pinnedIndicator={pinnedIndicator}
-            selectedIndicator={selectedIndicator || null}
+            selectedIndicator={selectedIndicator}
             municipalityData={municipalityData}
             markerData={markerData}
             barChartData={barChartData}
@@ -71,6 +71,7 @@ export default function Home() {
             markerData={markerData}
             barChartData={barChartData}
             selectedIndicator={selectedIndicator}
+            isPinned={selectedIndicator?.id === pinnedIndicator?.id}
           />
         )}
       </Box>
