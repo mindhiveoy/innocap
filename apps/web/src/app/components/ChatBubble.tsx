@@ -58,6 +58,7 @@ interface FlowiseConfig {
       backgroundColor?: string
       size?: string
       bottom?: number
+      dragAndDrop?: boolean
     }
     chatWindow?: ChatWindowConfig
   }
@@ -185,7 +186,8 @@ export const ChatBubble = () => {
             button: {
               backgroundColor: theme.palette.primary.light,
               size: 'medium',
-              bottom: isMobile ? 70 : 20
+              bottom: isMobile ? 70 : 20,
+              dragAndDrop: true,
             },
             chatWindow: getChatWindowConfig(),
           }

@@ -113,6 +113,25 @@ const PopupLink = styled.a(({
 
 `);
 
+const IndicatorOverlay = styled.div(({ theme }) => `
+  position: absolute;
+  top: 20px;
+  right: 2%;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: ${theme.spacing(1)} ${theme.spacing(2)};
+  border-radius: ${theme.shape.borderRadius}px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+  pointer-events: none;
+  max-width: 80%;
+  text-align: center;
+  
+  @media (max-width: 600px) {
+    font-size: 12px;
+    padding: ${theme.spacing(0.5)} ${theme.spacing(1)};
+  }
+`);
+
 function DraggablePopupContent({
   data,
   index,
@@ -418,31 +437,38 @@ export function LeafletMap({
   }), [center, zoom, maxBounds, minZoom, maxZoom]);
 
   return (
-    <MapContainer
-      attributionControl={false}
-      {...mapContainerProps}
-      ref={map => {
-        if (map && onMapMount) {
-          onMapMount(map);
-        }
-      }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-        className="grayscale-tiles"
-      />
-      <GeoJSON
-        key={`geojson-${selectedIndicator?.id || 'base'}`}
-        data={municipalityBoundaries}
-        style={geoJsonStyle}
-        onEachFeature={onEachFeatureCallback}
-        interactive={selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel}
-        bubblingMouseEvents={false}
-      />
-      {markerElements}
-      {barChartElements}
-      {children}
-    </MapContainer>
+    <>
+      {selectedIndicator && (
+        <IndicatorOverlay>
+          <Typography variant='label'>{selectedIndicator.indicatorNameEn}</Typography>
+        </IndicatorOverlay>
+      )}
+      <MapContainer
+        attributionControl={false}
+        {...mapContainerProps}
+        ref={map => {
+          if (map && onMapMount) {
+            onMapMount(map);
+          }
+        }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+          className="grayscale-tiles"
+        />
+        <GeoJSON
+          key={`geojson-${selectedIndicator?.id || 'base'}`}
+          data={municipalityBoundaries}
+          style={geoJsonStyle}
+          onEachFeature={onEachFeatureCallback}
+          interactive={selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel}
+          bubblingMouseEvents={false}
+        />
+        {markerElements}
+        {barChartElements}
+        {children}
+      </MapContainer>
+    </>
   );
 } 
