@@ -32,8 +32,9 @@ interface LeafletMapProps {
   markerData?: MarkerData[];
   barChartData?: BarChartData[];
   selectedIndicator?: Indicator | null;
-  onMapMount?: (map: L.Map) => void;
   isPinned?: boolean;
+  zoomControl?: boolean;
+  onMapMount?: (map: L.Map) => void;
 }
 
 const geoJSONStyle = {
@@ -247,8 +248,9 @@ export function LeafletMap({
   markerData = [],
   barChartData = [],
   selectedIndicator,
-  onMapMount,
   isPinned = false,
+  zoomControl = true,
+  onMapMount,
 }: LeafletMapProps) {
   const filteredMarkerData = useMemo(() => {
     if (!selectedIndicator || !markerData) return [];
@@ -435,7 +437,6 @@ export function LeafletMap({
     );
   }, [selectedIndicator, barChartData]);
 
-  // Memoize map container props
   const mapContainerProps = useMemo(() => ({
     center,
     zoom,
@@ -445,10 +446,10 @@ export function LeafletMap({
     minZoom,
     maxZoom,
     inertia: false,
-    zoomControl: true,
+    zoomControl,
     zoomSnap: 0.5,
     zoomDelta: 1,
-  }), [center, zoom, maxBounds, minZoom, maxZoom]);
+  }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
 
   return (
     <>

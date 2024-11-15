@@ -114,6 +114,16 @@ export function SplitMapView({
     barChartData,
   }), [center, zoom, maxBounds, municipalityData, markerData, barChartData]);
 
+  const topMapProps = useMemo(() => ({
+    ...commonMapProps,
+    zoomControl: true,
+  }), [commonMapProps]);
+
+  const bottomMapProps = useMemo(() => ({
+    ...commonMapProps,
+    zoomControl: false,
+  }), [commonMapProps]);
+
   const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const clientY = 'touches' in e ? e.touches[0]?.clientY ?? window.innerHeight / 2 : e.clientY;
     dragStartRef.current = {
@@ -245,7 +255,7 @@ export function SplitMapView({
     <Box sx={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
       <Box sx={topContainerStyle}>
         <LeafletMap
-          {...commonMapProps}
+          {...topMapProps}
           center={topMapAdjustments.center}
           maxBounds={topMapAdjustments.maxBounds}
           selectedIndicator={pinnedIndicator}
@@ -267,7 +277,7 @@ export function SplitMapView({
 
       <Box sx={bottomContainerStyle}>
         <LeafletMap
-          {...commonMapProps}
+          {...bottomMapProps}
           center={bottomMapAdjustments.center}
           maxBounds={bottomMapAdjustments.maxBounds}
           selectedIndicator={selectedIndicator}

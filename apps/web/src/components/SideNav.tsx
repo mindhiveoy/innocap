@@ -341,34 +341,56 @@ export function SideNav() {
           );
         case 'digital':
           return (
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <>
+              <Typography variant="h2" gutterBottom color="primary.darkest">
                 Digital Indicators
               </Typography>
-              <Typography variant="body1">
+              <Typography variant="lead" gutterBottom>
                 Coming soon: Explore digital transformation indicators across the region.
               </Typography>
-            </Box>
+            </>
           );
         case 'guide':
           return (
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h5" gutterBottom>
+            <>
+              <Typography variant="h2" gutterBottom color="primary.darkest">
                 User Guide
               </Typography>
-              <Typography variant="body1">
-                Learn how to use the platform and understand the indicators.
+              <Typography variant="lead" gutterBottom>
+                Learn how to use the platform and understand the indicators
               </Typography>
-              <Typography variant="body2" sx={{ mt: 2 }}>
+              <Typography variant="paragraph" sx={{ mb: 2 }}>
+                The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.
+              </Typography>
+              <GroupTitle variant='h2'>
+                Basic Navigation
+              </GroupTitle>
+              <Typography variant="paragraph" sx={{ mb: 2 }}>
                 • Click on municipalities to see detailed information
-              </Typography>
-              <Typography variant="body2">
-                • Use the tabs to switch between different indicator categories
-              </Typography>
-              <Typography variant="body2">
+                <br />
+                • Use the side navigation to switch between different indicator categories
+                <br />
                 • Explore the map to understand regional patterns
               </Typography>
-            </Box>
+              <GroupTitle variant='h2'>
+                Working with Indicators
+              </GroupTitle>
+              <Typography variant="paragraph" sx={{ mb: 2 }}>
+                • Select an indicator to view it on the map
+                <br />
+                • Pin an indicator to compare it with another
+                <br />
+                • Use the year selector to view data from different time periods
+              </Typography>
+              <GroupTitle variant='h2'>
+                AI Assistant
+              </GroupTitle>
+              <Typography variant="paragraph">
+                • An AI assistant is available to help answer your questions
+                <br />
+                • Please note that the assistant is in development phase and may have limited knowledge
+              </Typography>
+            </>
           );
         default:
           return null;
