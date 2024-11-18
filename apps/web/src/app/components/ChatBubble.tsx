@@ -97,7 +97,7 @@ const preloadImage = (src: string): Promise<string> => {
   })
 }
 
-// Constants
+// Constants 
 const CHATBOT_CONFIG = {
   FLOW_ID: "5f815f00-6aa4-4d73-801c-5623185319ba",
   API_HOST: "https://bot.mindhive.fi",
