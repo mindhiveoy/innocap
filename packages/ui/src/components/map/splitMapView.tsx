@@ -259,6 +259,7 @@ export function SplitMapView({
           center={topMapAdjustments.center}
           maxBounds={topMapAdjustments.maxBounds}
           selectedIndicator={pinnedIndicator}
+          pinnedIndicator={pinnedIndicator}
           isPinned={true}
           onMapMount={(map) => {
             topMapRef.current = map;
@@ -281,6 +282,7 @@ export function SplitMapView({
           center={bottomMapAdjustments.center}
           maxBounds={bottomMapAdjustments.maxBounds}
           selectedIndicator={selectedIndicator}
+          pinnedIndicator={null}
           isPinned={false}
           onMapMount={(map) => {
             bottomMapRef.current = map;

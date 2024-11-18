@@ -8,6 +8,7 @@ import { useIndicator } from '@/contexts/IndicatorContext';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { IndicatorType } from '@repo/ui/types/indicators';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
@@ -35,7 +36,10 @@ export default function Home() {
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
 
-  const showSplitView = isCompareMode && pinnedIndicator;
+  // Only use split view when comparing two municipality-level indicators
+  const showSplitView = isCompareMode && 
+    pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel && 
+    selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel;
 
   return (
     <Box sx={{ 
@@ -71,7 +75,8 @@ export default function Home() {
             markerData={markerData}
             barChartData={barChartData}
             selectedIndicator={selectedIndicator}
-            isPinned={selectedIndicator?.id === pinnedIndicator?.id}
+            pinnedIndicator={pinnedIndicator}
+            isPinned={!!pinnedIndicator}
           />
         )}
       </Box>

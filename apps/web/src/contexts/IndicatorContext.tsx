@@ -29,25 +29,17 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     setPinnedIndicator(current => {
       // Unpinning (current indicator is already pinned)
       if (current?.id === indicator.id) {
-        // When unpinning, keep the currently selected indicator (if any)
-        // Don't change the selected indicator, just remove the pin
         setIsCompareMode(false);
+        if (selectedIndicator?.id === indicator.id) {
+          setSelectedIndicator(null);
+        }
         return null;
       }
-      
-      // If we're pinning a new indicator
+      setIsCompareMode(true);
       if (selectedIndicator?.id === indicator.id) {
-        // If the indicator being pinned is the currently selected one,
-        // clear the selection since it's moving to the top
         setSelectedIndicator(null);
-        setIsCompareMode(true);
-        return indicator;
-      } else {
-        // If we're pinning a different indicator than the selected one,
-        // maintain the current selection for comparison
-        setIsCompareMode(true);
-        return indicator;
       }
+      return indicator;
     });
   }, [selectedIndicator]);
 
@@ -56,7 +48,7 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     pinnedIndicator,
     isCompareMode,
     setSelectedIndicator,
-    setPinnedIndicator,
+    setPinnedIndicator, 
     setIsCompareMode,
     isPinned,
     togglePin
