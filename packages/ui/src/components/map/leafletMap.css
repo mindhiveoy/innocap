@@ -91,6 +91,9 @@
 .leaflet-container {
   -webkit-tap-highlight-color: transparent;
   outline: none !important;
+  position: relative;
+  height: 100%;
+  width: 100%;
 }
 
 .leaflet-pane {
@@ -167,8 +170,13 @@
   border-radius: 4px;
 }
 
-/* Add hover effect for close button */
 .leaflet-popup-close-button:hover {
   color: #333 !important;
   transform: scale(1.1);
+}
+
+.map-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
 }

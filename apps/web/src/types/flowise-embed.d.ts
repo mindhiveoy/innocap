@@ -6,6 +6,8 @@ declare module 'flowise-embed/dist/web' {
       button?: {
         backgroundColor?: string
         size?: string
+        bottom?: number
+        dragAndDrop?: boolean
       }
       chatWindow?: {
         showTitle?: boolean
