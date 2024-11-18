@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { useData } from './DataContext';
 import type { Indicator } from '@repo/ui/types/indicators';
 
 export interface IndicatorContextType {
@@ -17,9 +18,16 @@ export interface IndicatorContextType {
 const IndicatorContext = createContext<IndicatorContextType | undefined>(undefined);
 
 export function IndicatorProvider({ children }: { children: React.ReactNode }) {
+  const { indicators } = useData();
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [pinnedIndicator, setPinnedIndicator] = useState<Indicator | null>(null);
   const [isCompareMode, setIsCompareMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (indicators?.length > 0) {
+      setSelectedIndicator(indicators[0]);
+    }
+  }, [indicators]);
 
   const isPinned = useCallback((indicator: Indicator) => {
     return pinnedIndicator?.id === indicator.id;
@@ -27,7 +35,6 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
 
   const togglePin = useCallback((indicator: Indicator) => {
     setPinnedIndicator(current => {
-      // Unpinning (current indicator is already pinned)
       if (current?.id === indicator.id) {
         setIsCompareMode(false);
         if (selectedIndicator?.id === indicator.id) {
@@ -48,7 +55,7 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     pinnedIndicator,
     isCompareMode,
     setSelectedIndicator,
-    setPinnedIndicator, 
+    setPinnedIndicator,
     setIsCompareMode,
     isPinned,
     togglePin
