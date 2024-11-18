@@ -440,17 +440,42 @@ export function LeafletMap({
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
 
   const barChartElements = useMemo(() => {
-    if (selectedIndicator?.indicatorType !== IndicatorType.BarChart || !barChartData) {
-      return null;
+    if (!barChartData) return null;
+
+    const relevantBarChartData = [];
+
+    // If we have a pinned bar chart indicator - keep these at center position
+    if (pinnedIndicator?.indicatorType === IndicatorType.BarChart) {
+      const pinnedData = barChartData
+        .filter(d => d.id === pinnedIndicator.id)
+        .map(d => ({
+          ...d,
+          iconName: pinnedIndicator.iconName,
+          color: pinnedIndicator.color,
+          isPinned: true
+        }));
+      relevantBarChartData.push(...pinnedData);
     }
 
-    const filteredBarChartData = barChartData.filter(
-      d => d.id === selectedIndicator.id
-    );
+    // If we have a selected bar chart indicator - offset these from center
+    if (selectedIndicator?.indicatorType === IndicatorType.BarChart &&
+      selectedIndicator.id !== pinnedIndicator?.id) {
+      const selectedData = barChartData
+        .filter(d => d.id === selectedIndicator.id)
+        .map(d => ({
+          ...d,
+          iconName: selectedIndicator.iconName,
+          color: selectedIndicator.color,
+          isPinned: false
+        }));
+      relevantBarChartData.push(...selectedData);
+    }
 
-    if (popupRefs.current.length !== filteredBarChartData.length) {
-      popupRefs.current = new Array(filteredBarChartData.length).fill(null);
-      dragRefs.current = new Array(filteredBarChartData.length).fill({
+    if (relevantBarChartData.length === 0) return null;
+
+    if (popupRefs.current.length !== relevantBarChartData.length) {
+      popupRefs.current = new Array(relevantBarChartData.length).fill(null);
+      dragRefs.current = new Array(relevantBarChartData.length).fill({
         isDragging: false,
         startPos: null,
         initialLatLng: null
@@ -459,35 +484,46 @@ export function LeafletMap({
 
     return (
       <LayerGroup>
-        {filteredBarChartData.map((data, index) => (
-          <Marker
-            key={`${data.id}-${data.municipalityName}-${index}`}
-            position={getMunicipalityCenter(data.municipalityCode)}
-            icon={createMarkerIcon(selectedIndicator.iconName, selectedIndicator.color)}
-          >
-            <Popup
-              ref={popup => {
-                popupRefs.current[index] = popup;
-              }}
-              closeButton={true}
-              closeOnClick={false}
-              autoClose={false}
-              className="draggable-popup"
-              autoPan={false}
+        {relevantBarChartData.map((data, index) => {
+          const center = getMunicipalityCenter(data.municipalityCode);
+          // Offset the selected indicators (non-pinned)
+          const position: LatLngTuple = data.isPinned
+            ? center
+            : [
+              center[0] - 0.03, // Offset selected indicators southwest
+              center[1] - 0.01
+            ];
+
+          return (
+            <Marker
+              key={`${data.id}-${data.municipalityName}-${index}`}
+              position={position}
+              icon={createMarkerIcon(data.iconName, data.color)}
             >
-              <DraggablePopupContent
-                data={data}
-                index={index}
-                popupRefs={popupRefs}
-                dragRefs={dragRefs}
-                color={selectedIndicator.color}
-              />
-            </Popup>
-          </Marker>
-        ))}
+              <Popup
+                ref={popup => {
+                  popupRefs.current[index] = popup;
+                }}
+                closeButton={true}
+                closeOnClick={false}
+                autoClose={false}
+                className="draggable-popup"
+                autoPan={false}
+              >
+                <DraggablePopupContent
+                  data={data}
+                  index={index}
+                  popupRefs={popupRefs}
+                  dragRefs={dragRefs}
+                  color={data.color}
+                />
+              </Popup>
+            </Marker>
+          );
+        })}
       </LayerGroup>
     );
-  }, [selectedIndicator, barChartData]);
+  }, [selectedIndicator, pinnedIndicator, barChartData]);
 
   const mapContainerProps = useMemo(() => ({
     center,
