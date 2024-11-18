@@ -415,7 +415,7 @@ export function LeafletMap({
           <Marker
             key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}`}
             position={marker.location}
-            icon={createMarkerIcon(marker.iconName, marker.color)}>
+            icon={createMarkerIcon(marker.markerIcon, marker.color)}>
             <Popup>
               <PopupContainer>
                 <PopupContent>
