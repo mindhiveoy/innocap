@@ -2,6 +2,8 @@
 
 import { useEffect, useCallback, useRef } from 'react'
 import { theme } from '@repo/shared'
+import { useMediaQuery } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 
 // Types
 interface BotMessageConfig {
@@ -55,6 +57,8 @@ interface FlowiseConfig {
     button?: {
       backgroundColor?: string
       size?: string
+      bottom?: number
+      dragAndDrop?: boolean
     }
     chatWindow?: ChatWindowConfig
   }
@@ -113,6 +117,8 @@ const CHATBOT_CONFIG = {
 export const ChatBubble = () => {
   const isInitialized = useRef(false)
   const botAvatarDataUrl = useRef<string>('')
+  const muiTheme = useTheme()
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'))
 
   // Preload bot avatar
   const preloadBotAvatar = useCallback(async () => {
@@ -125,7 +131,7 @@ export const ChatBubble = () => {
   }, [])
 
   const getChatWindowConfig = useCallback((): ChatWindowConfig => ({
-    welcomeMessage: 'Hi! How can I help you today with Mikkeli and Kangasniemi strategies?',
+    welcomeMessage: 'Hi! How can I help you today with Mikkeli, Kangasniemi and Juva strategies?',
     backgroundColor: '#ffffff',
     height: CHATBOT_CONFIG.WINDOW.HEIGHT,
     width: CHATBOT_CONFIG.WINDOW.WIDTH,
@@ -168,7 +174,7 @@ export const ChatBubble = () => {
   const loadChatbot = useCallback(async () => {
     try {
       if (!window.Chatbot && !isInitialized.current) {
-        await preloadBotAvatar() // Preload avatar before initializing chatbot
+        await preloadBotAvatar()
         const chatbot = await import('flowise-embed/dist/web')
         window.Chatbot = chatbot.default as ChatbotType
         isInitialized.current = true
@@ -180,6 +186,8 @@ export const ChatBubble = () => {
             button: {
               backgroundColor: theme.palette.primary.light,
               size: 'medium',
+              bottom: isMobile ? 70 : 20,
+              dragAndDrop: true,
             },
             chatWindow: getChatWindowConfig(),
           }
@@ -188,7 +196,7 @@ export const ChatBubble = () => {
     } catch (error) {
       console.error('Failed to load chatbot:', error)
     }
-  }, [getChatWindowConfig, preloadBotAvatar])
+  }, [getChatWindowConfig, preloadBotAvatar, isMobile])
 
   useEffect(() => {
     loadChatbot()

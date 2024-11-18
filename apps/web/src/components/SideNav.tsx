@@ -12,6 +12,8 @@ import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
 import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
 import { Indicator } from '@repo/ui/types/indicators';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -39,17 +41,19 @@ const StyledNav = styled.nav(({ theme }) => `
   }
 `);
 
-const NavList = styled(List)`
+const NavList = styled(List)(({ theme }) => `
   width: 100%;
   padding: 0;
   
   @media (max-width: 768px) {
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: space-evenly;
+    align-items: center;
     height: 100%;
+    padding: ${theme.spacing(1, 0)};
   }
-`;
+`);
 
 const NavItem = styled.div(({ theme }) => `
   display: flex;
@@ -71,11 +75,13 @@ const NavItem = styled.div(({ theme }) => `
   }
 
   @media (max-width: 768px) {
-    width: auto;
-    flex: 1;
+    width: ${NAV_HEIGHT - 8}px;
+    min-width: ${NAV_HEIGHT - 16}px;
+    flex: 0 0 auto;
     justify-content: center;
     margin: ${theme.spacing(0.75)};
     padding: ${theme.spacing(0.5)};
+    height: ${NAV_HEIGHT - 16}px;
   }
 `);
 
@@ -131,6 +137,50 @@ const DrawerContent = styled(Box)(({ theme }) => `
   gap: ${theme.spacing(2)};
 `);
 
+const LogoContainer = styled(Box)(({ theme }) => `
+  display: flex;
+  flex-direction: column;
+  gap: ${theme.spacing(4)};
+  margin-top: ${theme.spacing(3)};
+  align-items: center;
+  justify-content: center;
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+`)
+
+const DrawerHeader = styled(Box)(({ theme }) => `
+  display: flex;
+  align-items: center;
+  padding: ${theme.spacing(2, 2, 0, 2)};
+  
+  @media (max-width: 768px) {
+    justify-content: flex-end;
+  }
+  
+  @media (min-width: 769px) {
+    justify-content: flex-start;
+  }
+`)
+
+const CloseButton = styled(Box)(({ theme }) => `
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: ${theme.palette.primary.main};
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.shape.borderRadius}px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${theme.palette.action.hover};
+  }
+`)
+
 interface GroupedIndicators {
   [key: string]: {
     group: string;
@@ -150,7 +200,7 @@ interface MenuItem {
 
 export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { indicators, error } = useData();
 
   const menuItems: MenuItem[] = [
@@ -190,22 +240,7 @@ export function SideNav() {
       id: 'digital' 
     },
     { 
-      text: 'Ask AI', 
-      icon: (
-        <Box 
-          component="img" 
-          src="/icons/chat-question.svg" 
-          sx={{ 
-            width: 24, 
-            height: 24,
-            filter: selectedItem === 'ai' ? 'brightness(0) invert(1)' : 'none'
-          }} 
-        />
-      ), 
-      id: 'ai' 
-    },
-    { 
-      text: 'Guide', 
+      text: 'About', 
       icon: (
         <Box 
           component="img" 
@@ -213,11 +248,11 @@ export function SideNav() {
           sx={{ 
             width: 24, 
             height: 24,
-            filter: selectedItem === 'guide' ? 'brightness(0) invert(1)' : 'none'
+            filter: selectedItem === 'about' ? 'brightness(0) invert(1)' : 'none'
           }} 
         />
       ), 
-      id: 'guide' 
+      id: 'about' 
     },
   ];
 
@@ -247,13 +282,45 @@ export function SideNav() {
   };
 
   const renderDrawerContent = () => {
-    switch (selectedItem) {
-      case 'green':
-        return (
-          <DrawerContent>
-            {error ? (
-              <Typography color="error">Error loading indicators</Typography>
-            ) : (
+    const content = (() => {
+      switch (selectedItem) {
+        case 'welcome':
+          return (
+            <>
+              <Typography variant="h2" gutterBottom color="primary.darkest">
+                Southern Savo Green and Digital Transition Dashboard
+              </Typography>
+              <Typography variant="lead" gutterBottom>
+                We are building public sector innovation capacity towards digital-driven NPA communities
+              </Typography>
+              <Typography variant="paragraph" sx={{ mb: 4 }}>
+                This dashboard visualizes the green and digital transition indicators for the Southern Savo region. 
+                <br />
+                <br />
+                The indicators help monitor and understand the progress of municipalities in their journey towards
+                sustainable and digital future.
+              </Typography>
+              <LogoContainer>
+                <Box component="img" 
+                  src="/innocap_funder_logo.png" 
+                  alt="Innocap Funder"
+                />
+                <Box component="img" 
+                  src="/university_of_helsinki_ruralia.png" 
+                  alt="University of Helsinki Ruralia Institute"
+                />
+              </LogoContainer>
+            </>
+          );
+        case 'green':
+          return (
+            <>
+              <Typography variant="h2" gutterBottom color="primary.darkest">
+                Green Transfer Indicators
+              </Typography>
+              {error ? (
+                <Typography color="error">Error loading indicators</Typography>
+              ) : (
                 Object.values(groupedIndicators || {}).map(({ group, indicators }) => (
                   <span key={group}>
                     <GroupTitle variant='h2'>
@@ -261,66 +328,94 @@ export function SideNav() {
                     </GroupTitle>
                     <Box key={group}>
                       {indicators.map(indicator => (
-                    <IndicatorCard
-                      key={indicator.id}
-                      indicator={indicator}
-                    />
+                        <IndicatorCard
+                          key={indicator.id}
+                          indicator={indicator}
+                        />
                       ))}
                     </Box>
                   </span>
                 ))
-            )}
-          </DrawerContent>
-        );
+              )}
+            </>
+          );
+        case 'digital':
+          return (
+            <>
+              <Typography variant="h2" gutterBottom color="primary.darkest">
+                Digital Indicators
+              </Typography>
+              <Typography variant="lead" gutterBottom>
+                Coming soon: Explore digital transformation indicators across the region.
+              </Typography>
+            </>
+          );
+        case 'about':
+          return (
+            <>
+              <Typography variant="h2" gutterBottom color="primary.darkest">
+              About
+              </Typography>
+              <Typography variant="lead" gutterBottom>
+                Learn how to use the platform and understand the indicators
+              </Typography>
+              <Typography variant="paragraph" sx={{ mb: 2 }}>
+                The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.
+              </Typography>
+              <GroupTitle variant='h2'>
+                Basic Navigation
+              </GroupTitle>
+              <Typography variant="paragraph" sx={{ mb: 2 }}>
+                • Click on municipalities to see detailed information
+                <br />
+                • Use the side navigation to switch between different indicator categories
+                <br />
+                • Explore the map to understand regional patterns
+              </Typography>
+              <GroupTitle variant='h2'>
+                Working with Indicators
+              </GroupTitle>
+              <Typography variant="paragraph" sx={{ mb: 2 }}>
+                • Select an indicator to view it on the map
+                <br />
+                • Pin an indicator to compare it with another
+              </Typography>
+              <GroupTitle variant='h2'>
+                AI Assistant
+              </GroupTitle>
+              <Typography variant="paragraph">
+                • An AI assistant is available to help answer your questions
+                <br />
+                • Please note that the assistant is in development phase and may have limited knowledge
+              </Typography>
+            </>
+          );
+        default:
+          return null;
+      }
+    })();
 
-      case 'digital':
-        return (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Digital Indicators
-            </Typography>
-            <Typography variant="body1">
-              Coming soon: Explore digital transformation indicators across the region.
-            </Typography>
-          </Box>
-        );
-
-      case 'ai':
-        return (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Ask AI
-            </Typography>
-            <Typography variant="body1">
-              Coming soon: Get AI-powered insights about regional development and sustainability.
-            </Typography>
-          </Box>
-        );
-
-      case 'guide':
-        return (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              User Guide
-            </Typography>
-            <Typography variant="body1">
-              Learn how to use the platform and understand the indicators.
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 2 }}>
-              • Click on municipalities to see detailed information
-            </Typography>
-            <Typography variant="body2">
-              • Use the tabs to switch between different indicator categories
-            </Typography>
-            <Typography variant="body2">
-              • Explore the map to understand regional patterns
-            </Typography>
-          </Box>
-        );
-
-      default:
-        return null;
-    }
+    return (
+      <>
+        <DrawerHeader>
+          <CloseButton onClick={() => setDrawerOpen(false)}>
+            <Box sx={{ 
+              display: { xs: 'none', md: 'block' }
+            }}>
+              <ArrowBackIcon />
+            </Box>
+            <Box sx={{ 
+              display: { xs: 'block', md: 'none' }
+            }}>
+              <CloseIcon />
+            </Box>
+          </CloseButton>
+        </DrawerHeader>
+        <DrawerContent>
+          {content}
+        </DrawerContent>
+      </>
+    );
   };
 
   return (

@@ -19,8 +19,8 @@ declare module 'leaflet' {
 }
 
 interface SplitMapViewProps {
-  topIndicator: Indicator;
-  bottomIndicator: Indicator;
+  pinnedIndicator: Indicator | null;
+  selectedIndicator: Indicator | null;
   municipalityData: MunicipalityLevelData[];
   markerData: MarkerData[];
   barChartData: BarChartData[];
@@ -90,8 +90,8 @@ const calculateMapAdjustments = (splitPosition: number, isTopMap: boolean, defau
 };
 
 export function SplitMapView({
-  topIndicator,
-  bottomIndicator,
+  pinnedIndicator,
+  selectedIndicator,
   municipalityData,
   markerData,
   barChartData,
@@ -113,6 +113,16 @@ export function SplitMapView({
     markerData,
     barChartData,
   }), [center, zoom, maxBounds, municipalityData, markerData, barChartData]);
+
+  const topMapProps = useMemo(() => ({
+    ...commonMapProps,
+    zoomControl: true,
+  }), [commonMapProps]);
+
+  const bottomMapProps = useMemo(() => ({
+    ...commonMapProps,
+    zoomControl: false,
+  }), [commonMapProps]);
 
   const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const clientY = 'touches' in e ? e.touches[0]?.clientY ?? window.innerHeight / 2 : e.clientY;
@@ -245,10 +255,12 @@ export function SplitMapView({
     <Box sx={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
       <Box sx={topContainerStyle}>
         <LeafletMap
-          {...commonMapProps}
+          {...topMapProps}
           center={topMapAdjustments.center}
           maxBounds={topMapAdjustments.maxBounds}
-          selectedIndicator={topIndicator}
+          selectedIndicator={pinnedIndicator}
+          pinnedIndicator={pinnedIndicator}
+          isPinned={true}
           onMapMount={(map) => {
             topMapRef.current = map;
           }}
@@ -266,10 +278,12 @@ export function SplitMapView({
 
       <Box sx={bottomContainerStyle}>
         <LeafletMap
-          {...commonMapProps}
+          {...bottomMapProps}
           center={bottomMapAdjustments.center}
           maxBounds={bottomMapAdjustments.maxBounds}
-          selectedIndicator={bottomIndicator}
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={null}
+          isPinned={false}
           onMapMount={(map) => {
             bottomMapRef.current = map;
           }}
