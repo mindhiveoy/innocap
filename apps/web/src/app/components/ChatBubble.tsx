@@ -131,7 +131,7 @@ export const ChatBubble = () => {
   }, [])
 
   const getChatWindowConfig = useCallback((): ChatWindowConfig => ({
-    welcomeMessage: 'Hi! How can I help you today with Mikkeli and Kangasniemi strategies?',
+    welcomeMessage: 'Hi! How can I help you today with Mikkeli, Kangasniemi and Juva strategies?',
     backgroundColor: '#ffffff',
     height: CHATBOT_CONFIG.WINDOW.HEIGHT,
     width: CHATBOT_CONFIG.WINDOW.WIDTH,

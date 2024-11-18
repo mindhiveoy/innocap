@@ -48,7 +48,7 @@ export function createMarkerIcon(iconName: string, color: string = '#014B70') {
       align-items: center;
       justify-content: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.8);
-      background: #FFFFFFCC;
+      background: #FFFFFFE6;
     "><div style="
       width: 20px;
       height: 20px;

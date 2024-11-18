@@ -540,7 +540,7 @@ export function LeafletMap({
           style={geoJsonStyle}
           onEachFeature={onEachFeatureCallback}
           interactive={true}
-          bubblingMouseElements={false}
+          bubblingMouseEvents={false}
         />
         {markerElements}
         {barChartElements}
