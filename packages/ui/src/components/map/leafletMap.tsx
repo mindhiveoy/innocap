@@ -20,6 +20,7 @@ import { Typography } from '@mui/material';
 import { BarChartPopup } from './BarChartPopup';
 import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
+import { createMarkerIcon } from './DynamicIcon';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -45,26 +46,6 @@ const geoJSONStyle = {
   color: '#444',
   fillOpacity: 0,
 };
-
-// Create a simple marker icon for debugging
-const defaultIcon = L.divIcon({
-  html: `<div style="
-    width: 32px;
-    height: 32px;
-    background: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    color: #014B70;
-    font-size: 20px;
-  ">•</div>`,
-  className: 'custom-marker-icon',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
-  popupAnchor: [0, -16],
-});
 
 const PopupContainer = styled.div(({
   theme
@@ -405,7 +386,7 @@ export function LeafletMap({
           <Marker
             key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}`}
             position={marker.location}
-            icon={defaultIcon}>
+            icon={createMarkerIcon(selectedIndicator.iconName, selectedIndicator.color)}>
             <Popup>
               <PopupContainer>
                 <PopupContent>
@@ -423,7 +404,7 @@ export function LeafletMap({
         ))}
       </LayerGroup>
     );
-  }, [filteredMarkerData, selectedIndicator?.indicatorType]);
+  }, [filteredMarkerData, selectedIndicator]);
 
   // Create refs for popups
   const popupRefs = useRef<(L.Popup | null)[]>([]);
@@ -453,7 +434,7 @@ export function LeafletMap({
           <Marker
             key={`${data.id}-${data.municipalityName}-${index}`}
             position={getMunicipalityCenter(data.municipalityCode)}
-            icon={defaultIcon}
+            icon={createMarkerIcon(selectedIndicator.iconName, selectedIndicator.color)}
           >
             <Popup
               ref={popup => {

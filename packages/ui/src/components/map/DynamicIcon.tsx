@@ -6,15 +6,13 @@ import AirIcon from '@mui/icons-material/Air';
 import WaterIcon from '@mui/icons-material/Water';
 import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
+import Co2 from '@mui/icons-material/Co2';
+import Recycling from '@mui/icons-material/Recycling';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import L from 'leaflet';
+import { renderToStaticMarkup } from 'react-dom/server';
 
-interface DynamicIconProps {
-  iconName: string;
-  color?: string;
-  size?: number;
-}
-
-const iconComponents = {
+export const iconComponents = {
   'SolarPower': SolarPowerIcon,
   'Agriculture': AgricultureIcon,
   'Thermostat': ThermostatIcon,
@@ -22,26 +20,46 @@ const iconComponents = {
   'Water': WaterIcon,
   'WaterDrop': WaterDropIcon,
   'EnergySavingsLeaf': EnergySavingsLeafIcon,
+  'Co2': Co2,
+  'Recycling': Recycling,
   'Default': LocationOnIcon,
 } as const;
 
 type IconName = keyof typeof iconComponents;
 
-export function DynamicIcon({ iconName, color, size = 24 }: DynamicIconProps) {
-  const IconComponent = useMemo(() => {
-    console.log("Creating icon for:", iconName);
-    console.log("Available icons:", Object.keys(iconComponents));
-    
-    const cleanIconName = iconName.replace(/Icon$/, '');
-    const component = iconComponents[cleanIconName as IconName];
-    
-    if (!component) {
-      console.warn(`Icon not found for name: ${iconName}, using default`);
-      return iconComponents.Default;
-    }
-    
-    return component;
-  }, [iconName]);
 
-  return <IconComponent sx={{ width: size, height: size, color }} />;
-} 
+export function createMarkerIcon(iconName: string, color: string = '#014B70') {
+  const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
+  const IconComponent = iconComponents[cleanIconName] || iconComponents.Default;
+
+  // Render the MUI icon to SVG markup
+  const iconSvg = renderToStaticMarkup(
+    <IconComponent />
+  );
+
+  const coloredSvg = iconSvg.replace(/(<path\s[^>]*)(fill="[^"]*")?([^>]*>)/g, `$1 fill="${color}"$3`);
+
+  return L.divIcon({
+    html: `<div style="
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      background: #FFFFFFCC;
+    "><div style="
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: scale(0.83);
+    ">${coloredSvg}</div></div>`,
+    className: 'custom-marker-icon',
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+}
