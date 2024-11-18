@@ -240,7 +240,7 @@ export function SideNav() {
       id: 'digital' 
     },
     { 
-      text: 'Guide', 
+      text: 'About', 
       icon: (
         <Box 
           component="img" 
@@ -248,11 +248,11 @@ export function SideNav() {
           sx={{ 
             width: 24, 
             height: 24,
-            filter: selectedItem === 'guide' ? 'brightness(0) invert(1)' : 'none'
+            filter: selectedItem === 'about' ? 'brightness(0) invert(1)' : 'none'
           }} 
         />
       ), 
-      id: 'guide' 
+      id: 'about' 
     },
   ];
 
@@ -350,11 +350,11 @@ export function SideNav() {
               </Typography>
             </>
           );
-        case 'guide':
+        case 'about':
           return (
             <>
               <Typography variant="h2" gutterBottom color="primary.darkest">
-                User Guide
+              About
               </Typography>
               <Typography variant="lead" gutterBottom>
                 Learn how to use the platform and understand the indicators
@@ -379,8 +379,6 @@ export function SideNav() {
                 • Select an indicator to view it on the map
                 <br />
                 • Pin an indicator to compare it with another
-                <br />
-                • Use the year selector to view data from different time periods
               </Typography>
               <GroupTitle variant='h2'>
                 AI Assistant

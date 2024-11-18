@@ -98,34 +98,46 @@ const PopupLink = styled.a(({
 
 `);
 
-const IndicatorOverlay = styled.div(({ theme }) => `
+const OverlaysContainer = styled.div`
   position: absolute;
   top: 20px;
   right: 2%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 1000;
+`;
+
+const BaseOverlay = styled.div(({ theme }) => `
   background-color: rgba(255, 255, 255, 0.9);
   padding: ${theme.spacing(1)} ${theme.spacing(2)};
   border-radius: ${theme.shape.borderRadius}px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 1000;
   pointer-events: none;
-  max-width: 80%;
-  text-align: center;
+  max-width: fit-content;
+  text-align: right;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: ${theme.spacing(1)};
-  
-  .pin-icon {
-    position: relative;
-    top: 3px;
-    transform: rotate(-45deg);
-    color: ${theme.palette.primary.main};
-  }
   
   @media (max-width: 600px) {
     font-size: 12px;
     padding: ${theme.spacing(0.5)} ${theme.spacing(1)};
   }
 `);
+
+const PinnedOverlay = styled(BaseOverlay)`
+  .pin-icon {
+    position: relative;
+    top: 3px;
+    transform: rotate(-45deg);
+    color: ${({ theme }) => theme.palette.primary.main};
+  }
+`;
+
+const SelectedOverlay = styled(BaseOverlay)``;
 
 function DraggablePopupContent({
   data,
@@ -241,12 +253,29 @@ export function LeafletMap({
 
     const relevantMarkers = [];
 
-    if (selectedIndicator?.indicatorType === IndicatorType.Marker) {
-      relevantMarkers.push(...markerData.filter(marker => marker.id === selectedIndicator.id));
+    // If we have a pinned marker indicator
+    if (pinnedIndicator?.indicatorType === IndicatorType.Marker) {
+      const pinnedMarkers = markerData
+        .filter(marker => marker.id === pinnedIndicator.id)
+        .map(marker => ({
+          ...marker,
+          iconName: pinnedIndicator.iconName,
+          color: pinnedIndicator.color
+        }));
+      relevantMarkers.push(...pinnedMarkers);
     }
 
-    if (pinnedIndicator?.indicatorType === IndicatorType.Marker) {
-      relevantMarkers.push(...markerData.filter(marker => marker.id === pinnedIndicator.id));
+    // If we have a selected marker indicator (different from pinned)
+    if (selectedIndicator?.indicatorType === IndicatorType.Marker &&
+      selectedIndicator.id !== pinnedIndicator?.id) {
+      const selectedMarkers = markerData
+        .filter(marker => marker.id === selectedIndicator.id)
+        .map(marker => ({
+          ...marker,
+          iconName: selectedIndicator.iconName,
+          color: selectedIndicator.color
+        }));
+      relevantMarkers.push(...selectedMarkers);
     }
 
     return relevantMarkers;
@@ -376,7 +405,7 @@ export function LeafletMap({
   }, [selectedIndicator, pinnedIndicator, isPinned, handleMouseover, handleMouseout, geoJsonStyle]);
 
   const markerElements = useMemo(() => {
-    if (selectedIndicator?.indicatorType !== IndicatorType.Marker || !filteredMarkerData.length) {
+    if (!filteredMarkerData.length) {
       return null;
     }
 
@@ -386,7 +415,7 @@ export function LeafletMap({
           <Marker
             key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}`}
             position={marker.location}
-            icon={createMarkerIcon(selectedIndicator.iconName, selectedIndicator.color)}>
+            icon={createMarkerIcon(marker.iconName, marker.color)}>
             <Popup>
               <PopupContainer>
                 <PopupContent>
@@ -404,7 +433,7 @@ export function LeafletMap({
         ))}
       </LayerGroup>
     );
-  }, [filteredMarkerData, selectedIndicator]);
+  }, [filteredMarkerData]);
 
   // Create refs for popups
   const popupRefs = useRef<(L.Popup | null)[]>([]);
@@ -476,23 +505,21 @@ export function LeafletMap({
 
   return (
     <>
-      {(selectedIndicator || pinnedIndicator) && (
-        <IndicatorOverlay>
-          {isPinned && (
+      <OverlaysContainer>
+        {pinnedIndicator && (
+          <PinnedOverlay>
             <span className="pin-icon">
               <PushPinIcon fontSize="small" />
             </span>
-          )}
-          <Typography variant='label'>
-            {pinnedIndicator
-              ? selectedIndicator && selectedIndicator.id !== pinnedIndicator.id
-                ? `${pinnedIndicator.indicatorNameEn} + ${selectedIndicator.indicatorNameEn}`
-                : pinnedIndicator.indicatorNameEn
-              : selectedIndicator?.indicatorNameEn
-            }
-          </Typography>
-        </IndicatorOverlay>
-      )}
+            <Typography variant='label'>{pinnedIndicator.indicatorNameEn}</Typography>
+          </PinnedOverlay>
+        )}
+        {selectedIndicator && selectedIndicator.id !== pinnedIndicator?.id && (
+          <SelectedOverlay>
+            <Typography variant='label'>{selectedIndicator.indicatorNameEn}</Typography>
+          </SelectedOverlay>
+        )}
+      </OverlaysContainer>
       <MapContainer
         attributionControl={false}
         {...mapContainerProps}
@@ -513,7 +540,7 @@ export function LeafletMap({
           style={geoJsonStyle}
           onEachFeature={onEachFeatureCallback}
           interactive={true}
-          bubblingMouseEvents={false}
+          bubblingMouseElements={false}
         />
         {markerElements}
         {barChartElements}
