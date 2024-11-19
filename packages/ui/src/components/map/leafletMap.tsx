@@ -283,9 +283,11 @@ export function LeafletMap({
 
   const geoJsonStyle = useMemo(() => {
     return (feature: any) => {
-      const activeIndicator = isPinned
-        ? pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel ? pinnedIndicator : null
-        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel ? selectedIndicator : null;
+      const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+        ? pinnedIndicator
+        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+          ? selectedIndicator
+          : null;
 
       if (!activeIndicator) {
         return {
@@ -325,14 +327,14 @@ export function LeafletMap({
         className: 'geojson-feature'
       };
     };
-  }, [selectedIndicator, pinnedIndicator, municipalityData, isPinned]);
+  }, [selectedIndicator, pinnedIndicator, municipalityData]);
 
   const handleMouseover = useCallback((e: L.LeafletEvent, feature: any, tooltip: L.Tooltip, currentStyle: any) => {
     const layer = e.target;
 
-    const activeIndicator = isPinned && pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+    const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
       ? pinnedIndicator
-      : !isPinned && selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
         ? selectedIndicator
         : null;
 
@@ -363,26 +365,26 @@ export function LeafletMap({
       </ThemeProvider>
     );
     tooltip.setContent(container);
-  }, [selectedIndicator, pinnedIndicator, municipalityData, isPinned]);
+  }, [selectedIndicator, pinnedIndicator, municipalityData]);
 
   const handleMouseout = useCallback((e: L.LeafletEvent, feature: any) => {
     const layer = e.target;
-    const activeIndicator = isPinned && pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+    const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
       ? pinnedIndicator
-      : !isPinned && selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
         ? selectedIndicator
         : null;
 
     if (!activeIndicator) return;
 
     layer.setStyle(geoJsonStyle(feature));
-  }, [geoJsonStyle, selectedIndicator, pinnedIndicator, isPinned]);
+  }, [geoJsonStyle, selectedIndicator, pinnedIndicator]);
 
   const onEachFeatureCallback = useMemo(() => {
     return (feature: any, layer: L.Layer) => {
-      const activeIndicator = isPinned && pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+      const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
         ? pinnedIndicator
-        : !isPinned && selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
           ? selectedIndicator
           : null;
 
@@ -402,7 +404,7 @@ export function LeafletMap({
         mouseout: (e) => handleMouseout(e, feature)
       });
     };
-  }, [selectedIndicator, pinnedIndicator, isPinned, handleMouseover, handleMouseout, geoJsonStyle]);
+  }, [selectedIndicator, pinnedIndicator, handleMouseover, handleMouseout, geoJsonStyle]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
