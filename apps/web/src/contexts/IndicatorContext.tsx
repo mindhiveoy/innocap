@@ -13,6 +13,7 @@ export interface IndicatorContextType {
   setIsCompareMode: (isCompare: boolean) => void;
   isPinned: (indicator: Indicator) => boolean;
   togglePin: (indicator: Indicator) => void;
+  setPinnedIndicatorYear: (year: number | undefined) => void;
 }
 
 const IndicatorContext = createContext<IndicatorContextType | undefined>(undefined);
@@ -42,13 +43,31 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
         }
         return null;
       }
+
+      const selectedYear = selectedIndicator?.id === indicator.id
+        ? selectedIndicator.selectedYear
+        : undefined;
+
       setIsCompareMode(true);
       if (selectedIndicator?.id === indicator.id) {
         setSelectedIndicator(null);
       }
-      return indicator;
+
+      return {
+        ...indicator,
+        selectedYear: selectedYear
+      };
     });
   }, [selectedIndicator]);
+
+  const setPinnedIndicatorYear = useCallback((year: number | undefined) => {
+    if (pinnedIndicator) {
+      setPinnedIndicator({
+        ...pinnedIndicator,
+        selectedYear: year
+      });
+    }
+  }, [pinnedIndicator]);
 
   const value = {
     selectedIndicator,
@@ -58,7 +77,8 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     setPinnedIndicator,
     setIsCompareMode,
     isPinned,
-    togglePin
+    togglePin,
+    setPinnedIndicatorYear
   };
 
   return (
