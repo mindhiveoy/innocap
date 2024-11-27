@@ -139,6 +139,11 @@ const PinnedOverlay = styled(BaseOverlay)`
 
 const SelectedOverlay = styled(BaseOverlay)``;
 
+const YearText = styled(Typography)(({ theme }) => `
+  color: ${theme.palette.text.primary};
+  margin-left: ${theme.spacing(1)};
+`);
+
 function DraggablePopupContent({
   data,
   index,
@@ -553,12 +558,26 @@ export function LeafletMap({
             <span className="pin-icon">
               <PushPinIcon fontSize="small" />
             </span>
-            <Typography variant='label'>{pinnedIndicator.indicatorNameEn}</Typography>
+            <Typography variant='label'>
+              {pinnedIndicator.indicatorNameEn}
+              {pinnedIndicator.selectedYear && (
+                <YearText variant='label'>
+                  ({pinnedIndicator.selectedYear})
+                </YearText>
+              )}
+            </Typography>
           </PinnedOverlay>
         )}
         {selectedIndicator && selectedIndicator.id !== pinnedIndicator?.id && (
           <SelectedOverlay>
-            <Typography variant='label'>{selectedIndicator.indicatorNameEn}</Typography>
+            <Typography variant='label'>
+              {selectedIndicator.indicatorNameEn}
+              {selectedIndicator.selectedYear && (
+                <YearText variant='label'>
+                  ({selectedIndicator.selectedYear})
+                </YearText>
+              )}
+            </Typography>
           </SelectedOverlay>
         )}
       </OverlaysContainer>

@@ -212,17 +212,18 @@ const IndicatorTypeIcon = ({ iconName }: { iconName: string }) => {
 };
 
 const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
-  margin-bottom: ${theme.spacing(2)};
+  margin-bottom: ${theme.spacing(1)};
   background: ${theme.palette.background.paper};
   border-radius: 24px;
-  padding: ${theme.spacing(0.5)};
+  padding: ${theme.spacing(0)};
   width: fit-content;
   border: 1px solid ${theme.palette.divider};
+  
   
   .MuiToggleButton-root {
     border: none;
     border-radius: 20px;
-    padding: ${theme.spacing(0.5, 2)};
+    padding: ${theme.spacing(0.6, 1.7)};
     text-transform: none;
     font-size: 0.75rem;
     color: ${theme.palette.text.secondary};
