@@ -14,15 +14,16 @@ export interface Indicator {
   indicatorNameEn: string;
   indicatorNameFi: string;
   category: string;
-  indicatorType: IndicatorType;
+  indicatorType: 'Municipality Level Data' | 'Marker' | 'Bar Chart';
   indicatorTypeIcon: string;
-  color: string;
-  sourceEn: string;
-  sourceFi: string;
-  showOnMap: string;
-  iconName: string;
   group: string;
   groupFI: string;
+  iconName: string;
+  color: string;
+  showOnMap: string;
+  sourceEn: string;
+  sourceFi: string;
+  selectedYear?: number;
 }
 
 export enum IndicatorType {

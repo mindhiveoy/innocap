@@ -299,6 +299,7 @@ export function LeafletMap({
 
       const featureData = municipalityData
         .filter(d => d.id === activeIndicator.id)
+        .filter(d => !activeIndicator.selectedYear || d.year === activeIndicator.selectedYear)
         .find(d => d.municipalityCode === feature.properties.kunta);
 
       if (featureData) {
@@ -352,6 +353,7 @@ export function LeafletMap({
 
     const tooltipData = municipalityData
       .filter(d => d.id === activeIndicator.id)
+      .filter(d => !activeIndicator.selectedYear || d.year === activeIndicator.selectedYear)
       .find(d => d.municipalityCode === feature.properties.kunta);
 
     root.render(
@@ -446,10 +448,11 @@ export function LeafletMap({
 
     const relevantBarChartData = [];
 
-    // If we have a pinned bar chart indicator - keep these at center position
+    // If we have a pinned bar chart indicator
     if (pinnedIndicator?.indicatorType === IndicatorType.BarChart) {
       const pinnedData = barChartData
         .filter(d => d.id === pinnedIndicator.id)
+        .filter(d => !pinnedIndicator.selectedYear || d.year === pinnedIndicator.selectedYear)
         .map(d => ({
           ...d,
           iconName: pinnedIndicator.iconName,
@@ -459,11 +462,12 @@ export function LeafletMap({
       relevantBarChartData.push(...pinnedData);
     }
 
-    // If we have a selected bar chart indicator - offset these from center
+    // If we have a selected bar chart indicator (different from pinned)
     if (selectedIndicator?.indicatorType === IndicatorType.BarChart &&
       selectedIndicator.id !== pinnedIndicator?.id) {
       const selectedData = barChartData
         .filter(d => d.id === selectedIndicator.id)
+        .filter(d => !selectedIndicator.selectedYear || d.year === selectedIndicator.selectedYear)
         .map(d => ({
           ...d,
           iconName: selectedIndicator.iconName,
