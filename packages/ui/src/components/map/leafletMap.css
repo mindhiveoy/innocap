@@ -20,6 +20,8 @@
   box-shadow: none;
   padding: 0;
   transition: opacity 0.2s ease-in-out;
+  font-size: 14px;
+  padding: 8px;
 }
 
 /* Remove the tooltip arrow */
@@ -37,6 +39,9 @@
   will-change: transform;
   outline: none !important;
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  touch-action: none;
+  /* Prevents browser handling of touch events */
 }
 
 .municipality-tooltip-container {
@@ -70,6 +75,7 @@
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   width: auto !important;
+  cursor: pointer;
 }
 
 .leaflet-popup-content {
@@ -86,6 +92,12 @@
 .leaflet-popup {
   margin-bottom: 0;
   width: auto !important;
+  z-index: 600;
+  transition: z-index 0s;
+}
+
+.leaflet-popup-pane {
+  z-index: 600;
 }
 
 .leaflet-container {
@@ -179,4 +191,8 @@
   position: relative;
   height: 100%;
   width: 100%;
+}
+
+.municipality-tooltip-container {
+  padding: 0;
 }

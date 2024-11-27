@@ -282,7 +282,6 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
       .slice(0, 5); // Take only 5 latest years
   }, [indicator, municipalityData]);
 
-  // Set initial year in useEffect
   useEffect(() => {
     if (isSelected && years.length > 0 && !selectedYear) {
       setSelectedYear(years[0]);

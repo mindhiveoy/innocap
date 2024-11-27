@@ -335,58 +335,6 @@ export function LeafletMap({
     };
   }, [selectedIndicator, pinnedIndicator, municipalityData]);
 
-  const handleMouseover = useCallback((e: L.LeafletEvent, feature: any, tooltip: L.Tooltip, currentStyle: any) => {
-    const layer = e.target;
-
-    const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-      ? pinnedIndicator
-      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? selectedIndicator
-        : null;
-
-    if (!activeIndicator) return;
-
-    layer.setStyle({
-      ...currentStyle,
-      weight: 2,
-      color: '#666',
-    });
-    layer.bringToFront();
-
-    const container = document.createElement('div');
-    const root = createRoot(container);
-
-    const tooltipData = municipalityData
-      .filter(d => d.id === activeIndicator.id)
-      .filter(d => !activeIndicator.selectedYear || d.year === activeIndicator.selectedYear)
-      .find(d => d.municipalityCode === feature.properties.kunta);
-
-    root.render(
-      <ThemeProvider theme={theme}>
-        <MunicipalityTooltip
-          name={feature.properties.name}
-          data={tooltipData || undefined}
-          color={activeIndicator?.color}
-          opacity={currentStyle.fillOpacity}
-        />
-      </ThemeProvider>
-    );
-    tooltip.setContent(container);
-  }, [selectedIndicator, pinnedIndicator, municipalityData]);
-
-  const handleMouseout = useCallback((e: L.LeafletEvent, feature: any) => {
-    const layer = e.target;
-    const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-      ? pinnedIndicator
-      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? selectedIndicator
-        : null;
-
-    if (!activeIndicator) return;
-
-    layer.setStyle(geoJsonStyle(feature));
-  }, [geoJsonStyle, selectedIndicator, pinnedIndicator]);
-
   const onEachFeatureCallback = useMemo(() => {
     return (feature: any, layer: L.Layer) => {
       const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
@@ -397,21 +345,73 @@ export function LeafletMap({
 
       if (!activeIndicator) return;
 
-      const tooltip = L.tooltip({
-        permanent: false,
-        direction: 'center',
+      const popup = L.popup({
+        closeButton: true,
+        closeOnClick: false,
+        autoClose: false,
         className: 'municipality-tooltip-container',
-        opacity: 0.9
+        offset: [0, -10] as L.PointExpression
       });
 
-      layer.bindTooltip(tooltip);
+      layer.bindPopup(popup);
+
+      // Add click handler to the popup container to bring it to front
+      popup.on('add', (e) => {
+        const popupElement = e.target.getElement();
+        if (popupElement) {
+          popupElement.addEventListener('mousedown', () => {
+            // Find all popups and set their z-index lower
+            const allPopups = document.querySelectorAll('.leaflet-popup');
+            allPopups.forEach(p => {
+              (p as HTMLElement).style.zIndex = '600';
+            });
+            // Set clicked popup's z-index higher
+            popupElement.style.zIndex = '650';
+          });
+        }
+      });
 
       layer.on({
-        mouseover: (e) => handleMouseover(e, feature, tooltip, geoJsonStyle(feature)),
-        mouseout: (e) => handleMouseout(e, feature)
+        mouseover: (e) => {
+          const layer = e.target;
+          layer.setStyle({
+            ...geoJsonStyle(feature),
+            weight: 2,
+            color: '#666',
+          });
+          layer.bringToFront();
+        },
+        mouseout: (e) => {
+          const layer = e.target;
+          layer.setStyle(geoJsonStyle(feature));
+        },
+        click: (e) => {
+          const layer = e.target;
+          const tooltipData = municipalityData
+            .filter(d => d.id === activeIndicator.id)
+            .filter(d => !activeIndicator.selectedYear || d.year === activeIndicator.selectedYear)
+            .find(d => d.municipalityCode === feature.properties.kunta);
+
+          const container = document.createElement('div');
+          const root = createRoot(container);
+
+          root.render(
+            <ThemeProvider theme={theme}>
+              <MunicipalityTooltip
+                name={feature.properties.name}
+                data={tooltipData || undefined}
+                color={activeIndicator?.color}
+                opacity={geoJsonStyle(feature).fillOpacity}
+              />
+            </ThemeProvider>
+          );
+
+          popup.setContent(container);
+          layer.openPopup();
+        }
       });
     };
-  }, [selectedIndicator, pinnedIndicator, handleMouseover, handleMouseout, geoJsonStyle]);
+  }, [selectedIndicator, pinnedIndicator, municipalityData, geoJsonStyle]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
