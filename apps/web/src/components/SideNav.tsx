@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  List, 
+import {
+  List,
   Box,
   Typography,
 } from '@mui/material';
@@ -204,62 +204,62 @@ export function SideNav() {
   const { indicators, error } = useData();
 
   const menuItems: MenuItem[] = [
-    { 
-      text: 'Welcome', 
-      icon: <HomeIcon />, 
-      id: 'welcome' 
+    {
+      text: 'Welcome',
+      icon: <HomeIcon />,
+      id: 'welcome'
     },
-    { 
-      text: 'Green', 
+    {
+      text: 'Green',
       icon: (
-        <Box 
-          component="img" 
-          src="/icons/leaf.svg" 
-          sx={{ 
-            width: 24, 
+        <Box
+          component="img"
+          src="/icons/leaf.svg"
+          sx={{
+            width: 24,
             height: 24,
             filter: selectedItem === 'green' ? 'brightness(0) invert(1)' : 'none'
-          }} 
+          }}
         />
-      ), 
-      id: 'green' 
+      ),
+      id: 'green'
     },
-    { 
-      text: 'Digital', 
+    {
+      text: 'Digital',
       icon: (
-        <Box 
-          component="img" 
-          src="/icons/access-point-network.svg" 
-          sx={{ 
-            width: 24, 
+        <Box
+          component="img"
+          src="/icons/access-point-network.svg"
+          sx={{
+            width: 24,
             height: 24,
             filter: selectedItem === 'digital' ? 'brightness(0) invert(1)' : 'none'
-          }} 
+          }}
         />
-      ), 
-      id: 'digital' 
+      ),
+      id: 'digital'
     },
-    { 
-      text: 'About', 
+    {
+      text: 'About',
       icon: (
-        <Box 
-          component="img" 
-          src="/icons/information-variant-box.svg" 
-          sx={{ 
-            width: 24, 
+        <Box
+          component="img"
+          src="/icons/information-variant-box.svg"
+          sx={{
+            width: 24,
             height: 24,
             filter: selectedItem === 'about' ? 'brightness(0) invert(1)' : 'none'
-          }} 
+          }}
         />
-      ), 
-      id: 'about' 
+      ),
+      id: 'about'
     },
   ];
 
   // Group indicators by their group property
   const groupedIndicators = indicators?.reduce<GroupedIndicators>((acc, indicator) => {
     if (!indicator.group) return acc;
-    
+
     if (!acc[indicator.group]) {
       acc[indicator.group] = {
         group: indicator.group,
@@ -267,7 +267,7 @@ export function SideNav() {
         indicators: []
       };
     }
-    
+
     acc[indicator.group].indicators.push(indicator);
     return acc;
   }, {});
@@ -294,19 +294,19 @@ export function SideNav() {
                 We are building public sector innovation capacity towards digital-driven NPA communities
               </Typography>
               <Typography variant="paragraph" sx={{ mb: 4 }}>
-                This dashboard visualizes the green and digital transition indicators for the Southern Savo region. 
+                This dashboard visualizes the green and digital transition indicators for the Southern Savo region.
                 <br />
                 <br />
                 The indicators help monitor and understand the progress of municipalities in their journey towards
                 sustainable and digital future.
               </Typography>
               <LogoContainer>
-                <Box component="img" 
-                  src="/innocap_funder_logo.png" 
+                <Box component="img"
+                  src="/innocap_funder_logo.png"
                   alt="Innocap Funder"
                 />
-                <Box component="img" 
-                  src="/university_of_helsinki_ruralia.png" 
+                <Box component="img"
+                  src="/university_of_helsinki_ruralia.png"
                   alt="University of Helsinki Ruralia Institute"
                 />
               </LogoContainer>
@@ -327,9 +327,9 @@ export function SideNav() {
                       {group}
                     </GroupTitle>
                     <Box key={group}>
-                      {indicators.map(indicator => (
+                      {indicators.map((indicator, index) => (
                         <IndicatorCard
-                          key={indicator.id}
+                          key={`${indicator.id}-${index}`}
                           indicator={indicator}
                         />
                       ))}
@@ -354,7 +354,7 @@ export function SideNav() {
           return (
             <>
               <Typography variant="h2" gutterBottom color="primary.darkest">
-              About
+                About
               </Typography>
               <Typography variant="lead" gutterBottom>
                 Learn how to use the platform and understand the indicators
@@ -399,12 +399,12 @@ export function SideNav() {
       <>
         <DrawerHeader>
           <CloseButton onClick={() => setDrawerOpen(false)}>
-            <Box sx={{ 
+            <Box sx={{
               display: { xs: 'none', md: 'block' }
             }}>
               <ArrowBackIcon />
             </Box>
-            <Box sx={{ 
+            <Box sx={{
               display: { xs: 'block', md: 'none' }
             }}>
               <CloseIcon />
