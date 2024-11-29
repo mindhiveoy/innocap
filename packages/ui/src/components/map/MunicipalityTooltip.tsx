@@ -18,8 +18,8 @@ interface ColorIndicatorProps {
 
 const ColorIndicator = styled.div<ColorIndicatorProps>(({ color, opacity, theme }) => `
   padding-top: ${theme.spacing(0.5)};
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1px solid ${color};
   background-color: ${color};
@@ -39,8 +39,8 @@ const RightColumn = styled.div(({ theme }) => `
 `);
 
 const TooltipDescription = styled(Typography)(({ theme }) => `
-  min-width: 220px;
-  max-width: 220px;
+  min-width: 230px;
+  max-width: 230px;
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -71,15 +71,32 @@ export function MunicipalityTooltip({
         <ColorIndicator color={color} opacity={opacity} />
       </LeftColumn>
       <RightColumn>
-        <Box display='flex' flexDirection='row' gap={0.5}>
-          <Typography variant="label" fontWeight='medium'>
+        <Box display='flex' flexDirection='row' gap={0.4}>
+          <Typography variant="lead">
             {name}
           </Typography>
           {isMunicipalityData(data) && (
-            <Typography variant="label" fontWeight='medium'>
-              {data.value} {data.unit || ''}
-            </Typography>
+            <Box display="flex" flexDirection="row" gap={0.5} alignItems="baseline">
+              <Typography variant="lead">
+                {data.value}
+              </Typography>
+              {data.unit && (
+                <Typography
+                  variant="lead"
+                  noWrap
+                  sx={{
+                    maxWidth: '100px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {data.unit}
+                </Typography>
+              )}
+            </Box>
           )}
+
         </Box>
         {data?.descriptionFi && (
           <TooltipDescription variant="paragraph">
