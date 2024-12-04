@@ -340,7 +340,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
         <TitleSection>
           <Box display='flex' alignItems='center' gap={1}>
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
-            <Typography variant='paragraph' color='text.secondary'>Green transfer</Typography>
+            <Typography variant='paragraph' color='text.secondary'>Green transition</Typography>
             <IconWrapper>
               <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
             </IconWrapper>

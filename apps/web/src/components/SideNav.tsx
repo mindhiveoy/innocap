@@ -14,6 +14,7 @@ import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
 import { Indicator } from '@repo/ui/types/indicators';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
+import Image from 'next/image';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -154,16 +155,33 @@ const LogoContainer = styled(Box)(({ theme }) => `
 const DrawerHeader = styled(Box)(({ theme }) => `
   display: flex;
   align-items: center;
-  padding: ${theme.spacing(2, 2, 0, 2)};
+  padding: ${theme.spacing(2, 2)};
+  position: sticky;
+  top: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(5px);
+  z-index: 1;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  gap: ${theme.spacing(2)};
   
   @media (max-width: 768px) {
-    justify-content: flex-end;
+    justify-content: space-between;
   }
   
   @media (min-width: 769px) {
-    justify-content: flex-start;
+    justify-content: space-between;
   }
-`)
+
+  h2 {
+    margin: 0;
+    flex: 1;
+    font-size: ${theme.typography.h2.fontSize};
+    
+    @media (max-width: 1200px) {
+      font-size: 1.25rem;
+    }
+  }
+`);
 
 const CloseButton = styled(Box)(({ theme }) => `
   display: flex;
@@ -174,12 +192,45 @@ const CloseButton = styled(Box)(({ theme }) => `
   width: 40px;
   height: 40px;
   border-radius: ${theme.shape.borderRadius}px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease-in-out;
+
+  svg {
+    display: block;
+    margin: auto;
+  }
 
   &:hover {
-    background-color: ${theme.palette.action.hover};
+    transform: scale(1.1);
   }
-`)
+`);
+
+const LogoSection = styled(Box)(({ theme }) => `
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: ${theme.spacing(2)};
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`);
+
+const LogoImage = styled(Box)(({ theme }) => `
+  width: 65px;
+  height: 65px;
+  background-color: ${theme.palette.primary.darkest};
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  img {
+    width: auto;
+    height: 50px;
+    object-fit: contain;
+    margin-bottom: -5px;
+  }
+`);
 
 interface GroupedIndicators {
   [key: string]: {
@@ -287,107 +338,187 @@ export function SideNav() {
         case 'welcome':
           return (
             <>
-              <Typography variant="h2" gutterBottom color="primary.darkest">
-                Southern Savo Green and Digital Transition Dashboard
-              </Typography>
-              <Typography variant="lead" gutterBottom>
-                We are building public sector innovation capacity towards digital-driven NPA communities
-              </Typography>
-              <Typography variant="paragraph" sx={{ mb: 4 }}>
-                This dashboard visualizes the green and digital transition indicators for the Southern Savo region.
-                <br />
-                <br />
-                The indicators help monitor and understand the progress of municipalities in their journey towards
-                sustainable and digital future.
-              </Typography>
-              <LogoContainer>
-                <Box component="img"
-                  src="/innocap_funder_logo.png"
-                  alt="Innocap Funder"
-                />
-                <Box component="img"
-                  src="/university_of_helsinki_ruralia.png"
-                  alt="University of Helsinki Ruralia Institute"
-                />
-              </LogoContainer>
+              <DrawerHeader>
+                <CloseButton onClick={() => setDrawerOpen(false)}>
+                  <Box 
+                    display='flex' 
+                    alignItems='center' 
+                    sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      height: '24px',
+                    }}
+                  >
+                    <ArrowBackIcon />
+                  </Box>
+                  <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <CloseIcon />
+                  </Box>
+                </CloseButton>
+                <Typography variant="h2" color="primary.darkest">
+                  Southern Savo Green and Digital Transition Dashboard
+                </Typography>
+                <Box width={40} /> {/* Spacer to balance the close button */}
+              </DrawerHeader>
+              <DrawerContent>
+                <Typography variant="lead" gutterBottom>
+                  We are building public sector innovation capacity towards digital-driven NPA communities
+                </Typography>
+                <Typography variant="paragraph" sx={{ mb: 4 }}>
+                  This dashboard visualizes the green and digital transition indicators for the Southern Savo region.
+                  <br />
+                  <br />
+                  The indicators help monitor and understand the progress of municipalities in their journey towards
+                  sustainable and digital future.
+                </Typography>
+                <LogoContainer>
+                  <Box component="img"
+                    src="/innocap_funder_logo.png"
+                    alt="Innocap Funder"
+                  />
+                  <Box component="img"
+                    src="/university_of_helsinki_ruralia.png"
+                    alt="University of Helsinki Ruralia Institute"
+                  />
+                </LogoContainer>
+              </DrawerContent>
             </>
           );
         case 'green':
           return (
             <>
-              <Typography variant="h2" gutterBottom color="primary.darkest">
-                Green Transfer Indicators
-              </Typography>
-              {error ? (
-                <Typography color="error">Error loading indicators</Typography>
-              ) : (
-                Object.values(groupedIndicators || {}).map(({ group, indicators }) => (
-                  <span key={group}>
-                    <GroupTitle variant='h2'>
-                      {group}
-                    </GroupTitle>
-                    <Box key={group}>
-                      {indicators.map((indicator, index) => (
-                        <IndicatorCard
-                          key={`${indicator.id}-${index}`}
-                          indicator={indicator}
-                        />
-                      ))}
-                    </Box>
-                  </span>
-                ))
-              )}
+              <DrawerHeader>
+                <CloseButton onClick={() => setDrawerOpen(false)}>
+                  <Box 
+                    display='flex' 
+                    alignItems='center' 
+                    sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      height: '24px',
+                    }}
+                  >
+                    <ArrowBackIcon />
+                  </Box>
+                  <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <CloseIcon />
+                  </Box>
+                </CloseButton>
+                <Typography variant="h2" color="primary.darkest">
+                  Green Transition Indicators
+                </Typography>
+                <Box width={40} /> {/* Spacer to balance the close button */}
+              </DrawerHeader>
+              <DrawerContent>
+                {error ? (
+                  <Typography color="error">Error loading indicators</Typography>
+                ) : (
+                  Object.values(groupedIndicators || {}).map(({ group, indicators }) => (
+                    <span key={group}>
+                      <GroupTitle variant='h2'>
+                        {group}
+                      </GroupTitle>
+                      <Box key={group}>
+                        {indicators.map((indicator, index) => (
+                          <IndicatorCard
+                            key={`${indicator.id}-${index}`}
+                            indicator={indicator}
+                          />
+                        ))}
+                      </Box>
+                    </span>
+                  ))
+                )}
+              </DrawerContent>
             </>
           );
         case 'digital':
           return (
             <>
-              <Typography variant="h2" gutterBottom color="primary.darkest">
-                Digital Indicators
-              </Typography>
-              <Typography variant="lead" gutterBottom>
-                Coming soon: Explore digital transformation indicators across the region.
-              </Typography>
+              <DrawerHeader>
+                <CloseButton onClick={() => setDrawerOpen(false)}>
+                  <Box 
+                    display='flex' 
+                    alignItems='center' 
+                    sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      height: '24px',
+                    }}
+                  >
+                    <ArrowBackIcon />
+                  </Box>
+                  <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <CloseIcon />
+                  </Box>
+                </CloseButton>
+                <Typography variant="h2" color="primary.darkest">
+                  Digital Indicators
+                </Typography>
+                <Box width={40} /> {/* Spacer to balance the close button */}
+              </DrawerHeader>
+              <DrawerContent>
+                <Typography variant="lead" gutterBottom>
+                  Coming soon: Explore digital transformation indicators across the region.
+                </Typography>
+              </DrawerContent>
             </>
           );
         case 'about':
           return (
             <>
-              <Typography variant="h2" gutterBottom color="primary.darkest">
-                About
-              </Typography>
-              <Typography variant="lead" gutterBottom>
-                Learn how to use the platform and understand the indicators
-              </Typography>
-              <Typography variant="paragraph" sx={{ mb: 2 }}>
-                The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.
-              </Typography>
-              <GroupTitle variant='h2'>
-                Basic Navigation
-              </GroupTitle>
-              <Typography variant="paragraph" sx={{ mb: 2 }}>
-                • Click on municipalities to see detailed information
-                <br />
-                • Use the side navigation to switch between different indicator categories
-                <br />
-                • Explore the map to understand regional patterns
-              </Typography>
-              <GroupTitle variant='h2'>
-                Working with Indicators
-              </GroupTitle>
-              <Typography variant="paragraph" sx={{ mb: 2 }}>
-                • Select an indicator to view it on the map
-                <br />
-                • Pin an indicator to compare it with another
-              </Typography>
-              <GroupTitle variant='h2'>
-                AI Assistant
-              </GroupTitle>
-              <Typography variant="paragraph">
-                • An AI assistant is available to help answer your questions
-                <br />
-                • Please note that the assistant is in development phase and may have limited knowledge
-              </Typography>
+              <DrawerHeader>
+                <CloseButton onClick={() => setDrawerOpen(false)}>
+                  <Box 
+                    display='flex' 
+                    alignItems='center' 
+                    sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      height: '24px',
+                    }}
+                  >
+                    <ArrowBackIcon />
+                  </Box>
+                  <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <CloseIcon />
+                  </Box>
+                </CloseButton>
+                <Typography variant="h2" color="primary.darkest">
+                  About
+                </Typography>
+                <Box width={40} /> {/* Spacer to balance the close button */}
+              </DrawerHeader>
+              <DrawerContent>
+                <Typography variant="lead" gutterBottom>
+                  Learn how to use the platform and understand the indicators
+                </Typography>
+                <Typography variant="paragraph" sx={{ mb: 2 }}>
+                  The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.
+                </Typography>
+                <GroupTitle variant='h2'>
+                  Basic Navigation
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 2 }}>
+                  • Click on municipalities to see detailed information
+                  <br />
+                  • Use the side navigation to switch between different indicator categories
+                  <br />
+                  • Explore the map to understand regional patterns
+                </Typography>
+                <GroupTitle variant='h2'>
+                  Working with Indicators
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 2 }}>
+                  • Select an indicator to view it on the map
+                  <br />
+                  • Pin an indicator to compare it with another
+                </Typography>
+                <GroupTitle variant='h2'>
+                  AI Assistant
+                </GroupTitle>
+                <Typography variant="paragraph">
+                  • An AI assistant is available to help answer your questions
+                  <br />
+                  • Please note that the assistant is in development phase and may have limited knowledge
+                </Typography>
+              </DrawerContent>
             </>
           );
         default:
@@ -395,33 +526,25 @@ export function SideNav() {
       }
     })();
 
-    return (
-      <>
-        <DrawerHeader>
-          <CloseButton onClick={() => setDrawerOpen(false)}>
-            <Box sx={{
-              display: { xs: 'none', md: 'block' }
-            }}>
-              <ArrowBackIcon />
-            </Box>
-            <Box sx={{
-              display: { xs: 'block', md: 'none' }
-            }}>
-              <CloseIcon />
-            </Box>
-          </CloseButton>
-        </DrawerHeader>
-        <DrawerContent>
-          {content}
-        </DrawerContent>
-      </>
-    );
+    return content;
   };
 
   return (
     <>
       <StyledNav>
         <NavList>
+          <LogoSection>
+            <LogoImage>
+              <Image src="/innocap_logo.svg" alt="Innocap Logo" width={68} height={68} />
+            </LogoImage>
+            <Typography
+              variant="label"
+              color="primary.dark"
+              textAlign="center"
+            >
+              Innocap Portal
+            </Typography>
+          </LogoSection>
           {menuItems.map((item) => (
             <NavItem
               key={item.id}
