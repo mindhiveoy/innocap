@@ -351,9 +351,9 @@ export function LeafletMap({
 
     return (
       <LayerGroup>
-        {filteredMarkerData.map((marker) => (
+        {filteredMarkerData.map((marker, i) => (
           <Marker
-            key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}`}
+            key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}-${i}`}
             position={marker.location}
             icon={createMarkerIcon(marker.markerIcon, marker.color)}>
             <Popup>

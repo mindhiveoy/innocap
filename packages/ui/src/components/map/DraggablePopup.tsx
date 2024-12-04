@@ -16,36 +16,31 @@ export function DraggablePopup({
   map,
   children
 }: DraggablePopupProps) {
-  const handlePopupMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
     const popup = popupRefs.current[index];
     if (!popup) return;
 
     dragRefs.current[index] = {
       isDragging: true,
       startPos: map.mouseEventToContainerPoint({
-        clientX: e.clientX,
-        clientY: e.clientY
+        clientX,
+        clientY
       } as MouseEvent),
       initialLatLng: popup.getLatLng() ?? null
     };
 
     popup.getElement()?.classList.add('is-dragging');
     map.dragging.disable();
-
-    document.addEventListener('mousemove', handlePopupMouseMove);
-    document.addEventListener('mouseup', handlePopupMouseUp);
   }, [map, index, popupRefs, dragRefs]);
 
-  const handlePopupMouseMove = useCallback((e: MouseEvent) => {
-    e.preventDefault();
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
     const popup = popupRefs.current[index];
     const dragRef = dragRefs.current[index];
     if (!popup || !dragRef?.isDragging || !dragRef.startPos || !dragRef.initialLatLng) return;
 
     const currentPoint = map.mouseEventToContainerPoint({
-      clientX: e.clientX,
-      clientY: e.clientY
+      clientX,
+      clientY
     } as MouseEvent);
 
     const offset = currentPoint.subtract(dragRef.startPos);
@@ -56,8 +51,7 @@ export function DraggablePopup({
     popup.setLatLng(newLatLng);
   }, [map, index, popupRefs, dragRefs]);
 
-  const handlePopupMouseUp = useCallback((e: MouseEvent) => {
-    e.preventDefault();
+  const handleDragEnd = useCallback(() => {
     const popup = popupRefs.current[index];
     if (!popup) return;
 
@@ -68,19 +62,68 @@ export function DraggablePopup({
 
     popup.getElement()?.classList.remove('is-dragging');
     map.dragging.enable();
-
-    document.removeEventListener('mousemove', handlePopupMouseMove);
-    document.removeEventListener('mouseup', handlePopupMouseUp);
   }, [map, index, popupRefs, dragRefs]);
+
+  // Mouse event handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    handleDragStart(e.clientX, e.clientY);
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  }, [handleDragStart]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    handleDragMove(e.clientX, e.clientY);
+  }, [handleDragMove]);
+
+  const handleMouseUp = useCallback((e: MouseEvent) => {
+    e.preventDefault();
+    handleDragEnd();
+
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  }, [handleDragEnd]);
+
+  // Touch event handlers
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    handleDragStart(touch.clientX, touch.clientY);
+
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  }, [handleDragStart]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    handleDragMove(touch.clientX, touch.clientY);
+  }, [handleDragMove]);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    e.preventDefault();
+    handleDragEnd();
+
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleTouchEnd);
+  }, [handleDragEnd]);
 
   return (
     <div
-      onMouseDown={handlePopupMouseDown}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       style={{
         cursor: 'move',
         userSelect: 'none',
         width: '100%',
-        height: '100%'
+        height: '100%',
+        touchAction: 'none' // Prevent default touch actions like scrolling
       }}
     >
       {children}
