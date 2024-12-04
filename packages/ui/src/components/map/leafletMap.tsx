@@ -4,14 +4,14 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup, useMap } f
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { municipalityBoundaries } from './data/municipality-boundaries';
 import { Indicator, MunicipalityLevelData, MarkerData, IndicatorType, BarChartData } from '@repo/ui/types/indicators';
 import { calculateOpacity, Unit } from '../../types/units';
 import { MunicipalityTooltip } from './MunicipalityTooltip';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './leafletMap.css';
 import styled from '@emotion/styled';
@@ -144,98 +144,6 @@ const YearText = styled(Typography)(({ theme }) => `
   margin-left: ${theme.spacing(1)};
 `);
 
-function DraggablePopupContent({
-  data,
-  index,
-  popupRefs,
-  dragRefs,
-  color,
-}: {
-  data: BarChartData;
-  index: number;
-  popupRefs: React.MutableRefObject<(L.Popup | null)[]>;
-  dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
-  color?: string;
-}) {
-  const map = useMap();
-  const dragAreaRef = useRef<HTMLDivElement>(null);
-
-  const handlePopupMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent text selection
-    const popup = popupRefs.current[index];
-    if (!popup) return;
-
-    dragRefs.current[index] = {
-      isDragging: true,
-      startPos: map.mouseEventToContainerPoint({
-        clientX: e.clientX,
-        clientY: e.clientY
-      } as MouseEvent),
-      initialLatLng: popup.getLatLng() ?? null
-    };
-
-    // Add dragging class to the entire popup
-    popup.getElement()?.classList.add('is-dragging');
-    map.dragging.disable();
-
-    // Capture mouse events
-    document.addEventListener('mousemove', handlePopupMouseMove);
-    document.addEventListener('mouseup', handlePopupMouseUp);
-  }, [map, index, popupRefs, dragRefs]);
-
-  const handlePopupMouseMove = useCallback((e: MouseEvent) => {
-    e.preventDefault();
-    const popup = popupRefs.current[index];
-    const dragRef = dragRefs.current[index];
-    if (!popup || !dragRef?.isDragging || !dragRef.startPos || !dragRef.initialLatLng) return;
-
-    const currentPoint = map.mouseEventToContainerPoint({
-      clientX: e.clientX,
-      clientY: e.clientY
-    } as MouseEvent);
-
-    const offset = currentPoint.subtract(dragRef.startPos);
-    const initialPoint = map.latLngToContainerPoint(dragRef.initialLatLng);
-    const newPoint = initialPoint.add(offset);
-    const newLatLng = map.containerPointToLatLng(newPoint);
-
-    popup.setLatLng(newLatLng);
-  }, [map, index, popupRefs, dragRefs]);
-
-  const handlePopupMouseUp = useCallback((e: MouseEvent) => {
-    e.preventDefault();
-    const popup = popupRefs.current[index];
-    if (!popup) return;
-
-    if (dragRefs.current[index]) {
-      dragRefs.current[index].isDragging = false;
-      dragRefs.current[index].startPos = null;
-    }
-
-    popup.getElement()?.classList.remove('is-dragging');
-    map.dragging.enable();
-
-    // Remove event listeners
-    document.removeEventListener('mousemove', handlePopupMouseMove);
-    document.removeEventListener('mouseup', handlePopupMouseUp);
-  }, [map, index, popupRefs, dragRefs]);
-
-  return (
-    <div
-      ref={dragAreaRef}
-      onMouseDown={handlePopupMouseDown}
-      style={{
-        cursor: 'move',
-        userSelect: 'none',
-        width: '100%',
-        height: '100%'
-      }}
-    >
-      <BarChartPopup data={data} color={color} />
-    </div>
-  );
-}
-
 export function LeafletMap({
   center,
   zoom,
@@ -252,6 +160,9 @@ export function LeafletMap({
   onMapMount,
   pinnedIndicator,
 }: LeafletMapProps) {
+  const popupRefs = useRef<(L.Popup | null)[]>([]);
+  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
+  const mapRef = useRef<L.Map | null>(null);
 
   const filteredMarkerData = useMemo(() => {
     if (!markerData) return [];
@@ -345,12 +256,13 @@ export function LeafletMap({
 
       if (!activeIndicator) return;
 
+      // Create popup with the same options as bar chart popups
       const popup = L.popup({
         closeButton: true,
         closeOnClick: false,
         autoClose: false,
-        className: 'municipality-tooltip-container',
-        offset: [0, -10] as L.PointExpression
+        className: 'draggable-popup',
+        autoPan: false
       });
 
       layer.bindPopup(popup);
@@ -395,6 +307,19 @@ export function LeafletMap({
           const container = document.createElement('div');
           const root = createRoot(container);
 
+          // Get or create an index for this municipality
+          const index = feature.properties.kunta;
+
+          // Ensure we have space in our refs arrays
+          while (popupRefs.current.length <= index) {
+            popupRefs.current.push(null);
+            dragRefs.current.push({
+              isDragging: false,
+              startPos: null,
+              initialLatLng: null
+            });
+          }
+
           root.render(
             <ThemeProvider theme={theme}>
               <MunicipalityTooltip
@@ -402,16 +327,22 @@ export function LeafletMap({
                 data={tooltipData || undefined}
                 color={activeIndicator?.color}
                 opacity={geoJsonStyle(feature).fillOpacity}
+                index={index}
+                popupRefs={popupRefs}
+                dragRefs={dragRefs}
+                map={mapRef.current!}
               />
             </ThemeProvider>
           );
 
           popup.setContent(container);
+          // Store the popup reference
+          popupRefs.current[index] = popup;
           layer.openPopup();
         }
       });
     };
-  }, [selectedIndicator, pinnedIndicator, municipalityData, geoJsonStyle]);
+  }, [selectedIndicator, pinnedIndicator, municipalityData, geoJsonStyle, mapRef.current]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
@@ -444,12 +375,8 @@ export function LeafletMap({
     );
   }, [filteredMarkerData]);
 
-  // Create refs for popups
-  const popupRefs = useRef<(L.Popup | null)[]>([]);
-  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
-
   const barChartElements = useMemo(() => {
-    if (!barChartData) return null;
+    if (!barChartData || !mapRef.current) return null;
 
     const relevantBarChartData = [];
 
@@ -458,11 +385,12 @@ export function LeafletMap({
       const pinnedData = barChartData
         .filter(d => d.id === pinnedIndicator.id)
         .filter(d => !pinnedIndicator.selectedYear || d.year === pinnedIndicator.selectedYear)
-        .map(d => ({
+        .map((d, idx) => ({
           ...d,
           iconName: pinnedIndicator.iconName,
           color: pinnedIndicator.color,
-          isPinned: true
+          isPinned: true,
+          index: idx
         }));
       relevantBarChartData.push(...pinnedData);
     }
@@ -473,20 +401,22 @@ export function LeafletMap({
       const selectedData = barChartData
         .filter(d => d.id === selectedIndicator.id)
         .filter(d => !selectedIndicator.selectedYear || d.year === selectedIndicator.selectedYear)
-        .map(d => ({
+        .map((d, idx) => ({
           ...d,
           iconName: selectedIndicator.iconName,
           color: selectedIndicator.color,
-          isPinned: false
+          isPinned: false,
+          index: relevantBarChartData.length + idx
         }));
       relevantBarChartData.push(...selectedData);
     }
 
     if (relevantBarChartData.length === 0) return null;
 
-    if (popupRefs.current.length !== relevantBarChartData.length) {
-      popupRefs.current = new Array(relevantBarChartData.length).fill(null);
-      dragRefs.current = new Array(relevantBarChartData.length).fill({
+    // Ensure we have enough space in our refs arrays
+    while (popupRefs.current.length < relevantBarChartData.length) {
+      popupRefs.current.push(null);
+      dragRefs.current.push({
         isDragging: false,
         startPos: null,
         initialLatLng: null
@@ -495,25 +425,25 @@ export function LeafletMap({
 
     return (
       <LayerGroup>
-        {relevantBarChartData.map((data, index) => {
+        {relevantBarChartData.map((data) => {
           const center = getMunicipalityCenter(data.municipalityCode);
           // Offset the selected indicators (non-pinned)
           const position: LatLngTuple = data.isPinned
             ? center
             : [
-              center[0] - 0.03, // Offset selected indicators southwest
+              center[0] - 0.03,
               center[1] - 0.01
             ];
 
           return (
             <Marker
-              key={`${data.id}-${data.municipalityName}-${index}`}
+              key={`${data.id}-${data.municipalityName}-${data.index}`}
               position={position}
               icon={createMarkerIcon(data.iconName, data.color)}
             >
               <Popup
                 ref={popup => {
-                  popupRefs.current[index] = popup;
+                  popupRefs.current[data.index] = popup;
                 }}
                 closeButton={true}
                 closeOnClick={false}
@@ -521,12 +451,13 @@ export function LeafletMap({
                 className="draggable-popup"
                 autoPan={false}
               >
-                <DraggablePopupContent
+                <BarChartPopup
                   data={data}
-                  index={index}
+                  color={data.color}
+                  index={data.index}
                   popupRefs={popupRefs}
                   dragRefs={dragRefs}
-                  color={data.color}
+                  map={mapRef.current!}
                 />
               </Popup>
             </Marker>
@@ -534,7 +465,7 @@ export function LeafletMap({
         })}
       </LayerGroup>
     );
-  }, [selectedIndicator, pinnedIndicator, barChartData]);
+  }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current]);
 
   const mapContainerProps = useMemo(() => ({
     center,
@@ -549,6 +480,13 @@ export function LeafletMap({
     zoomSnap: 0.5,
     zoomDelta: 1,
   }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
+
+  const handleMapMount = useCallback((map: L.Map) => {
+    mapRef.current = map;
+    if (onMapMount) {
+      onMapMount(map);
+    }
+  }, [onMapMount]);
 
   return (
     <>
@@ -584,11 +522,7 @@ export function LeafletMap({
       <MapContainer
         attributionControl={false}
         {...mapContainerProps}
-        ref={map => {
-          if (map && onMapMount) {
-            onMapMount(map);
-          }
-        }}
+        ref={handleMapMount}
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
