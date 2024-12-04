@@ -177,15 +177,19 @@
 
 .leaflet-popup-close-button {
   position: absolute !important;
-  right: 10px !important;
-  top: 10px !important;
+  right: 24px !important;
+  top: 30px !important;
   z-index: 1000 !important;
-  color: #666 !important;
-  font-size: 16px !important;
-  padding: 4px !important;
-  height: auto !important;
-  width: auto !important;
+  color: #083553 !important;
+  font-size: 24px !important;
+  padding: 0 !important;
+  height: 24px !important;
+  width: 24px !important;
   border-radius: 4px;
+}
+
+.leaflet-popup-close-button span {
+  margin-top: -2px;
 }
 
 .leaflet-popup-close-button:hover {

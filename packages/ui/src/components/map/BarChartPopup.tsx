@@ -17,7 +17,7 @@ interface BarChartPopupProps {
 const PopupContainer = styled(Box)(({ theme }) => `
   background: ${theme.palette.background.paper};
   border-radius: ${theme.shape.borderRadius}px;
-  padding: ${theme.spacing(2)};
+  padding: ${theme.spacing(4)};
   width: 450px;
   max-width: 90vw;
 `);
@@ -51,7 +51,8 @@ export function BarChartPopup({
       map={map}
     >
       <PopupContainer>
-        <Typography variant="h6" gutterBottom>
+        <Typography
+          variant="h6" gutterBottom color='primary.darkest'>
           {data.municipalityName}
         </Typography>
         <ChartContainer>
