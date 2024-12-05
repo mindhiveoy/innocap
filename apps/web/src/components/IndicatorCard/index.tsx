@@ -248,6 +248,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     setSelectedIndicator,
     isPinned,
     togglePin,
+    setPinnedIndicatorYear,
   } = useIndicator();
   const { municipalityData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
@@ -259,7 +260,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     [selectedIndicator?.id, indicator?.id]
   );
 
-  const pinned = useMemo(() =>
+  const pinned: boolean = useMemo(() =>
     isPinned(indicator),
     [isPinned, indicator]
   );
@@ -304,9 +305,15 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   const handleYearChange = useCallback((_: React.MouseEvent<HTMLElement>, newYear: string | null) => {
     setSelectedYear(newYear);
 
-    // If this is the currently selected indicator, update its data
+    // If this indicator is pinned, update the pinned indicator's year instead
+    if (pinned) {
+      console.log("🚀 ~ handleYearChange ~ pinned:", pinned)
+      setPinnedIndicatorYear(newYear ? parseInt(newYear) : undefined);
+      return; // Prevent further processing that would affect selection
+    }
+
+    // Only update selection for non-pinned indicators
     if (isSelected) {
-      // Deselect and reselect to trigger data update
       setSelectedIndicator(null);
       setTimeout(() => {
         setSelectedIndicator({
@@ -315,7 +322,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
         });
       }, 0);
     }
-  }, [isSelected, indicator, setSelectedIndicator]);
+  }, [isSelected, pinned, indicator, setSelectedIndicator, setPinnedIndicatorYear]);
 
   useEffect(() => {
     const element = sourceRef.current;

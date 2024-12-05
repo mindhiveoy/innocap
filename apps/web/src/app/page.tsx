@@ -39,7 +39,9 @@ export default function Home() {
   // Only use split view when comparing two municipality-level indicators
   const showSplitView = isCompareMode &&
     pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel &&
-    selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel;
+    selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel &&
+    // Don't show split view when filtering pinned indicator
+    !(selectedIndicator?.id === pinnedIndicator?.id && selectedIndicator?.selectedYear !== pinnedIndicator?.selectedYear);
 
   return (
     <Box sx={{
