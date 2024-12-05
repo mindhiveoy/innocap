@@ -286,16 +286,21 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   useEffect(() => {
     if (isSelected && years.length > 0 && !selectedYear) {
       setSelectedYear(years[0]);
-      setSelectedIndicator({
-        ...indicator,
-        selectedYear: parseInt(years[0])
-      });
+      if (!pinned) {
+        setSelectedIndicator({
+          ...indicator,
+          selectedYear: parseInt(years[0])
+        });
+      }
     }
-  }, [isSelected, years, selectedYear, indicator, setSelectedIndicator]);
+  }, [isSelected, years, selectedYear, indicator, setSelectedIndicator, pinned]);
 
   const handleClick = useCallback(() => {
+    if (pinned) {
+      return;
+    }
     setSelectedIndicator(isSelected ? null : indicator);
-  }, [isSelected, indicator, setSelectedIndicator]);
+  }, [isSelected, indicator, setSelectedIndicator, pinned]);
 
   const handlePinClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -305,14 +310,22 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   const handleYearChange = useCallback((_: React.MouseEvent<HTMLElement>, newYear: string | null) => {
     setSelectedYear(newYear);
 
-    // If this indicator is pinned, update the pinned indicator's year instead
+    // For pinned indicators, only update the pinned year
     if (pinned) {
-      console.log("🚀 ~ handleYearChange ~ pinned:", pinned)
-      setPinnedIndicatorYear(newYear ? parseInt(newYear) : undefined);
-      return; // Prevent further processing that would affect selection
+      const yearValue = newYear ? parseInt(newYear) : undefined;
+      setPinnedIndicatorYear(yearValue);
+      
+      // If this indicator is also selected, update its year too
+      if (isSelected) {
+        setSelectedIndicator({
+          ...indicator,
+          selectedYear: yearValue
+        });
+      }
+      return;
     }
 
-    // Only update selection for non-pinned indicators
+    // For non-pinned indicators
     if (isSelected) {
       setSelectedIndicator(null);
       setTimeout(() => {

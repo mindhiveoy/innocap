@@ -4,14 +4,13 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup, useMap } f
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { municipalityBoundaries } from './data/municipality-boundaries';
 import { Indicator, MunicipalityLevelData, MarkerData, IndicatorType, BarChartData } from '@repo/ui/types/indicators';
 import { calculateOpacity, Unit } from '../../types/units';
 import { MunicipalityTooltip } from './MunicipalityTooltip';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
-import { useMemo } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './leafletMap.css';
 import styled from '@emotion/styled';
@@ -21,6 +20,7 @@ import { BarChartPopup } from './BarChartPopup';
 import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
+
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -198,21 +198,19 @@ export function LeafletMap({
     return relevantMarkers;
   }, [selectedIndicator, pinnedIndicator, markerData]);
 
+  const activeIndicator = useMemo(() => {
+    const isPinnedIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel;
+    return isPinnedIndicator
+      ? pinnedIndicator
+      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+        ? selectedIndicator
+        : null;
+  }, [pinnedIndicator, selectedIndicator]);
+
+
   const geoJsonStyle = useMemo(() => {
     return (feature: any) => {
-      const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? pinnedIndicator
-        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-          ? selectedIndicator
-          : null;
-
-      if (!activeIndicator) {
-        return {
-          ...geoJSONStyle,
-          pane: 'overlayPane',
-          className: 'geojson-feature'
-        };
-      }
+      if (!activeIndicator) return geoJSONStyle;
 
       const featureData = municipalityData
         .filter(d => d.id === activeIndicator.id)
@@ -245,16 +243,10 @@ export function LeafletMap({
         className: 'geojson-feature'
       };
     };
-  }, [selectedIndicator, pinnedIndicator, municipalityData]);
+  }, [activeIndicator, municipalityData]);
 
   const onEachFeatureCallback = useMemo(() => {
     return (feature: any, layer: L.Layer) => {
-      const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? pinnedIndicator
-        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-          ? selectedIndicator
-          : null;
-
       if (!activeIndicator) return;
 
       // Create popup with the same options as bar chart popups
@@ -287,8 +279,9 @@ export function LeafletMap({
       layer.on({
         mouseover: (e) => {
           const layer = e.target;
+          const style = geoJsonStyle(feature);
           layer.setStyle({
-            ...geoJsonStyle(feature),
+            ...style,
             weight: 2,
             color: '#666',
           });
@@ -296,6 +289,7 @@ export function LeafletMap({
         },
         mouseout: (e) => {
           const layer = e.target;
+          // Use the same activeIndicator for styling
           layer.setStyle(geoJsonStyle(feature));
         },
         click: (e) => {
@@ -343,7 +337,7 @@ export function LeafletMap({
         }
       });
     };
-  }, [selectedIndicator, pinnedIndicator, municipalityData, geoJsonStyle, mapRef.current]);
+  }, [activeIndicator, municipalityData, geoJsonStyle]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
@@ -536,7 +530,8 @@ export function LeafletMap({
           className="grayscale-tiles"
         />
         <GeoJSON
-          key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${isPinned}`}
+          // Keep the selected year in the key to force re-render when year changes, otherwise the style and used data will not update 
+          key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
           data={municipalityBoundaries}
           style={geoJsonStyle}
           onEachFeature={onEachFeatureCallback}
