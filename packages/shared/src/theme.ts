@@ -96,6 +96,7 @@ export const theme = createTheme({
     paragraph: {
       fontSize: '14px',
       fontWeight: 400,
+      letterSpacing: '0.14px',
     },
     label: {
       fontSize: '16px',
