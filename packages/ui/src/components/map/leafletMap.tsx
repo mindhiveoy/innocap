@@ -1,6 +1,6 @@
 'use client';
 
-import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup } from 'react-leaflet';
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
@@ -15,7 +15,7 @@ import 'leaflet/dist/leaflet.css';
 import './leafletMap.css';
 import styled from '@emotion/styled';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { Typography } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import { BarChartPopup } from './BarChartPopup';
 import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
@@ -54,9 +54,9 @@ const PopupContainer = styled.div(({
     display: flex;
     flex-direction: row;
     gap: ${theme.spacing(2)};
-    padding: ${theme.spacing(4, 2, 2, 2)};
+    padding: ${theme.spacing(4, 3, 3, 3)};
     border-radius: ${theme.shape.borderRadius}px;
-    min-width: 300px;
+    min-width: 310px;
 `);
 
 const PopupContent = styled.div(({
@@ -68,6 +68,18 @@ const PopupContent = styled.div(({
   max-width: 85%;
 `);
 
+const PhaseText = styled(Typography)(({
+  theme
+}) => ` 
+  color: ${theme.palette.primary.darkest};
+`);
+
+const PopupTitle = styled(Typography)(({
+  theme
+}) => ` 
+  color: ${theme.palette.primary.darkest};
+`);
+
 const PopupDescription = styled(Typography)(({
   theme
 }) => ` 
@@ -75,7 +87,7 @@ const PopupDescription = styled(Typography)(({
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-  color: ${theme.palette.grey[600]};
+  color: #7B7B7B;
   margin: 0;
 `);
 
@@ -84,7 +96,7 @@ const PopupLink = styled.a(({
 }) => ` 
   display: flex;
   align-items: center;
-  gap: ${theme.spacing(0.5)};
+  gap: ${theme.spacing(0.6)};
   color: ${theme.palette.primary.main};
   text-decoration: none;
   font-size: 14px;
@@ -96,6 +108,7 @@ const PopupLink = styled.a(({
 
   svg {
     font-size: 1rem;
+    margin-top: -1px;
   }
 
 `);
@@ -348,10 +361,10 @@ export function LeafletMap({
     return (
       <LayerGroup>
         {filteredMarkerData.map((marker, i) => {
+          console.log("🚀 ~ {filteredMarkerData.map ~ marker:", marker)
           // Create an index for the marker popup
           const index = `marker-${i}`;
 
-          // Ensure we have space in our refs arrays for the marker popup
           while (popupRefs.current.length <= i) {
             popupRefs.current.push(null);
             dragRefs.current.push({
@@ -385,8 +398,20 @@ export function LeafletMap({
                 >
                   <PopupContainer>
                     <PopupContent>
-                      <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>
-                      {marker.info && <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
+                      <PhaseText variant='paragraph'>{marker.phase}</PhaseText>
+                      <PopupTitle variant='label'>{marker.descriptionEn}</PopupTitle>
+                      <Box display='flex' gap={2}>
+                        {marker.year &&
+                          <Typography variant='paragraph'>{marker.year}</Typography>}
+                        {marker.value !== null &&
+                          <Box display='flex' gap={0.3}>
+                            <Typography variant='paragraph'>{marker.value}</Typography>
+                            <Typography variant='paragraph'>{marker.unit}</Typography>
+                          </Box>}
+                      </Box>
+                      {marker.info &&
+                        <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
+                      <Typography variant='paragraph'>{marker.municipalityName}</Typography>
                       {marker.sourceUrl && (
                         <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
                           Source <OpenInNewIcon fontSize='small' />
