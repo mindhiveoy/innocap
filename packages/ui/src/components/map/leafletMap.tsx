@@ -4,14 +4,13 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup, useMap } f
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
-import { useRef } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { municipalityBoundaries } from './data/municipality-boundaries';
 import { Indicator, MunicipalityLevelData, MarkerData, IndicatorType, BarChartData } from '@repo/ui/types/indicators';
 import { calculateOpacity, Unit } from '../../types/units';
 import { MunicipalityTooltip } from './MunicipalityTooltip';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
-import { useMemo, useCallback } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './leafletMap.css';
 import styled from '@emotion/styled';
@@ -21,6 +20,8 @@ import { BarChartPopup } from './BarChartPopup';
 import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
+import { DraggablePopup } from './DraggablePopup';
+
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -53,9 +54,9 @@ const PopupContainer = styled.div(({
     display: flex;
     flex-direction: row;
     gap: ${theme.spacing(2)};
-    padding: ${theme.spacing(1.5)};
+    padding: ${theme.spacing(4, 2, 2, 2)};
     border-radius: ${theme.shape.borderRadius}px;
-    min-width: 280px;
+    min-width: 300px;
 `);
 
 const PopupContent = styled.div(({
@@ -64,6 +65,7 @@ const PopupContent = styled.div(({
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing(1)};
+  max-width: 85%;
 `);
 
 const PopupDescription = styled(Typography)(({
@@ -139,97 +141,10 @@ const PinnedOverlay = styled(BaseOverlay)`
 
 const SelectedOverlay = styled(BaseOverlay)``;
 
-function DraggablePopupContent({
-  data,
-  index,
-  popupRefs,
-  dragRefs,
-  color,
-}: {
-  data: BarChartData;
-  index: number;
-  popupRefs: React.MutableRefObject<(L.Popup | null)[]>;
-  dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
-  color?: string;
-}) {
-  const map = useMap();
-  const dragAreaRef = useRef<HTMLDivElement>(null);
-
-  const handlePopupMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent text selection
-    const popup = popupRefs.current[index];
-    if (!popup) return;
-
-    dragRefs.current[index] = {
-      isDragging: true,
-      startPos: map.mouseEventToContainerPoint({
-        clientX: e.clientX,
-        clientY: e.clientY
-      } as MouseEvent),
-      initialLatLng: popup.getLatLng() ?? null
-    };
-
-    // Add dragging class to the entire popup
-    popup.getElement()?.classList.add('is-dragging');
-    map.dragging.disable();
-
-    // Capture mouse events
-    document.addEventListener('mousemove', handlePopupMouseMove);
-    document.addEventListener('mouseup', handlePopupMouseUp);
-  }, [map, index, popupRefs, dragRefs]);
-
-  const handlePopupMouseMove = useCallback((e: MouseEvent) => {
-    e.preventDefault();
-    const popup = popupRefs.current[index];
-    const dragRef = dragRefs.current[index];
-    if (!popup || !dragRef?.isDragging || !dragRef.startPos || !dragRef.initialLatLng) return;
-
-    const currentPoint = map.mouseEventToContainerPoint({
-      clientX: e.clientX,
-      clientY: e.clientY
-    } as MouseEvent);
-
-    const offset = currentPoint.subtract(dragRef.startPos);
-    const initialPoint = map.latLngToContainerPoint(dragRef.initialLatLng);
-    const newPoint = initialPoint.add(offset);
-    const newLatLng = map.containerPointToLatLng(newPoint);
-
-    popup.setLatLng(newLatLng);
-  }, [map, index, popupRefs, dragRefs]);
-
-  const handlePopupMouseUp = useCallback((e: MouseEvent) => {
-    e.preventDefault();
-    const popup = popupRefs.current[index];
-    if (!popup) return;
-
-    if (dragRefs.current[index]) {
-      dragRefs.current[index].isDragging = false;
-      dragRefs.current[index].startPos = null;
-    }
-
-    popup.getElement()?.classList.remove('is-dragging');
-    map.dragging.enable();
-
-    // Remove event listeners
-    document.removeEventListener('mousemove', handlePopupMouseMove);
-    document.removeEventListener('mouseup', handlePopupMouseUp);
-  }, [map, index, popupRefs, dragRefs]);
-
-  return (
-    <div
-      ref={dragAreaRef}
-      onMouseDown={handlePopupMouseDown}
-      style={{
-        cursor: 'move',
-        userSelect: 'none',
-        width: '100%',
-        height: '100%'
-      }}
-    >
-      <BarChartPopup data={data} color={color} />
-    </div>
-  );
-}
+const YearText = styled(Typography)(({ theme }) => `
+  color: ${theme.palette.text.primary};
+  margin-left: ${theme.spacing(1)};
+`);
 
 export function LeafletMap({
   center,
@@ -247,6 +162,9 @@ export function LeafletMap({
   onMapMount,
   pinnedIndicator,
 }: LeafletMapProps) {
+  const popupRefs = useRef<(L.Popup | null)[]>([]);
+  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
+  const mapRef = useRef<L.Map | null>(null);
 
   const filteredMarkerData = useMemo(() => {
     if (!markerData) return [];
@@ -281,24 +199,23 @@ export function LeafletMap({
     return relevantMarkers;
   }, [selectedIndicator, pinnedIndicator, markerData]);
 
+  const activeIndicator = useMemo(() => {
+    const isPinnedIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel;
+    return isPinnedIndicator
+      ? pinnedIndicator
+      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
+        ? selectedIndicator
+        : null;
+  }, [pinnedIndicator, selectedIndicator]);
+
+
   const geoJsonStyle = useMemo(() => {
     return (feature: any) => {
-      const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? pinnedIndicator
-        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-          ? selectedIndicator
-          : null;
-
-      if (!activeIndicator) {
-        return {
-          ...geoJSONStyle,
-          pane: 'overlayPane',
-          className: 'geojson-feature'
-        };
-      }
+      if (!activeIndicator) return geoJSONStyle;
 
       const featureData = municipalityData
         .filter(d => d.id === activeIndicator.id)
+        .filter(d => !activeIndicator.selectedYear || d.year === activeIndicator.selectedYear)
         .find(d => d.municipalityCode === feature.properties.kunta);
 
       if (featureData) {
@@ -327,84 +244,101 @@ export function LeafletMap({
         className: 'geojson-feature'
       };
     };
-  }, [selectedIndicator, pinnedIndicator, municipalityData]);
-
-  const handleMouseover = useCallback((e: L.LeafletEvent, feature: any, tooltip: L.Tooltip, currentStyle: any) => {
-    const layer = e.target;
-
-    const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-      ? pinnedIndicator
-      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? selectedIndicator
-        : null;
-
-    if (!activeIndicator) return;
-
-    layer.setStyle({
-      ...currentStyle,
-      weight: 2,
-      color: '#666',
-    });
-    layer.bringToFront();
-
-    const container = document.createElement('div');
-    const root = createRoot(container);
-
-    const tooltipData = municipalityData
-      .filter(d => d.id === activeIndicator.id)
-      .find(d => d.municipalityCode === feature.properties.kunta);
-
-    root.render(
-      <ThemeProvider theme={theme}>
-        <MunicipalityTooltip
-          name={feature.properties.name}
-          data={tooltipData || undefined}
-          color={activeIndicator?.color}
-          opacity={currentStyle.fillOpacity}
-        />
-      </ThemeProvider>
-    );
-    tooltip.setContent(container);
-  }, [selectedIndicator, pinnedIndicator, municipalityData]);
-
-  const handleMouseout = useCallback((e: L.LeafletEvent, feature: any) => {
-    const layer = e.target;
-    const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-      ? pinnedIndicator
-      : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? selectedIndicator
-        : null;
-
-    if (!activeIndicator) return;
-
-    layer.setStyle(geoJsonStyle(feature));
-  }, [geoJsonStyle, selectedIndicator, pinnedIndicator]);
+  }, [activeIndicator, municipalityData]);
 
   const onEachFeatureCallback = useMemo(() => {
     return (feature: any, layer: L.Layer) => {
-      const activeIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-        ? pinnedIndicator
-        : selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel
-          ? selectedIndicator
-          : null;
-
       if (!activeIndicator) return;
 
-      const tooltip = L.tooltip({
-        permanent: false,
-        direction: 'center',
-        className: 'municipality-tooltip-container',
-        opacity: 0.9
+      // Create popup with the same options as bar chart popups
+      const popup = L.popup({
+        closeButton: true,
+        closeOnClick: false,
+        autoClose: false,
+        className: 'draggable-popup municipality-popup',
+        autoPan: false
       });
 
-      layer.bindTooltip(tooltip);
+      layer.bindPopup(popup);
+
+      // Add click handler to the popup container to bring it to front
+      popup.on('add', (e) => {
+        const popupElement = e.target.getElement();
+        if (popupElement) {
+          popupElement.addEventListener('mousedown', () => {
+            // Find all popups and set their z-index lower
+            const allPopups = document.querySelectorAll('.leaflet-popup');
+            allPopups.forEach(p => {
+              (p as HTMLElement).style.zIndex = '600';
+            });
+            // Set clicked popup's z-index higher
+            popupElement.style.zIndex = '650';
+          });
+        }
+      });
 
       layer.on({
-        mouseover: (e) => handleMouseover(e, feature, tooltip, geoJsonStyle(feature)),
-        mouseout: (e) => handleMouseout(e, feature)
+        mouseover: (e) => {
+          const layer = e.target;
+          const style = geoJsonStyle(feature);
+          layer.setStyle({
+            ...style,
+            weight: 2,
+            color: '#666',
+          });
+          layer.bringToFront();
+        },
+        mouseout: (e) => {
+          const layer = e.target;
+          // Use the same activeIndicator for styling
+          layer.setStyle(geoJsonStyle(feature));
+        },
+        click: (e) => {
+          const layer = e.target;
+          const tooltipData = municipalityData
+            .filter(d => d.id === activeIndicator.id)
+            .filter(d => !activeIndicator.selectedYear || d.year === activeIndicator.selectedYear)
+            .find(d => d.municipalityCode === feature.properties.kunta);
+
+          const container = document.createElement('div');
+          const root = createRoot(container);
+
+          // Get or create an index for this municipality
+          const index = feature.properties.kunta;
+
+          // Ensure we have space in our refs arrays
+          while (popupRefs.current.length <= index) {
+            popupRefs.current.push(null);
+            dragRefs.current.push({
+              isDragging: false,
+              startPos: null,
+              initialLatLng: null
+            });
+          }
+
+          root.render(
+            <ThemeProvider theme={theme}>
+              <MunicipalityTooltip
+                name={feature.properties.name}
+                data={tooltipData || undefined}
+                color={activeIndicator?.color}
+                opacity={geoJsonStyle(feature).fillOpacity}
+                index={index}
+                popupRefs={popupRefs}
+                dragRefs={dragRefs}
+                map={mapRef.current!}
+              />
+            </ThemeProvider>
+          );
+
+          popup.setContent(container);
+          // Store the popup reference
+          popupRefs.current[index] = popup;
+          layer.openPopup();
+        }
       });
     };
-  }, [selectedIndicator, pinnedIndicator, handleMouseover, handleMouseout, geoJsonStyle]);
+  }, [activeIndicator, municipalityData, geoJsonStyle]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
@@ -413,71 +347,104 @@ export function LeafletMap({
 
     return (
       <LayerGroup>
-        {filteredMarkerData.map((marker) => (
-          <Marker
-            key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}`}
-            position={marker.location}
-            icon={createMarkerIcon(marker.markerIcon, marker.color)}>
-            <Popup>
-              <PopupContainer>
-                <PopupContent>
-                  <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>
-                  {marker.info && <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
-                  {marker.sourceUrl && (
-                    <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      Source <OpenInNewIcon fontSize='small' />
-                    </PopupLink>
-                  )}
-                </PopupContent>
-              </PopupContainer>
-            </Popup>
-          </Marker>
-        ))}
+        {filteredMarkerData.map((marker, i) => {
+          // Create an index for the marker popup
+          const index = `marker-${i}`;
+
+          // Ensure we have space in our refs arrays for the marker popup
+          while (popupRefs.current.length <= i) {
+            popupRefs.current.push(null);
+            dragRefs.current.push({
+              isDragging: false,
+              startPos: null,
+              initialLatLng: null
+            });
+          }
+
+          return (
+            <Marker
+              key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}-${i}`}
+              position={marker.location}
+              icon={createMarkerIcon(marker.markerIcon, marker.color)}
+            >
+              <Popup
+                ref={popup => {
+                  popupRefs.current[i] = popup;
+                }}
+                closeButton={true}
+                closeOnClick={false}
+                autoClose={false}
+                className="draggable-popup"
+                autoPan={false}
+              >
+                <DraggablePopup
+                  index={i}
+                  popupRefs={popupRefs}
+                  dragRefs={dragRefs}
+                  map={mapRef.current!}
+                >
+                  <PopupContainer>
+                    <PopupContent>
+                      <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>
+                      {marker.info && <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
+                      {marker.sourceUrl && (
+                        <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
+                          Source <OpenInNewIcon fontSize='small' />
+                        </PopupLink>
+                      )}
+                    </PopupContent>
+                  </PopupContainer>
+                </DraggablePopup>
+              </Popup>
+            </Marker>
+          );
+        })}
       </LayerGroup>
     );
   }, [filteredMarkerData]);
 
-  // Create refs for popups
-  const popupRefs = useRef<(L.Popup | null)[]>([]);
-  const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
-
   const barChartElements = useMemo(() => {
-    if (!barChartData) return null;
+    if (!barChartData || !mapRef.current) return null;
 
     const relevantBarChartData = [];
 
-    // If we have a pinned bar chart indicator - keep these at center position
+    // If we have a pinned bar chart indicator
     if (pinnedIndicator?.indicatorType === IndicatorType.BarChart) {
       const pinnedData = barChartData
         .filter(d => d.id === pinnedIndicator.id)
-        .map(d => ({
+        .filter(d => !pinnedIndicator.selectedYear || d.year === pinnedIndicator.selectedYear)
+        .map((d, idx) => ({
           ...d,
           iconName: pinnedIndicator.iconName,
           color: pinnedIndicator.color,
-          isPinned: true
+          isPinned: true,
+          index: idx
         }));
       relevantBarChartData.push(...pinnedData);
     }
 
-    // If we have a selected bar chart indicator - offset these from center
+    // If we have a selected bar chart indicator (different from pinned)
     if (selectedIndicator?.indicatorType === IndicatorType.BarChart &&
       selectedIndicator.id !== pinnedIndicator?.id) {
       const selectedData = barChartData
         .filter(d => d.id === selectedIndicator.id)
-        .map(d => ({
+        .filter(d => !selectedIndicator.selectedYear || d.year === selectedIndicator.selectedYear)
+        .map((d, idx) => ({
           ...d,
           iconName: selectedIndicator.iconName,
           color: selectedIndicator.color,
-          isPinned: false
+          isPinned: false,
+          index: relevantBarChartData.length + idx
         }));
       relevantBarChartData.push(...selectedData);
     }
 
     if (relevantBarChartData.length === 0) return null;
 
-    if (popupRefs.current.length !== relevantBarChartData.length) {
-      popupRefs.current = new Array(relevantBarChartData.length).fill(null);
-      dragRefs.current = new Array(relevantBarChartData.length).fill({
+    // Ensure we have enough space in our refs arrays
+    while (popupRefs.current.length < relevantBarChartData.length) {
+      popupRefs.current.push(null);
+      dragRefs.current.push({
         isDragging: false,
         startPos: null,
         initialLatLng: null
@@ -486,25 +453,25 @@ export function LeafletMap({
 
     return (
       <LayerGroup>
-        {relevantBarChartData.map((data, index) => {
+        {relevantBarChartData.map((data) => {
           const center = getMunicipalityCenter(data.municipalityCode);
           // Offset the selected indicators (non-pinned)
           const position: LatLngTuple = data.isPinned
             ? center
             : [
-              center[0] - 0.03, // Offset selected indicators southwest
+              center[0] - 0.03,
               center[1] - 0.01
             ];
 
           return (
             <Marker
-              key={`${data.id}-${data.municipalityName}-${index}`}
+              key={`${data.id}-${data.municipalityName}-${data.index}`}
               position={position}
               icon={createMarkerIcon(data.iconName, data.color)}
             >
               <Popup
                 ref={popup => {
-                  popupRefs.current[index] = popup;
+                  popupRefs.current[data.index] = popup;
                 }}
                 closeButton={true}
                 closeOnClick={false}
@@ -512,12 +479,13 @@ export function LeafletMap({
                 className="draggable-popup"
                 autoPan={false}
               >
-                <DraggablePopupContent
+                <BarChartPopup
                   data={data}
-                  index={index}
+                  color={data.color}
+                  index={data.index}
                   popupRefs={popupRefs}
                   dragRefs={dragRefs}
-                  color={data.color}
+                  map={mapRef.current!}
                 />
               </Popup>
             </Marker>
@@ -525,7 +493,7 @@ export function LeafletMap({
         })}
       </LayerGroup>
     );
-  }, [selectedIndicator, pinnedIndicator, barChartData]);
+  }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current]);
 
   const mapContainerProps = useMemo(() => ({
     center,
@@ -541,6 +509,13 @@ export function LeafletMap({
     zoomDelta: 1,
   }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
 
+  const handleMapMount = useCallback((map: L.Map) => {
+    mapRef.current = map;
+    if (onMapMount) {
+      onMapMount(map);
+    }
+  }, [onMapMount]);
+
   return (
     <>
       <OverlaysContainer>
@@ -549,23 +524,33 @@ export function LeafletMap({
             <span className="pin-icon">
               <PushPinIcon fontSize="small" />
             </span>
-            <Typography variant='label'>{pinnedIndicator.indicatorNameEn}</Typography>
+            <Typography variant='label'>
+              {pinnedIndicator.indicatorNameEn}
+              {pinnedIndicator.selectedYear && (
+                <YearText variant='label'>
+                  ({pinnedIndicator.selectedYear})
+                </YearText>
+              )}
+            </Typography>
           </PinnedOverlay>
         )}
         {selectedIndicator && selectedIndicator.id !== pinnedIndicator?.id && (
           <SelectedOverlay>
-            <Typography variant='label'>{selectedIndicator.indicatorNameEn}</Typography>
+            <Typography variant='label'>
+              {selectedIndicator.indicatorNameEn}
+              {selectedIndicator.selectedYear && (
+                <YearText variant='label'>
+                  ({selectedIndicator.selectedYear})
+                </YearText>
+              )}
+            </Typography>
           </SelectedOverlay>
         )}
       </OverlaysContainer>
       <MapContainer
         attributionControl={false}
         {...mapContainerProps}
-        ref={map => {
-          if (map && onMapMount) {
-            onMapMount(map);
-          }
-        }}
+        ref={handleMapMount}
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -573,7 +558,8 @@ export function LeafletMap({
           className="grayscale-tiles"
         />
         <GeoJSON
-          key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${isPinned}`}
+          // Keep the selected year in the key to force re-render when year changes, otherwise the style and used data will not update 
+          key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
           data={municipalityBoundaries}
           style={geoJsonStyle}
           onEachFeature={onEachFeatureCallback}

@@ -26,7 +26,7 @@ const CardWrapper = styled.div(({ theme }) => `
   background: ${theme.palette.background.paper};
   border: 1px solid ${theme.palette.divider};
   border-radius: ${theme.shape.borderRadius}px;
-  padding: ${theme.spacing(1,2)};
+  padding: ${theme.spacing(1, 2)};
   margin-bottom: ${theme.spacing(1)};
   transition: all 0.2s ease-in-out;
 
@@ -158,16 +158,16 @@ const iconComponents = {
 
 type IconName = keyof typeof iconComponents;
 
-const GradientIcon = ({ iconName }: { iconName: string }) => {  
+const GradientIcon = ({ iconName }: { iconName: string }) => {
   // Remove 'Icon' suffix if it exists
   const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
   const IconComponent = iconComponents[cleanIconName] || iconComponents.Home;
-  
+
   if (!IconComponent) {
     console.warn(`Icon not found for name: ${iconName}, using Home icon as fallback`);
     return <Home sx={{ fill: "url(#primaryGradient)" }} />;
   }
-  
+
   return (
     <>
       <svg width={0} height={0}>
@@ -203,7 +203,7 @@ const IconContainer = styled.div(({ theme }) => `
 
 const IndicatorTypeIcon = ({ iconName }: { iconName: string }) => {
   const IconComponent = indicatorTypeIcons[iconName as IndicatorIconName] || TerrainIcon;
-  
+
   return (
     <IconContainer>
       <IconComponent />
@@ -212,17 +212,18 @@ const IndicatorTypeIcon = ({ iconName }: { iconName: string }) => {
 };
 
 const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
-  margin-bottom: ${theme.spacing(2)};
+  margin-bottom: ${theme.spacing(1)};
   background: ${theme.palette.background.paper};
   border-radius: 24px;
-  padding: ${theme.spacing(0.5)};
+  padding: ${theme.spacing(0)};
   width: fit-content;
   border: 1px solid ${theme.palette.divider};
+  
   
   .MuiToggleButton-root {
     border: none;
     border-radius: 20px;
-    padding: ${theme.spacing(0.5, 2)};
+    padding: ${theme.spacing(0.6, 1.7)};
     text-transform: none;
     font-size: 0.75rem;
     color: ${theme.palette.text.secondary};
@@ -242,56 +243,99 @@ const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
 `);
 
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
-  const { 
+  const {
     selectedIndicator,
     setSelectedIndicator,
     isPinned,
     togglePin,
+    setPinnedIndicatorYear,
   } = useIndicator();
   const { municipalityData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
 
-  // Remove comparisonIndicator references since we're not using it anymore
-  const isSelected = useMemo(() => 
+  const isSelected = useMemo(() =>
     selectedIndicator?.id === indicator?.id,
     [selectedIndicator?.id, indicator?.id]
   );
 
-  const pinned = useMemo(() => 
+  const pinned: boolean = useMemo(() =>
     isPinned(indicator),
     [isPinned, indicator]
   );
 
-  // Update the pinning disabled logic
-  const isPinningDisabled = false; // Remove the old logic since we only allow one pin now
+  const isPinningDisabled = false;
 
-  // Get unique years available for this indicator's data
+  // Get five latest years without setting default
   const years = useMemo(() => {
     if (!indicator) return [];
+    if (indicator.indicatorType !== 'Municipality Level Data' && indicator.indicatorType !== 'Bar Chart') return [];
+
     const uniqueYears = new Set(
       municipalityData
         ?.filter(d => d.id === indicator.id)
         .map(d => d.year.toString())
     );
-    return ['all', ...Array.from(uniqueYears)].sort();
+
+    return Array.from(uniqueYears)
+      .sort((a, b) => parseInt(b) - parseInt(a)) // Sort descending
+      .slice(0, 5); // Take only 5 latest years
   }, [indicator, municipalityData]);
 
+  useEffect(() => {
+    if (isSelected && years.length > 0 && !selectedYear) {
+      setSelectedYear(years[0]);
+      if (!pinned) {
+        setSelectedIndicator({
+          ...indicator,
+          selectedYear: parseInt(years[0])
+        });
+      }
+    }
+  }, [isSelected, years, selectedYear, indicator, setSelectedIndicator, pinned]);
+
   const handleClick = useCallback(() => {
+    if (pinned) {
+      return;
+    }
     setSelectedIndicator(isSelected ? null : indicator);
-  }, [isSelected, indicator, setSelectedIndicator]);
+  }, [isSelected, indicator, setSelectedIndicator, pinned]);
 
   const handlePinClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     togglePin(indicator);
   }, [togglePin, indicator]);
 
-  const handleYearChange = useCallback((
- /*    _event: React.MouseEvent<HTMLElement>,
-    newYear: string | null, */
-  ) => {
-console.log('coming soon')
-  }, []);
+  const handleYearChange = useCallback((_: React.MouseEvent<HTMLElement>, newYear: string | null) => {
+    setSelectedYear(newYear);
+
+    // For pinned indicators, only update the pinned year
+    if (pinned) {
+      const yearValue = newYear ? parseInt(newYear) : undefined;
+      setPinnedIndicatorYear(yearValue);
+      
+      // If this indicator is also selected, update its year too
+      if (isSelected) {
+        setSelectedIndicator({
+          ...indicator,
+          selectedYear: yearValue
+        });
+      }
+      return;
+    }
+
+    // For non-pinned indicators
+    if (isSelected) {
+      setSelectedIndicator(null);
+      setTimeout(() => {
+        setSelectedIndicator({
+          ...indicator,
+          selectedYear: newYear ? parseInt(newYear) : undefined
+        });
+      }, 0);
+    }
+  }, [isSelected, pinned, indicator, setSelectedIndicator, setPinnedIndicatorYear]);
 
   useEffect(() => {
     const element = sourceRef.current;
@@ -300,7 +344,7 @@ console.log('coming soon')
     }
   }, [indicator?.sourceEn]);
 
-  const tooltipContent = useMemo(() => 
+  const tooltipContent = useMemo(() =>
     indicator?.sourceEn || '',
     [indicator?.sourceEn]
   );
@@ -308,15 +352,15 @@ console.log('coming soon')
   if (!indicator) return null;
 
   return (
-    <CardWrapper 
-      onClick={handleClick} 
+    <CardWrapper
+      onClick={handleClick}
       className={isSelected ? 'selected' : ''}
     >
       <CardHeader>
         <TitleSection>
           <Box display='flex' alignItems='center' gap={1}>
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
-            <Typography variant='paragraph' color='text.secondary'>Green transfer</Typography>
+            <Typography variant='paragraph' color='text.secondary'>Green transition</Typography>
             <IconWrapper>
               <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
             </IconWrapper>
@@ -356,28 +400,31 @@ console.log('coming soon')
               {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
             </span>
             <PinText>
-              {pinned 
-                ? 'Unpin from map' 
-                : isPinningDisabled 
-                  ? 'Maximum pins reached' 
+              {pinned
+                ? 'Unpin from map'
+                : isPinningDisabled
+                  ? 'Maximum pins reached'
                   : 'Pin to map'
               }
             </PinText>
           </PinButtonContent>
         </PinButton>
-          <YearSelector
-            value={'all'}
-            exclusive
-            onChange={handleYearChange}
-            aria-label="Select year"
-          >
-            {years.map((year) => (
-              <ToggleButton key={year} value={year}>
-                {year === 'all' ? 'All' : year}
-              </ToggleButton>
-            ))}
-          </YearSelector>
-{/*         <Typography variant="body2" color="text.secondary">
+        {(indicator.indicatorType === 'Municipality Level Data' ||
+          indicator.indicatorType === 'Bar Chart') && years.length > 0 && (
+            <YearSelector
+              value={selectedYear}
+              exclusive
+              onChange={handleYearChange}
+              aria-label="Select year"
+            >
+              {years.map((year) => (
+                <ToggleButton key={year} value={year}>
+                  {year}
+                </ToggleButton>
+              ))}
+            </YearSelector>
+          )}
+        {/*         <Typography variant="body2" color="text.secondary">
           {indicator?.indicatorNameFi}
         </Typography> */}
       </Box>
