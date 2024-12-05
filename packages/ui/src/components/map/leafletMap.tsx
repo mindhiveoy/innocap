@@ -159,6 +159,17 @@ const YearText = styled(Typography)(({ theme }) => `
   margin-left: ${theme.spacing(1)};
 `);
 
+// Add a static style for base borders
+const baseStyle = {
+  fillColor: 'transparent',
+  weight: 1,
+  opacity: 0.7,
+  color: '#444',
+  fillOpacity: 0,
+  pane: 'overlayPane',
+  className: 'geojson-feature'
+};
+
 export function LeafletMap({
   center,
   zoom,
@@ -582,15 +593,25 @@ export function LeafletMap({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
           className="grayscale-tiles"
         />
+        {/* Static base layer for borders */}
         <GeoJSON
-          // Keep the selected year in the key to force re-render when year changes, otherwise the style and used data will not update 
-          key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
+          key="geojson-base"
           data={municipalityBoundaries}
-          style={geoJsonStyle}
-          onEachFeature={onEachFeatureCallback}
-          interactive={true}
-          bubblingMouseEvents={false}
+          style={baseStyle}
+          interactive={false}
         />
+
+        {/* Choropleth layer only rendered when we have data */}
+        {activeIndicator && (
+          <GeoJSON
+            key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
+            data={municipalityBoundaries}
+            style={geoJsonStyle}
+            onEachFeature={onEachFeatureCallback}
+            interactive={true}
+            bubblingMouseEvents={false}
+          />
+        )}
         {markerElements}
         {barChartElements}
         {children}

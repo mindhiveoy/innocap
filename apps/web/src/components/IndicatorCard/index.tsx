@@ -84,7 +84,7 @@ const PinButton = styled.div(({ theme }) => `
     position: relative;
     top: -1px;
     transform: rotate(-45deg);
-    color: ${theme.palette.primary.main};
+    color: ${theme.palette.secondary.main};
   }
 
   &.disabled {
@@ -129,6 +129,15 @@ const PinText = styled(Typography)(({ theme }) => `
   font-size: 0.75rem;
   color: ${theme.palette.primary.darkest};
   margin: ${theme.spacing(2, 0, 3, 0)};
+  transition: font-weight 0.1s ease-in-out;
+
+  &:hover {
+    font-weight: 800;
+  }
+
+/*   &.pinned {
+    font-weight: 800;
+  } */
 `);
 
 const SourceTextWrapper = styled.div`
@@ -399,7 +408,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             <span className="pin-icon">
               {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
             </span>
-            <PinText>
+            <PinText className={pinned ? 'pinned' : ''}>
               {pinned
                 ? 'Unpin from map'
                 : isPinningDisabled
