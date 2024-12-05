@@ -53,9 +53,9 @@ const PopupContainer = styled.div(({
     display: flex;
     flex-direction: row;
     gap: ${theme.spacing(2)};
-    padding: ${theme.spacing(1.5)};
+    padding: ${theme.spacing(4, 2, 2, 2)};
     border-radius: ${theme.shape.borderRadius}px;
-    min-width: 280px;
+    min-width: 300px;
 `);
 
 const PopupContent = styled.div(({
@@ -64,6 +64,7 @@ const PopupContent = styled.div(({
   display: flex;
   flex-direction: column;
   gap: ${theme.spacing(1)};
+  max-width: 85%;
 `);
 
 const PopupDescription = styled(Typography)(({
@@ -261,7 +262,7 @@ export function LeafletMap({
         closeButton: true,
         closeOnClick: false,
         autoClose: false,
-        className: 'draggable-popup',
+        className: 'draggable-popup municipality-popup',
         autoPan: false
       });
 
@@ -356,7 +357,12 @@ export function LeafletMap({
             key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}-${i}`}
             position={marker.location}
             icon={createMarkerIcon(marker.markerIcon, marker.color)}>
-            <Popup>
+            <Popup
+              className="draggable-popup"
+              closeButton={true}
+              closeOnClick={false}
+              autoClose={false}
+            >
               <PopupContainer>
                 <PopupContent>
                   <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>

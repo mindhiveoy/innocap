@@ -8,7 +8,8 @@ const TooltipContainer = styled.div(({ theme }) => `
   background-color: #fff;
   display: flex;
   flex-direction: row;
-  gap: ${theme.spacing(2)};
+  align-items: center;
+  gap: ${theme.spacing(1)};
   padding: ${theme.spacing(1.5)};
   border-radius: ${theme.shape.borderRadius}px;
 `);
@@ -20,8 +21,8 @@ interface ColorIndicatorProps {
 
 const ColorIndicator = styled.div<ColorIndicatorProps>(({ color, opacity, theme }) => `
   padding-top: ${theme.spacing(0.5)};
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid ${color};
   background-color: ${color};
@@ -41,8 +42,8 @@ const RightColumn = styled.div(({ theme }) => `
 `);
 
 const TooltipDescription = styled(Typography)(({ theme }) => `
-  min-width: 230px;
-  max-width: 230px;
+  min-width: 250px;
+  max-width: 250px;
   white-space: normal;
   word-wrap: break-word;
   overflow-wrap: break-word;

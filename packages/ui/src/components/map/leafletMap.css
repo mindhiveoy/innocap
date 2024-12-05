@@ -175,7 +175,8 @@
   transition: none;
 }
 
-.leaflet-popup-close-button {
+/* Default close button styles for bar charts */
+.draggable-popup:not(.municipality-popup) .leaflet-popup-close-button {
   position: absolute !important;
   right: 24px !important;
   top: 30px !important;
@@ -185,6 +186,20 @@
   padding: 0 !important;
   height: 24px !important;
   width: 24px !important;
+  border-radius: 4px;
+}
+
+/* Municipality tooltip close button styles */
+.municipality-popup .leaflet-popup-close-button {
+  position: absolute !important;
+  right: 8px !important;
+  top: 8px !important;
+  z-index: 1000 !important;
+  color: #083553 !important;
+  font-size: 20px !important;
+  padding: 0 !important;
+  height: 20px !important;
+  width: 20px !important;
   border-radius: 4px;
 }
 
@@ -224,10 +239,16 @@
     min-width: 300px;
   }
 
-  .leaflet-popup-close-button {
+  .draggable-popup:not(.municipality-popup) .leaflet-popup-close-button {
     right: 16px !important;
     top: 20px !important;
     font-size: 20px !important;
+  }
+
+  .municipality-popup .leaflet-popup-close-button {
+    right: 6px !important;
+    top: 6px !important;
+    font-size: 16px !important;
   }
 
   .recharts-default-tooltip {
