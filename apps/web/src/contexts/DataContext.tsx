@@ -34,7 +34,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
         const responseData = await response.json();
         setIndicators(responseData.indicators);
-        
+
         const { data } = responseData;
         setMunicipalityData(data['Municipality Level Data'] || []);
         setMarkerData(data['Marker'] || []);
@@ -51,13 +51,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <DataContext.Provider value={{ 
-      indicators, 
-      municipalityData, 
-      markerData, 
+    <DataContext.Provider value={{
+      indicators,
+      municipalityData,
+      markerData,
       barChartData,
-      isLoading, 
-      error 
+      isLoading,
+      error
     }}>
       {children}
     </DataContext.Provider>

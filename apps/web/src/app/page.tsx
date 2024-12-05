@@ -37,14 +37,16 @@ export default function Home() {
   const zoom = 9;
 
   // Only use split view when comparing two municipality-level indicators
-  const showSplitView = isCompareMode && 
-    pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel && 
-    selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel;
+  const showSplitView = isCompareMode &&
+    pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel &&
+    selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel &&
+    // Don't show split view when filtering pinned indicator
+    !(selectedIndicator?.id === pinnedIndicator?.id && selectedIndicator?.selectedYear !== pinnedIndicator?.selectedYear);
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
       height: '100vh',
       pb: { xs: `${NAV_HEIGHT}px`, md: 0 },
       pl: { xs: 0, md: `${NAV_WIDTH}px` },
@@ -52,7 +54,7 @@ export default function Home() {
       <SideNav />
       <Box component="main" sx={{ flexGrow: 1, position: 'relative' }}>
         {isLoading && <LoadingOverlay />}
-        
+
         {showSplitView ? (
           <SplitMap
             pinnedIndicator={pinnedIndicator}
@@ -65,8 +67,8 @@ export default function Home() {
             maxBounds={MAP_BOUNDS}
           />
         ) : (
-          <Map 
-            center={center} 
+          <Map
+            center={center}
             zoom={zoom}
             maxBounds={MAP_BOUNDS}
             minZoom={8}

@@ -110,7 +110,7 @@ const CHATBOT_CONFIG = {
   },
   ASSETS: {
     BOT_AVATAR: '/innocap_logo.png',
-    USER_AVATAR: 'https://raw.githubusercontent.com/zahidkhawaja/langchain-chat-nextjs/main/public/usericon.png',
+    USER_AVATAR: '/user.png',
   },
 } as const
 
@@ -167,7 +167,7 @@ export const ChatBubble = () => {
       textColor: theme.palette.primary.light,
       text: 'Powered by',
       company: 'Mindhive',
-      companyLink: 'https://mindhive.fi',
+      companyLink: 'https://mindhive.fi/mainio',
     },
   }), [])
 
