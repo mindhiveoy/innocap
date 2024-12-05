@@ -84,7 +84,7 @@ const PinButton = styled.div(({ theme }) => `
     position: relative;
     top: -1px;
     transform: rotate(-45deg);
-    color: ${theme.palette.secondary.main};
+    color: ${theme.palette.primary.dark};
   }
 
   &.disabled {
@@ -135,9 +135,9 @@ const PinText = styled(Typography)(({ theme }) => `
     font-weight: 800;
   }
 
-/*   &.pinned {
+ &.pinned {
     font-weight: 800;
-  } */
+  }
 `);
 
 const SourceTextWrapper = styled.div`
