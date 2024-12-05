@@ -20,6 +20,7 @@ import { BarChartPopup } from './BarChartPopup';
 import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
+import { DraggablePopup } from './DraggablePopup';
 
 
 interface LeafletMapProps {
@@ -346,31 +347,58 @@ export function LeafletMap({
 
     return (
       <LayerGroup>
-        {filteredMarkerData.map((marker, i) => (
-          <Marker
-            key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}-${i}`}
-            position={marker.location}
-            icon={createMarkerIcon(marker.markerIcon, marker.color)}>
-            <Popup
-              className="draggable-popup"
-              closeButton={true}
-              closeOnClick={false}
-              autoClose={false}
+        {filteredMarkerData.map((marker, i) => {
+          // Create an index for the marker popup
+          const index = `marker-${i}`;
+
+          // Ensure we have space in our refs arrays for the marker popup
+          while (popupRefs.current.length <= i) {
+            popupRefs.current.push(null);
+            dragRefs.current.push({
+              isDragging: false,
+              startPos: null,
+              initialLatLng: null
+            });
+          }
+
+          return (
+            <Marker
+              key={`${marker.id}-${marker.municipalityName}-${marker.location.join(',')}-${i}`}
+              position={marker.location}
+              icon={createMarkerIcon(marker.markerIcon, marker.color)}
             >
-              <PopupContainer>
-                <PopupContent>
-                  <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>
-                  {marker.info && <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
-                  {marker.sourceUrl && (
-                    <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
-                      Source <OpenInNewIcon fontSize='small' />
-                    </PopupLink>
-                  )}
-                </PopupContent>
-              </PopupContainer>
-            </Popup>
-          </Marker>
-        ))}
+              <Popup
+                ref={popup => {
+                  popupRefs.current[i] = popup;
+                }}
+                closeButton={true}
+                closeOnClick={false}
+                autoClose={false}
+                className="draggable-popup"
+                autoPan={false}
+              >
+                <DraggablePopup
+                  index={i}
+                  popupRefs={popupRefs}
+                  dragRefs={dragRefs}
+                  map={mapRef.current!}
+                >
+                  <PopupContainer>
+                    <PopupContent>
+                      <PopupDescription variant='label'>{marker.descriptionEn}</PopupDescription>
+                      {marker.info && <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
+                      {marker.sourceUrl && (
+                        <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
+                          Source <OpenInNewIcon fontSize='small' />
+                        </PopupLink>
+                      )}
+                    </PopupContent>
+                  </PopupContainer>
+                </DraggablePopup>
+              </Popup>
+            </Marker>
+          );
+        })}
       </LayerGroup>
     );
   }, [filteredMarkerData]);
