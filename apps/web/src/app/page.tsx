@@ -32,7 +32,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 
 export default function Home() {
   const { municipalityData, markerData, barChartData, isLoading } = useData();
-  const { selectedIndicator, pinnedIndicator, isCompareMode } = useIndicator();
+  const { selectedIndicator, pinnedIndicator, isCompareMode, showNaturaAreas } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
 
@@ -79,6 +79,7 @@ export default function Home() {
             selectedIndicator={selectedIndicator}
             pinnedIndicator={pinnedIndicator}
             isPinned={!!pinnedIndicator}
+            showNaturaAreas={showNaturaAreas}
           />
         )}
       </Box>

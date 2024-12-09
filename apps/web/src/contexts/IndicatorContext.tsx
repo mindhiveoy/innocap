@@ -8,12 +8,14 @@ export interface IndicatorContextType {
   selectedIndicator: Indicator | null;
   pinnedIndicator: Indicator | null;
   isCompareMode: boolean;
+  showNaturaAreas: boolean;
   setSelectedIndicator: (indicator: Indicator | null) => void;
   setPinnedIndicator: (indicator: Indicator | null) => void;
   setIsCompareMode: (isCompare: boolean) => void;
   isPinned: (indicator: Indicator) => boolean;
   togglePin: (indicator: Indicator) => void;
   setPinnedIndicatorYear: (year: number | undefined) => void;
+  setShowNaturaAreas: (show: boolean) => void;
 }
 
 const IndicatorContext = createContext<IndicatorContextType | undefined>(undefined);
@@ -23,6 +25,7 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
   const [pinnedIndicator, setPinnedIndicator] = useState<Indicator | null>(null);
   const [isCompareMode, setIsCompareMode] = useState<boolean>(false);
+  const [showNaturaAreas, setShowNaturaAreas] = useState<boolean>(false);
 
   useEffect(() => {
     if (indicators?.length > 0) {
@@ -73,12 +76,14 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     selectedIndicator,
     pinnedIndicator,
     isCompareMode,
+    showNaturaAreas,
     setSelectedIndicator,
     setPinnedIndicator,
     setIsCompareMode,
     isPinned,
     togglePin,
-    setPinnedIndicatorYear
+    setPinnedIndicatorYear,
+    setShowNaturaAreas
   };
 
   return (

@@ -21,7 +21,7 @@ import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
 import { DraggablePopup } from './DraggablePopup';
-
+import { NaturaLayer } from './NaturaLayer';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -38,6 +38,7 @@ interface LeafletMapProps {
   zoomControl?: boolean;
   onMapMount?: (map: L.Map) => void;
   pinnedIndicator?: Indicator | null;
+  showNaturaAreas?: boolean;
 }
 
 const geoJSONStyle = {
@@ -185,7 +186,9 @@ export function LeafletMap({
   zoomControl = true,
   onMapMount,
   pinnedIndicator,
+  showNaturaAreas = false,
 }: LeafletMapProps) {
+
   const popupRefs = useRef<(L.Popup | null)[]>([]);
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
   const mapRef = useRef<L.Map | null>(null);
@@ -372,8 +375,6 @@ export function LeafletMap({
     return (
       <LayerGroup>
         {filteredMarkerData.map((marker, i) => {
-          console.log("🚀 ~ {filteredMarkerData.map ~ marker:", marker)
-          // Create an index for the marker popup
           const index = `marker-${i}`;
 
           while (popupRefs.current.length <= i) {
@@ -531,20 +532,6 @@ export function LeafletMap({
     );
   }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current]);
 
-  const mapContainerProps = useMemo(() => ({
-    center,
-    zoom,
-    style: { height: "100%" },
-    maxBounds,
-    maxBoundsViscosity: 1,
-    minZoom,
-    maxZoom,
-    inertia: false,
-    zoomControl,
-    zoomSnap: 0.5,
-    zoomDelta: 1,
-  }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
-
   const handleMapMount = useCallback((map: L.Map) => {
     mapRef.current = map;
     if (onMapMount) {
@@ -585,7 +572,17 @@ export function LeafletMap({
       </OverlaysContainer>
       <MapContainer
         attributionControl={false}
-        {...mapContainerProps}
+        center={center}
+        zoom={zoom}
+        style={{ height: "100%" }}
+        maxBounds={maxBounds}
+        maxBoundsViscosity={1}
+        minZoom={minZoom}
+        maxZoom={maxZoom}
+        inertia={false}
+        zoomControl={zoomControl}
+        zoomSnap={0.5}
+        zoomDelta={1}
         ref={handleMapMount}
       >
         <TileLayer
@@ -593,7 +590,8 @@ export function LeafletMap({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
           className="grayscale-tiles"
         />
-        {/* Static base layer for borders */}
+
+        {/* Base municipality borders */}
         <GeoJSON
           key="geojson-base"
           data={municipalityBoundaries}
@@ -601,19 +599,8 @@ export function LeafletMap({
           interactive={false}
         />
 
-        {/* Choropleth layer only rendered when we have data */}
-        {activeIndicator && (
-          <GeoJSON
-            key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
-            data={municipalityBoundaries}
-            style={geoJsonStyle}
-            onEachFeature={onEachFeatureCallback}
-            interactive={true}
-            bubblingMouseEvents={false}
-          />
-        )}
-        {markerElements}
-        {barChartElements}
+        <NaturaLayer visible={showNaturaAreas} />
+
         {children}
       </MapContainer>
     </>
