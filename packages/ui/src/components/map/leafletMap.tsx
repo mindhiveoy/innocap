@@ -532,6 +532,20 @@ export function LeafletMap({
     );
   }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current]);
 
+  const mapContainerProps = useMemo(() => ({
+    center,
+    zoom,
+    style: { height: "100%" },
+    maxBounds,
+    maxBoundsViscosity: 1,
+    minZoom,
+    maxZoom,
+    inertia: false,
+    zoomControl,
+    zoomSnap: 0.5,
+    zoomDelta: 1,
+  }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
+
   const handleMapMount = useCallback((map: L.Map) => {
     mapRef.current = map;
     if (onMapMount) {
@@ -572,17 +586,7 @@ export function LeafletMap({
       </OverlaysContainer>
       <MapContainer
         attributionControl={false}
-        center={center}
-        zoom={zoom}
-        style={{ height: "100%" }}
-        maxBounds={maxBounds}
-        maxBoundsViscosity={1}
-        minZoom={minZoom}
-        maxZoom={maxZoom}
-        inertia={false}
-        zoomControl={zoomControl}
-        zoomSnap={0.5}
-        zoomDelta={1}
+        {...mapContainerProps}
         ref={handleMapMount}
       >
         <TileLayer
@@ -590,8 +594,7 @@ export function LeafletMap({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
           className="grayscale-tiles"
         />
-
-        {/* Base municipality borders */}
+        {/* Static base layer for borders */}
         <GeoJSON
           key="geojson-base"
           data={municipalityBoundaries}
@@ -599,10 +602,27 @@ export function LeafletMap({
           interactive={false}
         />
 
-        <NaturaLayer visible={showNaturaAreas} />
+        <NaturaLayer
+          key="natura-layer"
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={pinnedIndicator}
+        />
 
+        {/* Choropleth layer only rendered when we have data */}
+        {activeIndicator && (
+          <GeoJSON
+            key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
+            data={municipalityBoundaries}
+            style={geoJsonStyle}
+            onEachFeature={onEachFeatureCallback}
+            interactive={true}
+            bubblingMouseEvents={false}
+          />
+        )}
+        {markerElements}
+        {barChartElements}
         {children}
       </MapContainer>
     </>
   );
-} 
+}

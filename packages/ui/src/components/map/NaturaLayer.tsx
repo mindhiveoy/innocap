@@ -2,18 +2,22 @@ import L from 'leaflet';
 import type { Layer } from 'leaflet';
 import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
 import { LayerGroup, GeoJSON } from 'react-leaflet';
-import { naturaAreas } from './data/natura-areas';
-/* import { useEffect } from 'react'; */
 import { useMap } from 'react-leaflet';
+import { naturaAreas } from './data/natura-areas';
+import { Indicator, SPECIAL_INDICATORS } from '@repo/ui/types/indicators';
 
 interface NaturaLayerProps {
-  visible: boolean;
+  selectedIndicator?: Indicator | null;
+  pinnedIndicator?: Indicator | null;
 }
 
-export const NaturaLayer = ({ visible }: NaturaLayerProps) => {
+export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerProps) => {
   const map = useMap();
 
-  if (!visible) return null;
+  const isVisible = selectedIndicator?.id === SPECIAL_INDICATORS.NATURA_2000 ||
+    pinnedIndicator?.id === SPECIAL_INDICATORS.NATURA_2000;
+
+  if (!isVisible) return null;
 
   const style = {
     fillColor: '#00ff00',
@@ -25,7 +29,7 @@ export const NaturaLayer = ({ visible }: NaturaLayerProps) => {
 
   const onEachFeature = (feature: Feature<Geometry, GeoJsonProperties>, layer: Layer) => {
     if (feature.properties) {
-      layer.bindTooltip(feature.properties.nimi || feature.properties.luontotyyppikoodi);
+      layer.bindTooltip(feature.properties.nimisuomi || feature.properties.luontotyyppikoodi);
 
       layer.on({
         mouseover: (e) => {

@@ -8,7 +8,7 @@ import { useIndicator } from '@/contexts/IndicatorContext';
 import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
-import { IndicatorType } from '@repo/ui/types/indicators';
+import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
@@ -30,18 +30,23 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
   [62.60, 29.75]  // Northeast corner
 ];
 
+const isOverlayCompatibleType = (indicator: Indicator | null) => {
+  return indicator?.indicatorType === IndicatorType.MunicipalityLevel || 
+         indicator?.indicatorType === IndicatorType.Natura;
+};
+
 export default function Home() {
   const { municipalityData, markerData, barChartData, isLoading } = useData();
-  const { selectedIndicator, pinnedIndicator, isCompareMode, showNaturaAreas } = useIndicator();
+  const { selectedIndicator, pinnedIndicator, isCompareMode } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
 
-  // Only use split view when comparing two municipality-level indicators
   const showSplitView = isCompareMode &&
-    pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel &&
-    selectedIndicator?.indicatorType === IndicatorType.MunicipalityLevel &&
+    isOverlayCompatibleType(pinnedIndicator) &&
+    isOverlayCompatibleType(selectedIndicator) &&
     // Don't show split view when filtering pinned indicator
-    !(selectedIndicator?.id === pinnedIndicator?.id && selectedIndicator?.selectedYear !== pinnedIndicator?.selectedYear);
+    !(selectedIndicator?.id === pinnedIndicator?.id && 
+      selectedIndicator?.selectedYear !== pinnedIndicator?.selectedYear);
 
   return (
     <Box sx={{
@@ -79,7 +84,6 @@ export default function Home() {
             selectedIndicator={selectedIndicator}
             pinnedIndicator={pinnedIndicator}
             isPinned={!!pinnedIndicator}
-            showNaturaAreas={showNaturaAreas}
           />
         )}
       </Box>

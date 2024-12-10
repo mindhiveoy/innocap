@@ -3,7 +3,7 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 import { NextResponse } from 'next/server';
 import credentials from '@/utils/innocap-f5563b67295e.json';
-import { IndicatorType } from '@repo/ui/types/indicators';
+import { SPECIAL_INDICATORS, type Indicator } from '@repo/ui/types/indicators';
 
 const SPREADSHEET_ID = '1gWZkBQ0LV9-u59B_BUTt0FuWSBo2FTW_-WZTMEhn-Jg';
 
@@ -23,6 +23,23 @@ async function getAuthenticatedDoc() {
     throw error;
   }
 }
+
+const naturaIndicator: Indicator = {
+  id: SPECIAL_INDICATORS.NATURA_2000,
+  category: 'Green',
+  group: 'Protected Areas',
+  groupFI: 'Suojelualueet',
+  indicatorNameEn: 'Natura 2000 areas',
+  indicatorNameFi: 'Natura 2000 -suojelualueet',
+  indicatorType: 'Natura',
+  indicatorTypeIcon: 'Terrain',
+  iconName: 'Forest',
+  color: '#00ff00',
+  sourceEn: 'Finnish Environment Institute (SYKE)',
+  sourceFi: 'Suomen ympäristökeskus (SYKE)',
+  sourceUrl: 'https://paikkatiedot.ymparisto.fi',
+  showOnMap: 'true'
+} as const;
 
 export async function GET() {
   try {
@@ -46,18 +63,30 @@ export async function GET() {
     ]);
 
     // Process all data
-    const indicators = processIndicatorRows(indicatorRows);
+    const sheetIndicators = processIndicatorRows(indicatorRows);
+
+    // Filter out any existing Natura indicators from sheet data
+    const filteredIndicators = sheetIndicators.filter(
+      indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000
+    );
+
+    // Combine indicators with Natura always first
+    const allIndicators = [naturaIndicator, ...filteredIndicators];
+
     const municipalityData = processMunicipalityRows(municipalityRows);
     const markerData = markerDataSheet ? await processMarkerRows(await markerDataSheet.getRows()) : [];
     const barChartData = processBarChartRows(barChartRows);
 
-    const data = {
-      [IndicatorType.MunicipalityLevel]: municipalityData,
-      [IndicatorType.Marker]: markerData,
-      [IndicatorType.BarChart]: barChartData,
+    const response = {
+      indicators: allIndicators,
+      data: {
+        'Municipality Level Data': municipalityData,
+        'Marker': markerData,
+        'Bar Chart': barChartData
+      }
     };
 
-    return NextResponse.json({ indicators, data });
+    return NextResponse.json(response);
   } catch (error: any) {
     console.error('Error in GET:', error);
     return NextResponse.json(

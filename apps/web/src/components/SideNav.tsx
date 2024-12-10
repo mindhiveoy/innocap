@@ -5,8 +5,6 @@ import {
   List,
   Box,
   Typography,
-  FormControlLabel,
-  Switch,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import HomeIcon from '@mui/icons-material/Home';
@@ -17,7 +15,6 @@ import { Indicator } from '@repo/ui/types/indicators';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
-import { useIndicator } from '@/contexts/IndicatorContext';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -256,7 +253,7 @@ export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { indicators, error } = useData();
-  const { showNaturaAreas, setShowNaturaAreas } = useIndicator();
+  console.log("🚀 ~ SideNav ~ indicators:", indicators)
 
   const menuItems: MenuItem[] = [
     {
@@ -410,16 +407,6 @@ export function SideNav() {
                   Green Transition Indicators
                 </Typography>
                 <Box width={40} /> {/* Spacer to balance the close button */}
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={showNaturaAreas}
-                      onChange={(e) => setShowNaturaAreas(e.target.checked)}
-                      color="primary"
-                    />
-                  }
-                  label="Show Natura 2000 Areas"
-                />
               </DrawerHeader>
               <DrawerContent>
                 {error ? (

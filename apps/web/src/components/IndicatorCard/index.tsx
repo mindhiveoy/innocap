@@ -7,6 +7,7 @@ import TerrainIcon from '@mui/icons-material/Terrain';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import MapsHomeWork from '@mui/icons-material/MapsHomeWork';
+import ForestIcon from '@mui/icons-material/Forest';
 import Home from '@mui/icons-material/Home';
 import SolarPower from '@mui/icons-material/SolarPower';
 import WaterDrop from '@mui/icons-material/WaterDrop';
@@ -156,6 +157,7 @@ const SourceText = styled(Typography)(({ theme }) => `
 const iconComponents = {
   'DirectionsBus': DirectionsBus,
   'MapsHomeWork': MapsHomeWork,
+  'Forest': ForestIcon,
   'Home': Home,
   'SolarPower': SolarPower,
   'WaterDrop': WaterDrop,

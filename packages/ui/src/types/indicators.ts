@@ -9,27 +9,35 @@ export const INDICATORS = {
 
 export type IndicatorId = typeof INDICATORS[keyof typeof INDICATORS];
 
+export const SPECIAL_INDICATORS = {
+  NATURA_2000: 'NATURA_2000'
+} as const;
+
+export type SpecialIndicatorId = typeof SPECIAL_INDICATORS[keyof typeof SPECIAL_INDICATORS];
+
 export interface Indicator {
-  id: string;
+  id: string | SpecialIndicatorId;
   indicatorNameEn: string;
   indicatorNameFi: string;
   category: string;
-  indicatorType: 'Municipality Level Data' | 'Marker' | 'Bar Chart';
+  indicatorType: 'Municipality Level Data' | 'Marker' | 'Bar Chart' | 'Natura';
   indicatorTypeIcon: string;
   group: string;
   groupFI: string;
   iconName: string;
   color: string;
-  showOnMap: string;
+  showOnMap?: string;
   sourceEn: string;
   sourceFi: string;
+  sourceUrl?: string;
   selectedYear?: number;
 }
 
 export enum IndicatorType {
   MunicipalityLevel = "Municipality Level Data",
   Marker = "Marker",
-  BarChart = "Bar Chart"
+  BarChart = "Bar Chart",
+  Natura = "Natura"
 }
 
 export interface BaseIndicatorData {
