@@ -25,6 +25,7 @@ import EvStation from '@mui/icons-material/EvStation';
 import DryCleaning from '@mui/icons-material/DryCleaning';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 
+
 interface IndicatorCardProps {
   indicator: Indicator;
 }
@@ -166,12 +167,12 @@ const iconComponents = {
   'Forest': ForestIcon,
   'Home': Home,
   'SolarPower': SolarPower,
-  'WaterDrop': WaterDrop,
   'EnergySavingsLeaf': EnergySavingsLeaf,
+  'ShoppingBag': ShoppingBag,
+  'WaterDrop': WaterDrop,
   'Co2': Co2,
   'Recycling': Recycling,
   'Groups': Groups,
-  'ShoppingBag': ShoppingBag,
   'ElectricalServices': ElectricalServices,
   'DryCleaning': DryCleaning,
   'LocalGasStation': LocalGasStation,
@@ -200,18 +201,21 @@ const lightenColor = (color: string, amount: number = 0.3): string => {
 const GradientIcon = ({ iconName, color = '#083553' }: { iconName: string; color?: string }) => {
   const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
   const IconComponent = iconComponents[cleanIconName] || iconComponents.Home;
-  const startColor = lightenColor(color);  // Lighter version of the color
-  const endColor = color;  // Original color
+  
+  // Removetabs and extra spaces
+  const cleanColor = color.trim().replace(/\t/g, '');
+  const startColor = lightenColor(cleanColor);
+  const endColor = cleanColor;
 
   return (
     <>
       <svg width={0} height={0}>
-        <linearGradient id={`gradient-${color}`} x1={0} y1={0} x2={0} y2={1}>
+        <linearGradient id={`gradient-${cleanColor}`} x1={0} y1={0} x2={0} y2={1}>
           <stop offset={0} stopColor={startColor} />
           <stop offset={1} stopColor={endColor} />
         </linearGradient>
       </svg>
-      <IconComponent sx={{ fill: `url(#gradient-${color})` }} />
+      <IconComponent sx={{ fill: `url(#gradient-${cleanColor})` }} />
     </>
   );
 };
@@ -278,7 +282,6 @@ const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
 `);
 
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
-  console.log("🚀 ~ IndicatorCard ~ indicator:", indicator.indicatorNameEn + ' - ' + indicator.iconName)
   const {
     selectedIndicator,
     setSelectedIndicator,
