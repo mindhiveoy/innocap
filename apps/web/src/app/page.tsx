@@ -77,7 +77,7 @@ export default function Home() {
             zoom={zoom}
             maxBounds={MAP_BOUNDS}
             minZoom={8}
-            maxZoom={10}
+            maxZoom={12}
             municipalityData={municipalityData}
             markerData={markerData}
             barChartData={barChartData}

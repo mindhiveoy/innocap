@@ -227,16 +227,16 @@
   .leaflet-popup-content-wrapper {
     margin: 0;
     padding: 0;
-    min-width: 300px;
+    min-width: 200px;
   }
 
   .leaflet-popup-content {
     margin: 0;
-    min-width: 300px;
+    min-width: 200px;
   }
 
   .leaflet-popup {
-    min-width: 300px;
+    min-width: 200px;
   }
 
   .draggable-popup:not(.municipality-popup) .leaflet-popup-close-button {

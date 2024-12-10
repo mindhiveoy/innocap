@@ -277,13 +277,13 @@ export function LeafletMap({
     return (feature: any, layer: L.Layer) => {
       if (!activeIndicator) return;
 
-      // Create popup with the same options as bar chart popups
       const popup = L.popup({
         closeButton: true,
         closeOnClick: false,
         autoClose: false,
         className: 'draggable-popup municipality-popup',
-        autoPan: false
+        autoPan: false,
+        offset: L.point(-150, 0),
       });
 
       layer.bindPopup(popup);
