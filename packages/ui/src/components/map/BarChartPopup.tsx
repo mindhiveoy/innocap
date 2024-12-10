@@ -91,18 +91,12 @@ export function BarChartPopup({
 }: BarChartPopupProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const chartData = data.labels.map((label, index) => ({
     name: label,
     value: data.values[index],
     nameFi: data.labelsFi[index]
   }));
-
-  const handleBarClick = (dataIndex: number) => {
-    setActiveIndex((prevIndex) => (prevIndex === dataIndex ? null : dataIndex)); // Toggle tooltip
-  };
-
 
   return (
     <DraggablePopup
@@ -163,7 +157,6 @@ export function BarChartPopup({
                 }}
               />
               <Tooltip
-
                 cursor={false}
                 formatter={(value: number) => [`${value} ${data.unit}`, data.indicatorNameEn]}
                 contentStyle={isMobile ? {
@@ -176,7 +169,6 @@ export function BarChartPopup({
                 fill={color}
                 radius={[4, 4, 0, 0]}
                 maxBarSize={isMobile ? 30 : 40}
-                onClick={(data, barIndex) => handleBarClick(barIndex)}
               />
             </BarChart>
           </ResponsiveContainer>
