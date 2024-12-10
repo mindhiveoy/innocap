@@ -39,7 +39,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setMunicipalityData(data['Municipality Level Data'] || []);
         setMarkerData(data['Marker'] || []);
         setBarChartData(data['Bar Chart'] || []);
-        console.log("🚀 ~ DataProvider ~ barChartData:", barChartData)
       } catch (err) {
         console.error('Error in DataProvider:', err);
         setError(err as Error);
