@@ -253,7 +253,6 @@ export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { indicators, error } = useData();
-  console.log("🚀 ~ SideNav ~ indicators:", indicators)
 
   const menuItems: MenuItem[] = [
     {

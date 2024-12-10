@@ -15,7 +15,7 @@ import EnergySavingsLeaf from '@mui/icons-material/EnergySavingsLeaf';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { useIndicator } from '@/contexts/IndicatorContext';
-import type { Indicator } from '@repo/ui/types/indicators';
+import { IndicatorType, type Indicator } from '@repo/ui/types/indicators';
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useData } from '@/contexts/DataContext';
 
@@ -261,7 +261,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     togglePin,
     setPinnedIndicatorYear,
   } = useIndicator();
-  const { municipalityData } = useData();
+  const { municipalityData, barChartData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -281,18 +281,27 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   // Get five latest years without setting default
   const years = useMemo(() => {
     if (!indicator) return [];
-    if (indicator.indicatorType !== 'Municipality Level Data' && indicator.indicatorType !== 'Bar Chart') return [];
+    if (indicator.indicatorType !== IndicatorType.MunicipalityLevel && 
+        indicator.indicatorType !== IndicatorType.BarChart) return [];
+
+    // Get the correct data source based on indicator type
+    const data = indicator.indicatorType === IndicatorType.MunicipalityLevel 
+      ? municipalityData 
+      : barChartData;
 
     const uniqueYears = new Set(
-      municipalityData
+      data
         ?.filter(d => d.id === indicator.id)
         .map(d => d.year.toString())
     );
 
-    return Array.from(uniqueYears)
-      .sort((a, b) => parseInt(b) - parseInt(a)) // Sort descending
-      .slice(0, 5); // Take only 5 latest years
-  }, [indicator, municipalityData]);
+    // Convert to array and sort
+    const availableYears = Array.from(uniqueYears)
+      .sort((a, b) => parseInt(b) - parseInt(a));  // Sort descending
+
+    // No need to slice(0, 5) anymore - show all available years
+    return availableYears;
+  }, [indicator, municipalityData, barChartData]);
 
   useEffect(() => {
     if (isSelected && years.length > 0 && !selectedYear) {
@@ -361,7 +370,6 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   );
 
   if (!indicator) return null;
-
   return (
     <CardWrapper
       onClick={handleClick}
@@ -420,8 +428,8 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             </PinText>
           </PinButtonContent>
         </PinButton>
-        {(indicator.indicatorType === 'Municipality Level Data' ||
-          indicator.indicatorType === 'Bar Chart') && years.length > 0 && (
+        {(indicator.indicatorType ===  IndicatorType.MunicipalityLevel ||
+          indicator.indicatorType === IndicatorType.BarChart) && years.length > 0 && (
             <YearSelector
               value={selectedYear}
               exclusive
