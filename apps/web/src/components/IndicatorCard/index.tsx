@@ -18,6 +18,12 @@ import { useIndicator } from '@/contexts/IndicatorContext';
 import { IndicatorType, type Indicator } from '@repo/ui/types/indicators';
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useData } from '@/contexts/DataContext';
+import ElectricalServices from '@mui/icons-material/ElectricalServices';
+import Groups from '@mui/icons-material/Groups';
+import LocalGasStation from '@mui/icons-material/LocalGasStation';
+import EvStation from '@mui/icons-material/EvStation';
+import DryCleaning from '@mui/icons-material/DryCleaning';
+import ShoppingBag from '@mui/icons-material/ShoppingBag';
 
 interface IndicatorCardProps {
   indicator: Indicator;
@@ -164,30 +170,48 @@ const iconComponents = {
   'EnergySavingsLeaf': EnergySavingsLeaf,
   'Co2': Co2,
   'Recycling': Recycling,
+  'Groups': Groups,
+  'ShoppingBag': ShoppingBag,
+  'ElectricalServices': ElectricalServices,
+  'DryCleaning': DryCleaning,
+  'LocalGasStation': LocalGasStation,
+  'EvStation': EvStation,
   'HomeIcon': Home,  // Fallback for HomeIcon
 } as const;
 
 type IconName = keyof typeof iconComponents;
 
-const GradientIcon = ({ iconName }: { iconName: string }) => {
-  // Remove 'Icon' suffix if it exists
+const lightenColor = (color: string, amount: number = 0.3): string => {
+  // Remove the '#' and split into RGB
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  // Lighten each component
+  const lightR = Math.min(Math.round(r + (255 - r) * amount), 255);
+  const lightG = Math.min(Math.round(g + (255 - g) * amount), 255);
+  const lightB = Math.min(Math.round(b + (255 - b) * amount), 255);
+
+  // Convert back to hex
+  return `#${lightR.toString(16).padStart(2, '0')}${lightG.toString(16).padStart(2, '0')}${lightB.toString(16).padStart(2, '0')}`;
+};
+
+const GradientIcon = ({ iconName, color = '#083553' }: { iconName: string; color?: string }) => {
   const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
   const IconComponent = iconComponents[cleanIconName] || iconComponents.Home;
-
-  if (!IconComponent) {
-    console.warn(`Icon not found for name: ${iconName}, using Home icon as fallback`);
-    return <Home sx={{ fill: "url(#primaryGradient)" }} />;
-  }
+  const startColor = lightenColor(color);  // Lighter version of the color
+  const endColor = color;  // Original color
 
   return (
     <>
       <svg width={0} height={0}>
-        <linearGradient id="primaryGradient" x1={0} y1={0} x2={0} y2={1}>
-          <stop offset={0} stopColor="#0A81B2" />
-          <stop offset={1} stopColor="#083553" />
+        <linearGradient id={`gradient-${color}`} x1={0} y1={0} x2={0} y2={1}>
+          <stop offset={0} stopColor={startColor} />
+          <stop offset={1} stopColor={endColor} />
         </linearGradient>
       </svg>
-      <IconComponent sx={{ fill: "url(#primaryGradient)" }} />
+      <IconComponent sx={{ fill: `url(#gradient-${color})` }} />
     </>
   );
 };
@@ -254,6 +278,7 @@ const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
 `);
 
 export function IndicatorCard({ indicator }: IndicatorCardProps) {
+  console.log("🚀 ~ IndicatorCard ~ indicator:", indicator.indicatorNameEn + ' - ' + indicator.iconName)
   const {
     selectedIndicator,
     setSelectedIndicator,
@@ -381,7 +406,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
             <Typography variant='paragraph' color='text.secondary'>Green transition</Typography>
             <IconWrapper>
-              <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
+              <GradientIcon color={indicator?.color || '#083553'} iconName={indicator?.iconName || 'HomeIcon'} />
             </IconWrapper>
           </Box>
           <TitleRow>

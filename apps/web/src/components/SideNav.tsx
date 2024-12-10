@@ -276,21 +276,6 @@ export function SideNav() {
       id: 'green'
     },
     {
-      text: 'Digital',
-      icon: (
-        <Box
-          component="img"
-          src="/icons/access-point-network.svg"
-          sx={{
-            width: 24,
-            height: 24,
-            filter: selectedItem === 'digital' ? 'brightness(0) invert(1)' : 'none'
-          }}
-        />
-      ),
-      id: 'digital'
-    },
-    {
       text: 'About',
       icon: (
         <Box
@@ -427,37 +412,6 @@ export function SideNav() {
                     </span>
                   ))
                 )}
-              </DrawerContent>
-            </>
-          );
-        case 'digital':
-          return (
-            <>
-              <DrawerHeader>
-                <CloseButton onClick={() => setDrawerOpen(false)}>
-                  <Box 
-                    display='flex' 
-                    alignItems='center' 
-                    sx={{ 
-                      display: { xs: 'none', md: 'block' },
-                      height: '24px',
-                    }}
-                  >
-                    <ArrowBackIcon />
-                  </Box>
-                  <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-                    <CloseIcon />
-                  </Box>
-                </CloseButton>
-                <Typography variant="h2" color="primary.darkest">
-                  Digital Indicators
-                </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
-              </DrawerHeader>
-              <DrawerContent>
-                <Typography variant="lead" gutterBottom>
-                  Coming soon: Explore digital transformation indicators across the region.
-                </Typography>
               </DrawerContent>
             </>
           );

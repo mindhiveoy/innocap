@@ -128,11 +128,6 @@ export function BarChartPopup({
                 left: 10,
                 bottom: 20
               }}
-              onClick={(e) => {
-                if (e?.activeTooltipIndex !== undefined) {
-                  handleBarClick(e.activeTooltipIndex);
-                }
-              }}
             >
               <XAxis
                 dataKey="name"

@@ -34,7 +34,7 @@ const naturaIndicator: Indicator = {
   indicatorType: 'Natura',
   indicatorTypeIcon: 'Terrain',
   iconName: 'Forest',
-  color: '#00ff00',
+  color: '#155415',
   sourceEn: 'Finnish Environment Institute (SYKE)',
   sourceFi: 'Suomen ympäristökeskus (SYKE)',
   sourceUrl: 'https://paikkatiedot.ymparisto.fi',
