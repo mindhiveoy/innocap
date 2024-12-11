@@ -4,6 +4,7 @@ import styled from '@emotion/styled';
 import { BarChartData } from '../../types/indicators';
 import { DraggablePopup } from './DraggablePopup';
 import L from 'leaflet';
+import { useState } from 'react';
 
 interface BarChartPopupProps {
   data: BarChartData;
@@ -151,6 +152,7 @@ export function BarChartPopup({
                 }}
               />
               <Tooltip
+                cursor={false}
                 formatter={(value: number) => [`${value} ${data.unit}`, data.indicatorNameEn]}
                 contentStyle={isMobile ? {
                   fontSize: '10px',
@@ -162,7 +164,6 @@ export function BarChartPopup({
                 fill={color}
                 radius={[4, 4, 0, 0]}
                 maxBarSize={isMobile ? 30 : 40}
-
               />
             </BarChart>
           </ResponsiveContainer>

@@ -78,7 +78,7 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
     setIsCompareMode,
     isPinned,
     togglePin,
-    setPinnedIndicatorYear
+    setPinnedIndicatorYear,
   };
 
   return (

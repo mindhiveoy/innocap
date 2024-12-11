@@ -7,6 +7,7 @@ import TerrainIcon from '@mui/icons-material/Terrain';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import MapsHomeWork from '@mui/icons-material/MapsHomeWork';
+import ForestIcon from '@mui/icons-material/Forest';
 import Home from '@mui/icons-material/Home';
 import SolarPower from '@mui/icons-material/SolarPower';
 import WaterDrop from '@mui/icons-material/WaterDrop';
@@ -14,9 +15,16 @@ import EnergySavingsLeaf from '@mui/icons-material/EnergySavingsLeaf';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { useIndicator } from '@/contexts/IndicatorContext';
-import type { Indicator } from '@repo/ui/types/indicators';
+import { IndicatorType, type Indicator } from '@repo/ui/types/indicators';
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { useData } from '@/contexts/DataContext';
+import ElectricalServices from '@mui/icons-material/ElectricalServices';
+import Groups from '@mui/icons-material/Groups';
+import LocalGasStation from '@mui/icons-material/LocalGasStation';
+import EvStation from '@mui/icons-material/EvStation';
+import DryCleaning from '@mui/icons-material/DryCleaning';
+import ShoppingBag from '@mui/icons-material/ShoppingBag';
+
 
 interface IndicatorCardProps {
   indicator: Indicator;
@@ -156,36 +164,58 @@ const SourceText = styled(Typography)(({ theme }) => `
 const iconComponents = {
   'DirectionsBus': DirectionsBus,
   'MapsHomeWork': MapsHomeWork,
+  'Forest': ForestIcon,
   'Home': Home,
   'SolarPower': SolarPower,
-  'WaterDrop': WaterDrop,
   'EnergySavingsLeaf': EnergySavingsLeaf,
+  'ShoppingBag': ShoppingBag,
+  'WaterDrop': WaterDrop,
   'Co2': Co2,
   'Recycling': Recycling,
+  'Groups': Groups,
+  'ElectricalServices': ElectricalServices,
+  'DryCleaning': DryCleaning,
+  'LocalGasStation': LocalGasStation,
+  'EvStation': EvStation,
   'HomeIcon': Home,  // Fallback for HomeIcon
 } as const;
 
 type IconName = keyof typeof iconComponents;
 
-const GradientIcon = ({ iconName }: { iconName: string }) => {
-  // Remove 'Icon' suffix if it exists
+const lightenColor = (color: string, amount: number = 0.3): string => {
+  // Remove the '#' and split into RGB
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  // Lighten each component
+  const lightR = Math.min(Math.round(r + (255 - r) * amount), 255);
+  const lightG = Math.min(Math.round(g + (255 - g) * amount), 255);
+  const lightB = Math.min(Math.round(b + (255 - b) * amount), 255);
+
+  // Convert back to hex
+  return `#${lightR.toString(16).padStart(2, '0')}${lightG.toString(16).padStart(2, '0')}${lightB.toString(16).padStart(2, '0')}`;
+};
+
+const GradientIcon = ({ iconName, color = '#083553' }: { iconName: string; color?: string }) => {
   const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
   const IconComponent = iconComponents[cleanIconName] || iconComponents.Home;
-
-  if (!IconComponent) {
-    console.warn(`Icon not found for name: ${iconName}, using Home icon as fallback`);
-    return <Home sx={{ fill: "url(#primaryGradient)" }} />;
-  }
+  
+  // Removetabs and extra spaces
+  const cleanColor = color.trim().replace(/\t/g, '');
+  const startColor = lightenColor(cleanColor);
+  const endColor = cleanColor;
 
   return (
     <>
       <svg width={0} height={0}>
-        <linearGradient id="primaryGradient" x1={0} y1={0} x2={0} y2={1}>
-          <stop offset={0} stopColor="#0A81B2" />
-          <stop offset={1} stopColor="#083553" />
+        <linearGradient id={`gradient-${cleanColor}`} x1={0} y1={0} x2={0} y2={1}>
+          <stop offset={0} stopColor={startColor} />
+          <stop offset={1} stopColor={endColor} />
         </linearGradient>
       </svg>
-      <IconComponent sx={{ fill: "url(#primaryGradient)" }} />
+      <IconComponent sx={{ fill: `url(#gradient-${cleanColor})` }} />
     </>
   );
 };
@@ -259,7 +289,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     togglePin,
     setPinnedIndicatorYear,
   } = useIndicator();
-  const { municipalityData } = useData();
+  const { municipalityData, barChartData } = useData();
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -279,18 +309,27 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   // Get five latest years without setting default
   const years = useMemo(() => {
     if (!indicator) return [];
-    if (indicator.indicatorType !== 'Municipality Level Data' && indicator.indicatorType !== 'Bar Chart') return [];
+    if (indicator.indicatorType !== IndicatorType.MunicipalityLevel && 
+        indicator.indicatorType !== IndicatorType.BarChart) return [];
+
+    // Get the correct data source based on indicator type
+    const data = indicator.indicatorType === IndicatorType.MunicipalityLevel 
+      ? municipalityData 
+      : barChartData;
 
     const uniqueYears = new Set(
-      municipalityData
+      data
         ?.filter(d => d.id === indicator.id)
         .map(d => d.year.toString())
     );
 
-    return Array.from(uniqueYears)
-      .sort((a, b) => parseInt(b) - parseInt(a)) // Sort descending
-      .slice(0, 5); // Take only 5 latest years
-  }, [indicator, municipalityData]);
+    // Convert to array and sort
+    const availableYears = Array.from(uniqueYears)
+      .sort((a, b) => parseInt(b) - parseInt(a));  // Sort descending
+
+    // No need to slice(0, 5) anymore - show all available years
+    return availableYears;
+  }, [indicator, municipalityData, barChartData]);
 
   useEffect(() => {
     if (isSelected && years.length > 0 && !selectedYear) {
@@ -359,7 +398,6 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
   );
 
   if (!indicator) return null;
-
   return (
     <CardWrapper
       onClick={handleClick}
@@ -371,7 +409,7 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
             <Typography variant='paragraph' color='text.secondary'>Green transition</Typography>
             <IconWrapper>
-              <GradientIcon iconName={indicator?.iconName || 'HomeIcon'} />
+              <GradientIcon color={indicator?.color || '#083553'} iconName={indicator?.iconName || 'HomeIcon'} />
             </IconWrapper>
           </Box>
           <TitleRow>
@@ -418,8 +456,8 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
             </PinText>
           </PinButtonContent>
         </PinButton>
-        {(indicator.indicatorType === 'Municipality Level Data' ||
-          indicator.indicatorType === 'Bar Chart') && years.length > 0 && (
+        {(indicator.indicatorType ===  IndicatorType.MunicipalityLevel ||
+          indicator.indicatorType === IndicatorType.BarChart) && years.length > 0 && (
             <YearSelector
               value={selectedYear}
               exclusive

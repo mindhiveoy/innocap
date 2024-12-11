@@ -33,6 +33,7 @@
     "@types/eslint": "^8.56.5",
     "@types/leaflet": "^1.9.8",
     "@types/node": "^20.11.24",
+    "@types/proj4": "^2.5.5",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
     "eslint": "^8.57.0",
@@ -40,8 +41,10 @@
   },
   "dependencies": {
     "@repo/shared": "*",
+    "firebase": "^11.0.2",
     "leaflet": "^1.9.4",
     "leaflet.sync": "^0.2.4",
+    "proj4": "^2.7.0",
     "react": "19.0.0-rc-69d4b800-20241021",
     "react-leaflet": "5.0.0-rc.1",
     "recharts": "^2.10.3"
