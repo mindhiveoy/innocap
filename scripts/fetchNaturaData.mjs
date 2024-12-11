@@ -146,7 +146,7 @@ function simplifyPolygon(coordinates, tolerance = 0.001) {
 
 async function fetchNaturaData() {
   try {
-    // Read from local file
+    // replace this with the local file path where the whole finlands natura data json is stored if modification is needed
     const rawData = await readFile('/Users/paivinykanen/Downloads/natura/natura_all.json', 'utf8');
     const data = JSON.parse(rawData);
 
