@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Indicator, MunicipalityLevelData, MarkerData, BarChartData } from '@repo/ui/types/indicators';
+import { fetchFirebaseData } from '@/utils/firebaseOperations';
 
 interface DataContextType {
   indicators: Indicator[];
@@ -25,23 +26,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/sheets');
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('API Error:', errorData);
-          throw new Error(errorData.details || 'Failed to fetch data');
-        }
-
-        const responseData = await response.json();
-        setIndicators(responseData.indicators);
-
-        const { data } = responseData;
-        setMunicipalityData(data['Municipality Level Data'] || []);
-        setMarkerData(data['Marker'] || []);
-        setBarChartData(data['Bar Chart'] || []);
+        const data = await fetchFirebaseData();
+        setIndicators(data.indicators || []);
+        setMunicipalityData(data.municipalityLevelData || []);
+        setMarkerData(data.markerData || []);
+        setBarChartData(data.barChartData || []);
+        setError(null);
       } catch (err) {
-        console.error('Error in DataProvider:', err);
-        setError(err as Error);
+        console.error('Error loading data:', err);
+        setError(err instanceof Error ? err : new Error('Failed to load data'));
       } finally {
         setIsLoading(false);
       }

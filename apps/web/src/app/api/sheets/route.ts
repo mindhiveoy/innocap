@@ -110,26 +110,15 @@ export async function GET() {
 export async function POST() {
   try {
     const startTime = new Date().toISOString();
-    console.log('Starting scheduled data update:', startTime);
-
     const data = await fetchAndProcessData();
+    const timestamp = await updateFirebaseData(data);
 
-    // Log some stats before update
-    console.log('Data to be updated:', {
-      indicators: data.indicators.length,
-      municipalityData: data.municipalityLevelData.length,
-      markerData: data.markerData.length,
-      barChartData: data.barChartData.length
-    });
-
-    await updateFirebaseData(data);
-
-    console.log('Scheduled data update completed:', new Date().toISOString());
     return NextResponse.json({
       status: 200,
       message: 'Data update completed successfully',
       startTime,
       endTime: new Date().toISOString(),
+      lastUpdateTimestamp: timestamp,
       dataCounts: {
         indicators: data.indicators.length,
         municipalityData: data.municipalityLevelData.length,

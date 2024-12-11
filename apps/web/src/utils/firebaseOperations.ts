@@ -56,9 +56,8 @@ export async function updateFirebaseData(data: Omit<FirebaseData, 'metadata'>) {
     const metadataRef = doc(collection(db, COLLECTIONS.METADATA), 'lastUpdate');
     batch.set(metadataRef, { timestamp });
 
-    // Commit the batch
     await batch.commit();
-    console.log('Firebase data updated successfully:', new Date(timestamp).toISOString());
+    return timestamp;
   } catch (error) {
     console.error('Error in updateFirebaseData:', error);
     throw error;
@@ -68,20 +67,22 @@ export async function updateFirebaseData(data: Omit<FirebaseData, 'metadata'>) {
 export async function fetchFirebaseData(): Promise<Omit<FirebaseData, 'metadata'>> {
   const result: Partial<FirebaseData> = {};
 
-  // Fetch data from each collection
+  const collectionToKey = {
+    [COLLECTIONS.INDICATORS]: 'indicators',
+    [COLLECTIONS.MUNICIPALITY_DATA]: 'municipalityLevelData',
+    [COLLECTIONS.MARKER_DATA]: 'markerData',
+    [COLLECTIONS.BAR_CHART_DATA]: 'barChartData'
+  } as const;
+
   for (const collectionName of Object.values(COLLECTIONS)) {
     if (collectionName === COLLECTIONS.METADATA) continue;
 
     const latestDoc = await getDocs(collection(db, collectionName));
     const docData = latestDoc.docs[0]?.data();
-
-    // Map collection name to result key
-    const key = Object.keys(COLLECTIONS).find(
-      k => COLLECTIONS[k as keyof typeof COLLECTIONS] === collectionName
-    )?.toLowerCase();
+    const key = collectionToKey[collectionName as keyof typeof collectionToKey];
 
     if (key && docData && 'data' in docData) {
-      result[key as keyof Omit<FirebaseData, 'metadata'>] = docData.data;
+      result[key] = docData.data;
     }
   }
 
