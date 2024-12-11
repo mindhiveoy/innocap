@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getStorage } from 'firebase/storage';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,3 +13,13 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);
+export const db = getFirestore(app);
+
+// Collection references
+export const COLLECTIONS = {
+  INDICATORS: 'indicators',
+  MUNICIPALITY_DATA: 'municipalityLevelData',
+  MARKER_DATA: 'markerData',
+  BAR_CHART_DATA: 'barChartData',
+  METADATA: 'metadata'
+} as const;
