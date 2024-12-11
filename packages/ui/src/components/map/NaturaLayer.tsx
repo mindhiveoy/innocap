@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import L from 'leaflet';
 import type { Layer } from 'leaflet';
-import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
+import type { Feature, GeoJsonProperties, Geometry, FeatureCollection } from 'geojson';
 import { LayerGroup, GeoJSON } from 'react-leaflet';
 import { useMap } from 'react-leaflet';
 import { naturaAreas } from './data/natura-areas';
@@ -12,6 +12,15 @@ import { Typography } from '@mui/material';
 import styled from '@emotion/styled';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
+
+const typedNaturaAreas = naturaAreas as FeatureCollection;
+
+if (process.env.NODE_ENV === 'development') {
+  console.log('Natura areas stats:', {
+    areas: typedNaturaAreas.features.length,
+    size: `${(JSON.stringify(typedNaturaAreas).length / 1024).toFixed(1)}KB`
+  });
+}
 
 const PopupContainer = styled.div(({ theme }) => `
   background-color: #fff;
@@ -148,8 +157,8 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
   return (
     <LayerGroup>
       <GeoJSON
-        key="natura-areas-debug"
-        data={naturaAreas}
+        key="natura-areas"
+        data={typedNaturaAreas}
         style={style}
         onEachFeature={onEachFeature}
       />

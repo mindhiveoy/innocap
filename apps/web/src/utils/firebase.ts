@@ -10,5 +10,6 @@ const firebaseConfig = {
   appId: "1:678821301815:web:470f9b2094d6f3198bb9b2"
 };
 
+// Keep the app initialization for future Google Sheets integration
 export const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);

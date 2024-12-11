@@ -90,6 +90,60 @@ async function fetchWithRetry(url, retries = 3) {
   throw new Error('Unreachable');
 }
 
+function simplifyPolygon(coordinates, tolerance = 0.001) {
+  function perpendicularDistance(point, lineStart, lineEnd) {
+    const [x, y] = point;
+    const [x1, y1] = lineStart;
+    const [x2, y2] = lineEnd;
+
+    const area = Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1);
+    const bottom = Math.sqrt(Math.pow(y2 - y1, 2) + Math.pow(x2 - x1, 2));
+    return area / bottom;
+  }
+
+  function simplifyLine(points, tolerance) {
+    if (points.length <= 2) return points;
+
+    let maxDistance = 0;
+    let maxIndex = 0;
+    const firstPoint = points[0];
+    const lastPoint = points[points.length - 1];
+
+    for (let i = 1; i < points.length - 1; i++) {
+      const distance = perpendicularDistance(points[i], firstPoint, lastPoint);
+      if (distance > maxDistance) {
+        maxDistance = distance;
+        maxIndex = i;
+      }
+    }
+
+    if (maxDistance > tolerance) {
+      const firstHalf = simplifyLine(points.slice(0, maxIndex + 1), tolerance);
+      const secondHalf = simplifyLine(points.slice(maxIndex), tolerance);
+      return firstHalf.slice(0, -1).concat(secondHalf);
+    }
+
+    return [firstPoint, lastPoint];
+  }
+
+  // For polygons, ensure the first and last points are identical
+  function simplifyRing(ring, tolerance) {
+    const simplified = simplifyLine(ring.slice(0, -1), tolerance);
+    return [...simplified, simplified[0]]; // Close the ring
+  }
+
+  // Handle MultiPolygon vs Polygon
+  if (Array.isArray(coordinates[0][0][0])) {
+    // MultiPolygon
+    return coordinates.map(polygon => {
+      return polygon.map(ring => simplifyRing(ring, tolerance));
+    });
+  } else {
+    // Polygon
+    return coordinates.map(ring => simplifyRing(ring, tolerance));
+  }
+}
+
 async function fetchNaturaData() {
   try {
     // Read from local file
@@ -108,9 +162,26 @@ async function fetchNaturaData() {
     console.log('Features:');
     filteredFeatures.forEach(f => console.log(`- ${f.properties.nimisuomi}`));
 
+    const simplifiedFeatures = filteredFeatures.map(feature => {
+      const originalPoints = JSON.stringify(feature.geometry.coordinates).length;
+      const simplified = simplifyPolygon(feature.geometry.coordinates, 0.002); // Adjust tolerance as needed
+      const simplifiedPoints = JSON.stringify(simplified).length;
+
+      console.log(`${feature.properties.nimisuomi}:`);
+      console.log(`  Points reduced by ${((1 - simplifiedPoints / originalPoints) * 100).toFixed(1)}%`);
+
+      return {
+        ...feature,
+        geometry: {
+          ...feature.geometry,
+          coordinates: simplified
+        }
+      };
+    });
+
     const finalData = {
       type: "FeatureCollection",
-      features: filteredFeatures
+      features: simplifiedFeatures
     };
 
     // Save the data
@@ -126,7 +197,7 @@ export const naturaAreas = ${JSON.stringify(finalData, null, 2)};`;
 
     console.log('Natura 2000 data saved successfully to:', outputPath);
     console.log('\nFeatures in Southern Savo:');
-    filteredFeatures.forEach(feature => {
+    simplifiedFeatures.forEach(feature => {
       console.log(`- ${feature.properties.KOHDENIMI || feature.properties.TUNNUS}`);
     });
 
