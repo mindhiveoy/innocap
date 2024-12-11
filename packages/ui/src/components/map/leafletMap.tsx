@@ -21,7 +21,7 @@ import { getMunicipalityCenter } from './data/municipality-centers';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
 import { DraggablePopup } from './DraggablePopup';
-
+import { NaturaLayer } from './NaturaLayer';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -38,6 +38,7 @@ interface LeafletMapProps {
   zoomControl?: boolean;
   onMapMount?: (map: L.Map) => void;
   pinnedIndicator?: Indicator | null;
+  showNaturaAreas?: boolean;
 }
 
 const geoJSONStyle = {
@@ -185,7 +186,9 @@ export function LeafletMap({
   zoomControl = true,
   onMapMount,
   pinnedIndicator,
+  showNaturaAreas = false,
 }: LeafletMapProps) {
+
   const popupRefs = useRef<(L.Popup | null)[]>([]);
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
   const mapRef = useRef<L.Map | null>(null);
@@ -274,13 +277,13 @@ export function LeafletMap({
     return (feature: any, layer: L.Layer) => {
       if (!activeIndicator) return;
 
-      // Create popup with the same options as bar chart popups
       const popup = L.popup({
         closeButton: true,
         closeOnClick: false,
         autoClose: false,
         className: 'draggable-popup municipality-popup',
-        autoPan: false
+        autoPan: false,
+        offset: L.point(-150, 0),
       });
 
       layer.bindPopup(popup);
@@ -372,8 +375,6 @@ export function LeafletMap({
     return (
       <LayerGroup>
         {filteredMarkerData.map((marker, i) => {
-          console.log("🚀 ~ {filteredMarkerData.map ~ marker:", marker)
-          // Create an index for the marker popup
           const index = `marker-${i}`;
 
           while (popupRefs.current.length <= i) {
@@ -601,6 +602,12 @@ export function LeafletMap({
           interactive={false}
         />
 
+        <NaturaLayer
+          key="natura-layer"
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={pinnedIndicator}
+        />
+
         {/* Choropleth layer only rendered when we have data */}
         {activeIndicator && (
           <GeoJSON
@@ -618,4 +625,4 @@ export function LeafletMap({
       </MapContainer>
     </>
   );
-} 
+}
