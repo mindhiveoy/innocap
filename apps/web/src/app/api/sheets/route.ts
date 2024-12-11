@@ -42,79 +42,109 @@ const naturaIndicator: Indicator = {
   showOnMap: 'true'
 } as const;
 
+// Shared function to fetch and process data
+async function fetchAndProcessData() {
+  const doc = await getAuthenticatedDoc();
+
+  // Get all required sheets
+  const indicatorsSheet = doc.sheetsByTitle['Indicators'];
+  const municipalityDataSheet = doc.sheetsByTitle['Municipality Level Data'];
+  const markerDataSheet = doc.sheetsByTitle['Marker'];
+  const barChartSheet = doc.sheetsByTitle['Bar Chart'];
+
+  if (!indicatorsSheet || !municipalityDataSheet) {
+    throw new Error('Required sheets not found');
+  }
+
+  // Fetch all data in parallel
+  const [indicatorRows, municipalityRows, markerRows, barChartRows] = await Promise.all([
+    indicatorsSheet.getRows(),
+    municipalityDataSheet.getRows(),
+    markerDataSheet?.getRows() || Promise.resolve([]),
+    barChartSheet?.getRows() || Promise.resolve([]),
+  ]);
+
+  // Process all data
+  const sheetIndicators = processIndicatorRows(indicatorRows);
+  const filteredIndicators = sheetIndicators.filter(
+    indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000
+  );
+  const allIndicators = [naturaIndicator, ...filteredIndicators];
+
+  const municipalityData = processMunicipalityRows(municipalityRows);
+  const markerData = markerRows.length > 0 ? processMarkerRows(markerRows) : [];
+  const barChartData = processBarChartRows(barChartRows);
+
+  return {
+    indicators: allIndicators,
+    municipalityLevelData: municipalityData,
+    markerData: markerData,
+    barChartData: barChartData
+  };
+}
+
+// Regular GET endpoint for UI
 export async function GET() {
   try {
-    const doc = await getAuthenticatedDoc();
+    const data = await fetchAndProcessData();
 
-    // Get all required sheets
-    const indicatorsSheet = doc.sheetsByTitle['Indicators'];
-    const municipalityDataSheet = doc.sheetsByTitle['Municipality Level Data'];
-    const markerDataSheet = doc.sheetsByTitle['Marker'];
-    const barChartSheet = doc.sheetsByTitle['Bar Chart'];
-
-    if (!indicatorsSheet || !municipalityDataSheet) {
-      throw new Error('Required sheets not found');
-    }
-
-    // Fetch all data in parallel
-    const [indicatorRows, municipalityRows, markerRows, barChartRows] = await Promise.all([
-      indicatorsSheet.getRows(),
-      municipalityDataSheet.getRows(),
-      markerDataSheet?.getRows() || Promise.resolve([]),
-      barChartSheet?.getRows() || Promise.resolve([]),
-    ]);
-
-    // Process all data
-    const sheetIndicators = processIndicatorRows(indicatorRows);
-
-    // Filter out any existing Natura indicators from sheet data
-    const filteredIndicators = sheetIndicators.filter(
-      indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000
-    );
-
-    // Combine indicators with Natura always first
-    const allIndicators = [naturaIndicator, ...filteredIndicators];
-
-    const municipalityData = processMunicipalityRows(municipalityRows);
-    const markerData = markerRows.length > 0 ? processMarkerRows(markerRows) : [];
-    const barChartData = processBarChartRows(barChartRows);
-
-    // Log data sizes for debugging
-    console.log('Data sizes:', {
-      indicators: allIndicators.length,
-      municipalityData: municipalityData.length,
-      markerData: markerData.length,
-      barChartData: barChartData.length
-    });
-
-    // Prepare data for Firebase in the correct format
-    const processedData = {
-      indicators: allIndicators,
-      municipalityLevelData: municipalityData,
-      markerData: markerData,
-      barChartData: barChartData
-    };
-
-    console.log('Processed data for Firebase:', JSON.stringify(processedData, null, 2));
-
-    // Update Firebase with the new data
-    await updateFirebaseData(processedData);
-
-    // Return the response in the original format for backward compatibility
-    const response = {
-      indicators: allIndicators,
+    // Return in the format expected by the UI
+    return NextResponse.json({
+      indicators: data.indicators,
       data: {
-        'Municipality Level Data': municipalityData,
-        'Marker': markerData,
-        'Bar Chart': barChartData
+        'Municipality Level Data': data.municipalityLevelData,
+        'Marker': data.markerData,
+        'Bar Chart': data.barChartData
       }
-    };
-
-    return NextResponse.json(response);
+    });
   } catch (error: any) {
     console.error('Error in GET:', error);
     return NextResponse.json(
       { error: 'Failed to fetch data', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+// POST endpoint for cron job
+export async function POST() {
+  try {
+    const startTime = new Date().toISOString();
+    console.log('Starting scheduled data update:', startTime);
+
+    const data = await fetchAndProcessData();
+
+    // Log some stats before update
+    console.log('Data to be updated:', {
+      indicators: data.indicators.length,
+      municipalityData: data.municipalityLevelData.length,
+      markerData: data.markerData.length,
+      barChartData: data.barChartData.length
+    });
+
+    await updateFirebaseData(data);
+
+    console.log('Scheduled data update completed:', new Date().toISOString());
+    return NextResponse.json({
+      status: 200,
+      message: 'Data update completed successfully',
+      startTime,
+      endTime: new Date().toISOString(),
+      dataCounts: {
+        indicators: data.indicators.length,
+        municipalityData: data.municipalityLevelData.length,
+        markerData: data.markerData.length,
+        barChartData: data.barChartData.length
+      }
+    });
+  } catch (error) {
+    console.error('Scheduled update failed:', error);
+    return NextResponse.json(
+      {
+        status: 500,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
