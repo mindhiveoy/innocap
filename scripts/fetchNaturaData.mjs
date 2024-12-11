@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { writeFile } from 'fs/promises';
+import { writeFile, readFile } from 'fs/promises';
 import fetch from 'node-fetch';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,17 +36,31 @@ function isValidNaturaFeature(feature) {
  */
 function isInSouthernSavo(feature) {
   try {
-    // Get the first coordinate point for checking
-    // This is simplified - ideally we'd check if any part of the polygon intersects
-    const coords = feature.geometry.coordinates[0][0];
-    const [lon, lat] = coords;
+    // Handle MultiPolygon vs Polygon
+    const coordinates = feature.geometry.coordinates;
 
-    return lat >= BOUNDS.minLat &&
+    // Function to check if a point is within bounds
+    const isPointInBounds = ([lon, lat]) =>
+      lat >= BOUNDS.minLat &&
       lat <= BOUNDS.maxLat &&
       lon >= BOUNDS.minLon &&
       lon <= BOUNDS.maxLon;
+
+    // For MultiPolygon: check each polygon's points
+    if (feature.geometry.type === 'MultiPolygon') {
+      return coordinates.some(polygon =>
+        polygon.some(ring =>
+          ring.some(point => isPointInBounds(point))
+        )
+      );
+    }
+
+    // For Polygon: check all points in all rings
+    return coordinates.some(ring =>
+      ring.some(point => isPointInBounds(point))
+    );
   } catch (error) {
-    console.error('Error checking coordinates for feature:', feature.properties?.TUNNUS);
+    console.error('Error checking coordinates for feature:', feature.properties?.nimisuomi);
     return false;
   }
 }
@@ -78,38 +92,21 @@ async function fetchWithRetry(url, retries = 3) {
 
 async function fetchNaturaData() {
   try {
-    const params = new URLSearchParams({
-      service: 'WMS',
-      version: '1.3.0',
-      request: 'GetFeatureInfo',
-      layers: 'PS.ProtectedSitesSpecialAreaOfConservation',
-      query_layers: 'PS.ProtectedSitesSpecialAreaOfConservation',
-      info_format: 'application/json',
-      feature_count: '1000',
-      i: '50',
-      j: '50',
-      width: '101',
-      height: '101',
-      bbox: `${BOUNDS.minLon},${BOUNDS.minLat},${BOUNDS.maxLon},${BOUNDS.maxLat}`,
-      crs: 'EPSG:4326'
-    });
-
-    const url = `https://paikkatiedot.ymparisto.fi/geoserver/inspire_ps/wms?${params}`;
-    console.log('Fetching Natura 2000 sites from:', url);
-
-    const response = await fetchWithRetry(url);
-    const data = await response.json();
+    // Read from local file
+    const rawData = await readFile('/Users/paivinykanen/Downloads/natura/natura_all.json', 'utf8');
+    const data = JSON.parse(rawData);
 
     if (!data || !Array.isArray(data.features)) {
-      throw new Error('Invalid response format: missing features array');
+      throw new Error('Invalid JSON format: missing features array');
     }
 
-    // Filter and validate features
     const filteredFeatures = data.features
       .filter(isValidNaturaFeature)
       .filter(isInSouthernSavo);
 
     console.log(`Found ${filteredFeatures.length} Natura 2000 sites in Southern Savo`);
+    console.log('Features:');
+    filteredFeatures.forEach(f => console.log(`- ${f.properties.nimisuomi}`));
 
     const finalData = {
       type: "FeatureCollection",
@@ -124,7 +121,7 @@ async function fetchNaturaData() {
 // Bounds: ${JSON.stringify(BOUNDS)}
 export const naturaAreas = ${JSON.stringify(finalData, null, 2)};`;
 
-    const outputPath = join(__dirname, '../UI Library/src/components/map/data/natura-areas.ts');
+    const outputPath = join(__dirname, '../packages/ui/src/components/map/data/natura-areas.ts');
     await writeFile(outputPath, fileContent);
 
     console.log('Natura 2000 data saved successfully to:', outputPath);
