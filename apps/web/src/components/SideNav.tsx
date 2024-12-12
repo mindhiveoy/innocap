@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   List,
   Box,
@@ -56,18 +56,25 @@ const NavList = styled(List)(({ theme }) => `
   }
 `);
 
-const NavItem = styled.div(({ theme }) => `
+const NavItem = styled.button(({ theme }) => `
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: ${theme.spacing(1)};
   cursor: pointer;
   width: 100%;
+  border: none;
+  background: none;
   border-radius: ${theme.shape.borderRadius}px;
   transition: all 0.2s ease-in-out;
 
   &:hover {
     background-color: ${theme.palette.action.hover};
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px ${theme.palette.primary.main};
   }
 
   &.selected {
@@ -183,7 +190,7 @@ const DrawerHeader = styled(Box)(({ theme }) => `
   }
 `);
 
-const CloseButton = styled(Box)(({ theme }) => `
+const CloseButton = styled.button(({ theme }) => `
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,16 +198,24 @@ const CloseButton = styled(Box)(({ theme }) => `
   color: ${theme.palette.primary.main};
   width: 40px;
   height: 40px;
+  border: none;
+  background: none;
   border-radius: ${theme.shape.borderRadius}px;
   transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px ${theme.palette.primary.main};
+    transform: scale(1.1);
+  }
 
   svg {
     display: block;
     margin: auto;
-  }
-
-  &:hover {
-    transform: scale(1.1);
   }
 `);
 
@@ -253,6 +268,8 @@ export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { indicators, error } = useData();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const lastActiveElementRef = useRef<HTMLElement | null>(null);
 
   const menuItems: MenuItem[] = [
     {
@@ -308,14 +325,44 @@ export function SideNav() {
     return acc;
   }, {});
 
-  const handleItemClick = (itemId: string) => {
+  // Focus management when opening/closing drawer
+  useEffect(() => {
+    if (drawerOpen) {
+      lastActiveElementRef.current = document.activeElement as HTMLElement;
+      const closeButton = drawerRef.current?.querySelector('button') as HTMLElement;
+      closeButton?.focus();
+    } else if (lastActiveElementRef.current) {
+      lastActiveElementRef.current.focus();
+    }
+  }, [drawerOpen]);
+
+  // Handle escape key to close drawer
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && drawerOpen) {
+        setDrawerOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [drawerOpen]);
+
+  const handleItemClick = useCallback((itemId: string) => {
     if (selectedItem === itemId) {
       setDrawerOpen(!drawerOpen);
     } else {
       setSelectedItem(itemId);
       setDrawerOpen(true);
     }
-  };
+  }, [selectedItem, drawerOpen]);
+
+  const handleItemKeyDown = useCallback((event: React.KeyboardEvent, itemId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleItemClick(itemId);
+    }
+  }, [handleItemClick]);
 
   const renderDrawerContent = () => {
     const content = (() => {
@@ -485,8 +532,8 @@ export function SideNav() {
 
   return (
     <>
-      <StyledNav>
-        <NavList>
+      <StyledNav aria-label="Main navigation">
+        <NavList role="menubar">
           <LogoSection>
             <LogoImage>
               <Image src="/innocap_logo.svg" alt="Innocap Logo" width={68} height={68} />
@@ -503,7 +550,13 @@ export function SideNav() {
             <NavItem
               key={item.id}
               onClick={() => handleItemClick(item.id)}
+              onKeyDown={(e) => handleItemKeyDown(e, item.id)}
               className={selectedItem === item.id ? 'selected' : ''}
+              aria-expanded={selectedItem === item.id && drawerOpen}
+              aria-haspopup="dialog"
+              aria-controls={`drawer-${item.id}`}
+              role="menuitem"
+              tabIndex={0}
             >
               <Box
                 sx={{
@@ -514,11 +567,13 @@ export function SideNav() {
                     height: '100%'
                   }
                 }}
+                aria-hidden="true"
               >
                 {item.icon}
               </Box>
               <Typography
                 variant="caption"
+                component="span"
                 sx={{
                   mt: { xs: 0.25, md: 0.5 },
                   textAlign: 'center',
@@ -532,7 +587,14 @@ export function SideNav() {
         </NavList>
       </StyledNav>
 
-      <ContentDrawer className={drawerOpen ? 'open' : ''}>
+      <ContentDrawer 
+        className={drawerOpen ? 'open' : ''} 
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        id={selectedItem ? `drawer-${selectedItem}` : undefined}
+        aria-label={selectedItem ? `${selectedItem} panel` : undefined}
+      >
         {renderDrawerContent()}
       </ContentDrawer>
     </>
