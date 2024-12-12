@@ -112,11 +112,22 @@ const PinButtonContent = styled.button(({ theme }) => `
   background: none;
   border: none;
   padding: 0;
+  margin: ${theme.spacing(2, 1, 3, 0)};
   cursor: pointer;
   color: inherit;
+  text-align: left;
   
   &:hover {
     background-color: transparent;
+  }
+  
+  &:focus-visible {
+    outline: none;
+    padding: ${theme.spacing(0, 1)};
+    margin: ${theme.spacing(2, 0, 3, -1 )};
+    box-shadow: 0 0 0 1px ${theme.palette.primary.main};
+    border-radius: ${theme.shape.borderRadius}px;
+    background-color: ${theme.palette.action.hover};
   }
   
   .pin-icon {
@@ -136,7 +147,6 @@ const PinButtonContent = styled.button(({ theme }) => `
 const PinText = styled(Typography)(({ theme }) => `
   font-size: 0.75rem;
   color: ${theme.palette.primary.darkest};
-  margin: ${theme.spacing(2, 0, 3, 0)};
   transition: font-weight 0.1s ease-in-out;
 
   &:hover {
@@ -281,7 +291,7 @@ const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
   }
 `);
 
-export function IndicatorCard({ indicator }: IndicatorCardProps) {
+export const IndicatorCard: React.FC<IndicatorCardProps> = ({ indicator }) => {
   const {
     selectedIndicator,
     setSelectedIndicator,
@@ -350,12 +360,15 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     setSelectedIndicator(isSelected ? null : indicator);
   }, [isSelected, indicator, setSelectedIndicator, pinned]);
 
-  const handlePinClick = useCallback((e: React.MouseEvent) => {
+  const handlePinClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
     togglePin(indicator);
   }, [togglePin, indicator]);
 
-  const handleYearChange = useCallback((_: React.MouseEvent<HTMLElement>, newYear: string | null) => {
+  const handleYearChange = useCallback((
+    event: React.MouseEvent<HTMLElement> | null,
+    newYear: string | null
+  ) => {
     setSelectedYear(newYear);
 
     // For pinned indicators, only update the pinned year
@@ -385,6 +398,14 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     }
   }, [isSelected, pinned, indicator, setSelectedIndicator, setPinnedIndicatorYear]);
 
+  // Separate keyboard handler that calls handleYearChange
+  const handleYearKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>, year: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleYearChange(null, year);
+    }
+  }, [handleYearChange]);
+
   useEffect(() => {
     const element = sourceRef.current;
     if (element) {
@@ -402,6 +423,16 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
     <CardWrapper
       onClick={handleClick}
       className={isSelected ? 'selected' : ''}
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
+      aria-label={`${indicator.indicatorNameEn} indicator card`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick();
+        }
+      }}
     >
       <CardHeader>
         <TitleSection>
@@ -438,12 +469,20 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
         <PinButton className={`${pinned ? 'pinned' : ''} ${isPinningDisabled ? 'disabled' : ''}`}>
           <PinButtonContent
             onClick={handlePinClick}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handlePinClick(e);
+              }
+            }}
             disabled={isPinningDisabled}
+            aria-label={pinned ? 'Unpin from map' : 'Pin to map'}
             style={{
               color: pinned ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-primary-darkest)',
             }}
+            tabIndex={0}
           >
-            <span className="pin-icon">
+            <span className="pin-icon" aria-hidden="true">
               {pinned ? <PushPinIcon /> : <PushPinOutlinedIcon />}
             </span>
             <PinText className={pinned ? 'pinned' : ''}>
@@ -462,10 +501,15 @@ export function IndicatorCard({ indicator }: IndicatorCardProps) {
               value={selectedYear}
               exclusive
               onChange={handleYearChange}
-              aria-label="Select year"
+              aria-label={`Select year for ${indicator.indicatorNameEn}`}
             >
               {years.map((year) => (
-                <ToggleButton key={year} value={year}>
+                <ToggleButton 
+                  key={year} 
+                  value={year}
+                  onKeyDown={(e) => handleYearKeyDown(e, year)}
+                  aria-label={`Year ${year}`}
+                >
                   {year}
                 </ToggleButton>
               ))}

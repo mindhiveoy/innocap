@@ -283,6 +283,8 @@ export function SideNav() {
         <Box
           component="img"
           src="/icons/leaf.svg"
+          alt=""
+          aria-hidden="true"
           sx={{
             width: 24,
             height: 24,
@@ -371,7 +373,7 @@ export function SideNav() {
           return (
             <>
               <DrawerHeader>
-                <CloseButton onClick={() => setDrawerOpen(false)}>
+                <CloseButton onClick={() => setDrawerOpen(false)} aria-label="Close panel">
                   <Box 
                     display='flex' 
                     alignItems='center' 
@@ -403,13 +405,15 @@ export function SideNav() {
                   sustainable and digital future.
                 </Typography>
                 <LogoContainer>
-                  <Box component="img"
+                  <Box 
+                    component="img"
                     src="/innocap_funder_logo.png"
-                    alt="Innocap Funder"
+                    alt="Innocap Funder Logo"
                   />
-                  <Box component="img"
+                  <Box 
+                    component="img"
                     src="/university_of_helsinki_ruralia.png"
-                    alt="University of Helsinki Ruralia Institute"
+                    alt="University of Helsinki Ruralia Institute Logo"
                   />
                 </LogoContainer>
               </DrawerContent>
@@ -419,7 +423,7 @@ export function SideNav() {
           return (
             <>
               <DrawerHeader>
-                <CloseButton onClick={() => setDrawerOpen(false)}>
+                <CloseButton onClick={() => setDrawerOpen(false)} aria-label="Close panel">
                   <Box 
                     display='flex' 
                     alignItems='center' 
@@ -466,7 +470,7 @@ export function SideNav() {
           return (
             <>
               <DrawerHeader>
-                <CloseButton onClick={() => setDrawerOpen(false)}>
+                <CloseButton onClick={() => setDrawerOpen(false)} aria-label="Close panel">
                   <Box 
                     display='flex' 
                     alignItems='center' 
@@ -536,7 +540,12 @@ export function SideNav() {
         <NavList role="menubar">
           <LogoSection>
             <LogoImage>
-              <Image src="/innocap_logo.svg" alt="Innocap Logo" width={68} height={68} />
+              <Image 
+                src="/innocap_logo.svg" 
+                alt="Innocap Logo"
+                width={68} 
+                height={68} 
+              />
             </LogoImage>
             <Typography
               variant="label"
