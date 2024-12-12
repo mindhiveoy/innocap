@@ -20,6 +20,8 @@ interface TextInputConfig {
   sendButtonColor?: string
   maxChars?: number
   maxCharsWarningMessage?: string
+  ariaLabel?: string
+  sendButtonAriaLabel?: string
 }
 
 interface ChatWindowConfig {
@@ -41,12 +43,22 @@ interface ChatWindowConfig {
     date?: boolean
     time?: boolean
   }
+  feedback?: {
+    color?: string
+  }
   footer?: {
     textColor?: string
     text?: string
     company?: string
     companyLink?: string
     fontSize?: number
+  }
+  accessibility?: {
+    role?: string
+    ariaLabel?: string
+    closeButtonAriaLabel?: string
+    messageListAriaLabel?: string
+    starterPromptsAriaLabel?: string
   }
 }
 
@@ -143,7 +155,7 @@ export const ChatBubble = () => {
       backgroundColor: theme.palette.primary.light + '1A',
       textColor: '#303235',
       showAvatar: true,
-      avatarSrc: botAvatarDataUrl.current, // Use the preloaded data URL
+      avatarSrc: botAvatarDataUrl.current,
     },
     userMessage: {
       backgroundColor: theme.palette.primary.light,
@@ -158,10 +170,15 @@ export const ChatBubble = () => {
       sendButtonColor: theme.palette.primary.light,
       maxChars: CHATBOT_CONFIG.MAX_CHARS,
       maxCharsWarningMessage: `You exceeded the characters limit. Please input less than ${CHATBOT_CONFIG.MAX_CHARS} characters.`,
+      ariaLabel: 'Chat message input',
+      sendButtonAriaLabel: 'Send message',
     },
     dateTimeToggle: {
       date: true,
       time: true,
+    },
+    feedback: {
+      color: '#303235',
     },
     footer: {
       textColor: theme.palette.primary.light,
@@ -169,6 +186,13 @@ export const ChatBubble = () => {
       company: 'Mindhive',
       companyLink: 'https://mindhive.fi/mainio',
     },
+    accessibility: {
+      role: 'complementary',
+      ariaLabel: 'Chat with AI Assistant',
+      closeButtonAriaLabel: 'Close chat',
+      messageListAriaLabel: 'Chat messages',
+      starterPromptsAriaLabel: 'Suggested questions',
+    }
   }), [])
 
   const loadChatbot = useCallback(async () => {
@@ -212,6 +236,45 @@ export const ChatBubble = () => {
       isInitialized.current = false
     }
   }, [loadChatbot])
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && window.Chatbot?.close) {
+        window.Chatbot.close();
+      }
+      
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        loadChatbot();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [loadChatbot]);
+
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          const chatWindow = document.querySelector('.flowise-chat-window');
+          if (chatWindow) {
+            chatWindow.setAttribute('role', 'dialog');
+            chatWindow.setAttribute('aria-label', 'Chat with AI Assistant');
+            
+            const messageList = chatWindow.querySelector('.chat-messages-container');
+            if (messageList) {
+              messageList.setAttribute('role', 'log');
+              messageList.setAttribute('aria-live', 'polite');
+            }
+          }
+        }
+      });
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   return null
 } 

@@ -45,3 +45,30 @@ a {
   width: 100%;
   height: 100%;
 }
+
+/* Add focus styles for chat elements */
+.flowise-chat-input:focus,
+.flowise-chat-button:focus,
+.flowise-chat-close-button:focus {
+  outline: 2px solid #2196f3;
+  outline-offset: 2px;
+}
+
+/* Ensure proper contrast for chat elements */
+.flowise-chat-button {
+  color: #ffffff !important;
+}
+
+/* Make sure chat elements are keyboard accessible */
+.flowise-chat-button,
+.flowise-chat-input,
+.flowise-chat-close-button {
+  cursor: pointer;
+}
+
+/* Hide focus ring on mouse click, show on keyboard focus */
+.flowise-chat-button:focus:not(:focus-visible),
+.flowise-chat-input:focus:not(:focus-visible),
+.flowise-chat-close-button:focus:not(:focus-visible) {
+  outline: none;
+}
