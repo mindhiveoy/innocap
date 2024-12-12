@@ -267,6 +267,14 @@ export const ChatBubble = () => {
               messageList.setAttribute('role', 'log');
               messageList.setAttribute('aria-live', 'polite');
             }
+
+            // Focus the chat input when window opens
+            setTimeout(() => {
+              const chatInput = chatWindow.querySelector<HTMLElement>('.chat-input-textarea');
+              if (chatInput) {
+                chatInput.focus();
+              }
+            }, 100); // Small delay to ensure the input is rendered
           }
         }
       });
