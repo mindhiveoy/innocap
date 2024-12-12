@@ -157,9 +157,14 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
   return (
     <LayerGroup>
       <GeoJSON
-        key="natura-areas"
+        key={`natura-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}`}
         data={typedNaturaAreas}
-        style={style}
+        style={{
+          ...style,
+          pane: 'naturaPane',
+          className: 'natura-feature'
+        }}
+        interactive={true}
         onEachFeature={onEachFeature}
       />
     </LayerGroup>

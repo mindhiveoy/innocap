@@ -4,7 +4,7 @@ import { MapContainer, TileLayer, GeoJSON, Marker, Popup, LayerGroup } from 'rea
 import type { LatLngBoundsExpression, LatLngTuple } from 'leaflet';
 import L from 'leaflet';
 import { createRoot } from 'react-dom/client';
-import { useRef, useCallback, useMemo } from 'react';
+import { useRef, useCallback, useMemo, useEffect } from 'react';
 import { municipalityBoundaries } from './data/municipality-boundaries';
 import { Indicator, MunicipalityLevelData, MarkerData, IndicatorType, BarChartData } from '@repo/ui/types/indicators';
 import { calculateOpacity, Unit } from '../../types/units';
@@ -38,7 +38,7 @@ interface LeafletMapProps {
   zoomControl?: boolean;
   onMapMount?: (map: L.Map) => void;
   pinnedIndicator?: Indicator | null;
-  showNaturaAreas?: boolean;
+  tabIndex?: number;
 }
 
 const geoJSONStyle = {
@@ -186,7 +186,7 @@ export function LeafletMap({
   zoomControl = true,
   onMapMount,
   pinnedIndicator,
-  showNaturaAreas = false,
+  tabIndex,
 }: LeafletMapProps) {
 
   const popupRefs = useRef<(L.Popup | null)[]>([]);
@@ -553,9 +553,38 @@ export function LeafletMap({
     }
   }, [onMapMount]);
 
+  // Add effect to make map container focusable after mount
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const container = mapRef.current.getContainer();
+    if (container) {
+      container.tabIndex = tabIndex ?? 0;  // Use provided tabIndex or default to 0
+      container.setAttribute('role', 'application');
+      container.setAttribute('aria-label', 'Interactive map');
+    }
+  }, [mapRef.current, tabIndex]);
+
+  // In LeafletMap component, add this effect to create custom panes
+  useEffect(() => {
+    if (!mapRef.current) return undefined;  // Explicit return for early exit
+
+    // Create custom panes with specific z-indices
+    const map = mapRef.current;
+    if (!map.getPane('naturaPane')) {
+      map.createPane('naturaPane');
+      const pane = map.getPane('naturaPane');
+      if (pane) {
+        pane.style.zIndex = '399'; // Between overlay and marker panes
+      }
+    }
+
+    return undefined;  // Explicit return at the end
+  }, [mapRef.current]);
+
   return (
     <>
-      <OverlaysContainer>
+      <OverlaysContainer tabIndex={tabIndex}>
         {pinnedIndicator && (
           <PinnedOverlay>
             <span className="pin-icon">
@@ -588,6 +617,7 @@ export function LeafletMap({
         attributionControl={false}
         {...mapContainerProps}
         ref={handleMapMount}
+        className="leaflet-container-focusable" // Add custom class for styling
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
