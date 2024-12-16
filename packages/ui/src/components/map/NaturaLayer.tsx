@@ -41,6 +41,26 @@ interface NaturaLayerProps {
   pinnedIndicator?: Indicator | null;
 }
 
+// Add type definition for the colors
+type NaturaAreaType = 'SAC' | 'SAC/SPA';
+
+const NATURA_COLORS: Record<NaturaAreaType, {
+  fillColor: string;
+  color: string;
+  fillOpacity: number;
+}> = {
+  SAC: {
+    fillColor: '#00ff00',
+    color: '#006400',
+    fillOpacity: 0.3,
+  },
+  'SAC/SPA': {
+    fillColor: '#5992B6',
+    color: '#325971',
+    fillOpacity: 0.3,
+  }
+};
+
 export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerProps) => {
   const map = useMap();
   const popupRefs = useRef<(L.Popup | null)[]>([]);
@@ -51,16 +71,21 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
 
   if (!isVisible) return null;
 
-  const style = {
-    fillColor: '#00ff00',
-    fillOpacity: 0.3,
-    weight: 2,
-    opacity: 1,
-    color: '#006400',
+  const getStyleForFeature = (feature: Feature<Geometry, GeoJsonProperties>) => {
+    const areaType = feature.properties?.aluetyyppi || 'SAC';
+    return {
+      ...NATURA_COLORS[areaType as keyof typeof NATURA_COLORS],
+      weight: 2,
+      opacity: 1,
+    };
   };
 
   const onEachFeature = (feature: Feature<Geometry, GeoJsonProperties>, layer: Layer) => {
     if (feature.properties) {
+      // Apply initial style
+      const initialStyle = getStyleForFeature(feature);
+      (layer as L.Path).setStyle(initialStyle);
+
       const popup = L.popup({
         closeButton: true,
         closeOnClick: false,
@@ -141,13 +166,17 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
       layer.on({
         mouseover: (e) => {
           const layer = e.target;
+          const areaType = feature.properties?.aluetyyppi || 'SAC';
+          const colors = NATURA_COLORS[areaType as keyof typeof NATURA_COLORS];
           layer.setStyle({
+            ...colors,
             fillOpacity: 0.6,
             weight: 3,
           });
         },
         mouseout: (e) => {
           const layer = e.target;
+          const style = getStyleForFeature(feature);
           layer.setStyle(style);
         },
       });
@@ -159,10 +188,13 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
       <GeoJSON
         key={`natura-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}`}
         data={typedNaturaAreas}
-        style={{
-          ...style,
-          pane: 'naturaPane',
-          className: 'natura-feature'
+        style={(feature?: Feature<Geometry, GeoJsonProperties>) => {
+          if (!feature) return {};
+          return {
+            ...getStyleForFeature(feature),
+            pane: 'naturaPane',
+            className: 'natura-feature'
+          };
         }}
         interactive={true}
         onEachFeature={onEachFeature}
