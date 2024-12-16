@@ -8,6 +8,8 @@ import { ChatBubble } from './components/ChatBubble'
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
 import { initCookieConsent } from '@/utils/cookieConsent';
+import { initGA } from '@/utils/analytics';
+import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -20,9 +22,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const hasAnalyticsConsent = useAnalyticsConsent();
+
   useEffect(() => {
     initCookieConsent();
   }, []);
+
+  useEffect(() => {
+    if (hasAnalyticsConsent) {
+      initGA();
+    }
+  }, [hasAnalyticsConsent]);
 
   return (
     <html lang="en" className={openSans.className}>

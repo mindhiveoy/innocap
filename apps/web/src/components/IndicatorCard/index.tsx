@@ -14,6 +14,10 @@ import WaterDrop from '@mui/icons-material/WaterDrop';
 import EnergySavingsLeaf from '@mui/icons-material/EnergySavingsLeaf';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
+import Agriculture from '@mui/icons-material/Agriculture';
+import Thermostat from '@mui/icons-material/Thermostat';
+import Water from '@mui/icons-material/Water';
+import AirIcon from '@mui/icons-material/Air';
 import { useIndicator } from '@/contexts/IndicatorContext';
 import { IndicatorType, type Indicator } from '@repo/ui/types/indicators';
 import { useRef, useState, useEffect, useMemo, useCallback } from 'react';
@@ -178,6 +182,10 @@ const iconComponents = {
   'Home': Home,
   'SolarPower': SolarPower,
   'EnergySavingsLeaf': EnergySavingsLeaf,
+  'WindPower': AirIcon,
+  'Water': Water,
+  'Thermostat': Thermostat,
+  'Agriculture': Agriculture,
   'ShoppingBag': ShoppingBag,
   'WaterDrop': WaterDrop,
   'Co2': Co2,

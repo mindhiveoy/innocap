@@ -7,6 +7,22 @@ export const COOKIE_CATEGORIES = {
 } as const;
 
 export const initCookieConsent = () => {
+  // Add custom styles to match our theme
+  const style = document.createElement('style');
+  style.innerHTML = `
+    #cc-main {
+      /* Font */
+      --cc-font-family: var(--font-open-sans);
+      
+      --cc-btn-primary-bg: #014B70;
+      --cc-btn-primary-hover-bg: #083553;
+      --cc-btn-primary-color: #FFFFFF;
+
+      /* Toggle colors */
+      --cc-toggle-on-bg: #014B70;
+  `;
+  document.head.appendChild(style);
+
   CookieConsent.run({
     categories: {
       [COOKIE_CATEGORIES.NECESSARY]: {
@@ -53,7 +69,6 @@ export const initCookieConsent = () => {
             acceptAllBtn: 'Accept all',
             acceptNecessaryBtn: 'Accept necessary only',
             showPreferencesBtn: 'Manage preferences',
-            footer: '<a href="/privacy-policy" target="_blank">Privacy Policy</a>'
           },
           preferencesModal: {
             title: 'Cookie Preferences',
@@ -67,7 +82,7 @@ export const initCookieConsent = () => {
                 description: 'We use cookies to ensure basic functionality and analyze our traffic with anonymized data.'
               },
               {
-                title: 'Strictly Necessary Cookies',
+                title: 'Necessary Cookies',
                 description: 'These cookies are essential for the website to function properly.',
                 linkedCategory: 'necessary'
               },
@@ -85,12 +100,12 @@ export const initCookieConsent = () => {
                     {
                       name: '_ga',
                       domain: window.location.hostname,
-                      desc: 'Google Analytics: Used to distinguish users'
+                      desc: ' Used by Google Analytics to distinguish unique users.'
                     },
                     {
                       name: '_gid',
                       domain: window.location.hostname,
-                      desc: 'Google Analytics: Used to distinguish users'
+                      desc: 'Used by Google Analytics to distinguish unique users.'
                     }
                   ]
                 }

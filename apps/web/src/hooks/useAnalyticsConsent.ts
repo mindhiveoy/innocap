@@ -7,7 +7,8 @@ export const useAnalyticsConsent = () => {
   useEffect(() => {
     const checkConsent = () => {
       const acceptedCategories = getConsentStatus();
-      setHasAnalyticsConsent(acceptedCategories.includes(COOKIE_CATEGORIES.ANALYTICS));
+      const categories = Array.isArray(acceptedCategories) ? acceptedCategories : [];
+      setHasAnalyticsConsent(categories.includes(COOKIE_CATEGORIES.ANALYTICS));
     };
 
     // Check initial consent

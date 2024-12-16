@@ -13,6 +13,9 @@ import ElectricalServices from '@mui/icons-material/ElectricalServices';
 import DryCleaning from '@mui/icons-material/DryCleaning';
 import Groups from '@mui/icons-material/Groups';
 import EvStation from '@mui/icons-material/EvStation';
+import DirectionsBus from '@mui/icons-material/DirectionsBus';
+import Forest from '@mui/icons-material/Forest';
+import MapsHomeWork from '@mui/icons-material/MapsHomeWork';
 import LocalGasStation from '@mui/icons-material/LocalGasStation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import L from 'leaflet';
@@ -34,6 +37,9 @@ export const iconComponents = {
   'EvStation': EvStation,
   'Groups': Groups,
   'LocalGasStation': LocalGasStation,
+  'DirectionsBus': DirectionsBus,
+  'Forest': Forest,
+  'MapsHomeWork': MapsHomeWork,
   'Default': LocationOnIcon,
 } as const;
 
