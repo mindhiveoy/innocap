@@ -27,10 +27,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const fetchData = async () => {
       try {
         const data = await fetchFirebaseData();
+        
+        // Sort all data by year in descending order (latest first)
+        const sortedMunicipalityData = [...(data.municipalityLevelData || [])].sort(
+          (a, b) => b.year - a.year
+        );
+        
+        const sortedMarkerData = [...(data.markerData || [])].sort(
+          (a, b) => b.year - a.year
+        );
+        
+        const sortedBarChartData = [...(data.barChartData || [])].sort(
+          (a, b) => b.year - a.year
+        );
+
         setIndicators(data.indicators || []);
-        setMunicipalityData(data.municipalityLevelData || []);
-        setMarkerData(data.markerData || []);
-        setBarChartData(data.barChartData || []);
+        setMunicipalityData(sortedMunicipalityData);
+        setMarkerData(sortedMarkerData);
+        setBarChartData(sortedBarChartData);
         setError(null);
       } catch (err) {
         console.error('Error loading data:', err);
