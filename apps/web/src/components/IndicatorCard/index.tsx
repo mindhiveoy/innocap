@@ -291,7 +291,7 @@ const YearSelector = styled(ToggleButtonGroup)(({ theme }) => `
   }
 `);
 
-export const IndicatorCard: React.FC<IndicatorCardProps> = ({ indicator }) => {
+export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNode => {
   const {
     selectedIndicator,
     setSelectedIndicator,
@@ -316,13 +316,12 @@ export const IndicatorCard: React.FC<IndicatorCardProps> = ({ indicator }) => {
 
   const isPinningDisabled = false;
 
-  // Get five latest years without setting default
   const years = useMemo(() => {
     if (!indicator) return [];
     if (indicator.indicatorType !== IndicatorType.MunicipalityLevel && 
         indicator.indicatorType !== IndicatorType.BarChart) return [];
 
-    // Get the correct data source based on indicator type
+    //Data source based on indicator type
     const data = indicator.indicatorType === IndicatorType.MunicipalityLevel 
       ? municipalityData 
       : barChartData;
@@ -333,22 +332,32 @@ export const IndicatorCard: React.FC<IndicatorCardProps> = ({ indicator }) => {
         .map(d => d.year.toString())
     );
 
-    // Convert to array and sort
     const availableYears = Array.from(uniqueYears)
       .sort((a, b) => parseInt(b) - parseInt(a));  // Sort descending
 
-    // No need to slice(0, 5) anymore - show all available years
     return availableYears;
   }, [indicator, municipalityData, barChartData]);
 
   useEffect(() => {
-    if (isSelected && years.length > 0 && !selectedYear) {
-      setSelectedYear(years[0]);
-      if (!pinned) {
-        setSelectedIndicator({
-          ...indicator,
-          selectedYear: parseInt(years[0])
-        });
+    if (isSelected && years.length > 0) {
+      // If no year is selected yet, set the default year
+      if (!selectedYear) {
+        const defaultYear = years[0];
+        setSelectedYear(defaultYear);
+        if (!pinned) {
+          setSelectedIndicator({
+            ...indicator,
+            selectedYear: parseInt(defaultYear)
+          });
+        }
+      } else {
+        // Maintain the currently selected year
+        if (!pinned) {
+          setSelectedIndicator({
+            ...indicator,
+            selectedYear: parseInt(selectedYear)
+          });
+        }
       }
     }
   }, [isSelected, years, selectedYear, indicator, setSelectedIndicator, pinned]);
@@ -515,9 +524,6 @@ export const IndicatorCard: React.FC<IndicatorCardProps> = ({ indicator }) => {
               ))}
             </YearSelector>
           )}
-        {/*         <Typography variant="body2" color="text.secondary">
-          {indicator?.indicatorNameFi}
-        </Typography> */}
       </Box>
     </CardWrapper>
   );

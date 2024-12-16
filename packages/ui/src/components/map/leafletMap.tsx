@@ -160,7 +160,7 @@ const YearText = styled(Typography)(({ theme }) => `
   margin-left: ${theme.spacing(1)};
 `);
 
-// Add a static style for base borders
+/** Base style for municipality boundaries when no data is displayed */
 const baseStyle = {
   fillColor: 'transparent',
   weight: 1,
@@ -171,6 +171,7 @@ const baseStyle = {
   className: 'geojson-feature'
 };
 
+/** Manages map visualization with support for multiple indicator types and interactive features */
 export function LeafletMap({
   center,
   zoom,
@@ -193,6 +194,7 @@ export function LeafletMap({
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
   const mapRef = useRef<L.Map | null>(null);
 
+  /** Filters marker data based on selected and pinned indicator states */
   const filteredMarkerData = useMemo(() => {
     if (!markerData) return [];
 
@@ -226,6 +228,7 @@ export function LeafletMap({
     return relevantMarkers;
   }, [selectedIndicator, pinnedIndicator, markerData]);
 
+  /** Determines active indicator for choropleth visualization */
   const activeIndicator = useMemo(() => {
     const isPinnedIndicator = pinnedIndicator?.indicatorType === IndicatorType.MunicipalityLevel;
     return isPinnedIndicator
@@ -288,7 +291,7 @@ export function LeafletMap({
 
       layer.bindPopup(popup);
 
-      // Add click handler to the popup container to bring it to front
+      // Bring the clicked popup to front
       popup.on('add', (e) => {
         const popupElement = e.target.getElement();
         if (popupElement) {
@@ -317,7 +320,6 @@ export function LeafletMap({
         },
         mouseout: (e) => {
           const layer = e.target;
-          // Use the same activeIndicator for styling
           layer.setStyle(geoJsonStyle(feature));
         },
         click: (e) => {
@@ -329,8 +331,6 @@ export function LeafletMap({
 
           const container = document.createElement('div');
           const root = createRoot(container);
-
-          // Get or create an index for this municipality
           const index = feature.properties.kunta;
 
           // Ensure we have space in our refs arrays
@@ -359,7 +359,6 @@ export function LeafletMap({
           );
 
           popup.setContent(container);
-          // Store the popup reference
           popupRefs.current[index] = popup;
           layer.openPopup();
         }
@@ -460,7 +459,7 @@ export function LeafletMap({
       relevantBarChartData.push(...pinnedData);
     }
 
-    // If we have a selected bar chart indicator (different from pinned)
+    // Selected bar chart indicator (different from pinned)
     if (selectedIndicator?.indicatorType === IndicatorType.BarChart &&
       selectedIndicator.id !== pinnedIndicator?.id) {
       const selectedData = barChartData
@@ -492,7 +491,7 @@ export function LeafletMap({
       <LayerGroup>
         {relevantBarChartData.map((data) => {
           const center = getMunicipalityCenter(data.municipalityCode);
-          // Offset the selected indicators (non-pinned)
+          // Offset the selected indicators (non-pinned) to prevent overlap
           const position: LatLngTuple = data.isPinned
             ? center
             : [
@@ -553,7 +552,6 @@ export function LeafletMap({
     }
   }, [onMapMount]);
 
-  // Add effect to make map container focusable after mount
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -565,11 +563,9 @@ export function LeafletMap({
     }
   }, [mapRef.current, tabIndex]);
 
-  // In LeafletMap component, add this effect to create custom panes
+  /** Creates custom pane for Natura layer with specific z-index */
   useEffect(() => {
-    if (!mapRef.current) return undefined;  // Explicit return for early exit
-
-    // Create custom panes with specific z-indices
+    if (!mapRef.current) return undefined;
     const map = mapRef.current;
     if (!map.getPane('naturaPane')) {
       map.createPane('naturaPane');
@@ -578,8 +574,7 @@ export function LeafletMap({
         pane.style.zIndex = '399'; // Between overlay and marker panes
       }
     }
-
-    return undefined;  // Explicit return at the end
+    return undefined;
   }, [mapRef.current]);
 
   return (
@@ -617,7 +612,7 @@ export function LeafletMap({
         attributionControl={false}
         {...mapContainerProps}
         ref={handleMapMount}
-        className="leaflet-container-focusable" // Add custom class for styling
+        className="leaflet-container-focusable"
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -632,13 +627,14 @@ export function LeafletMap({
           interactive={false}
         />
 
+        {/* Natura areas */}
         <NaturaLayer
           key="natura-layer"
           selectedIndicator={selectedIndicator}
           pinnedIndicator={pinnedIndicator}
         />
 
-        {/* Choropleth layer only rendered when we have data */}
+        {/* Choropleth layer */}
         {activeIndicator && (
           <GeoJSON
             key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
