@@ -12428,6 +12428,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"vanilla-cookieconsent@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "vanilla-cookieconsent@npm:3.0.1"
+  checksum: 10c0/dfb91004aaa14575561c6e6d8dd885b4cb9a867f99cce204802392e2ce725674b6b544b8af39e3eed2c25a9d30357c9ea45dbcef552a49c8445c6b4b0abd7db0
+  languageName: node
+  linkType: hard
+
 "vercel@npm:^37.12.1":
   version: 37.14.0
   resolution: "vercel@npm:37.14.0"
@@ -12524,6 +12531,7 @@ __metadata:
     react-dom: "npm:19.0.0-rc-69d4b800-20241021"
     react-leaflet: "npm:5.0.0-rc.1"
     typescript: "npm:5.6.3"
+    vanilla-cookieconsent: "npm:^3.0.1"
   languageName: unknown
   linkType: soft
 

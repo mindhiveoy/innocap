@@ -22,7 +22,8 @@
     "next": "15.0.3",
     "react": "19.0.0-rc-69d4b800-20241021",
     "react-dom": "19.0.0-rc-69d4b800-20241021",
-    "react-leaflet": "5.0.0-rc.1"
+    "react-leaflet": "5.0.0-rc.1",
+    "vanilla-cookieconsent": "^3.0.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",

@@ -5,6 +5,7 @@ import {
   List,
   Box,
   Typography,
+  Button,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import HomeIcon from '@mui/icons-material/Home';
@@ -15,6 +16,8 @@ import { Indicator } from '@repo/ui/types/indicators';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
+import { openPreferences } from '@/utils/cookieConsent';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -259,9 +262,11 @@ interface GroupedIndicators {
 
 
 interface MenuItem {
-  text: string;
+  text?: string;
   icon: React.ReactNode;
-  id: string;
+  id?: string;
+  label?: string;
+  onClick?: () => void;
 }
 
 export function SideNav() {
@@ -309,6 +314,11 @@ export function SideNav() {
       ),
       id: 'about'
     },
+    {
+      text: 'Settings',
+      icon: <SettingsIcon />,
+      id: 'settings'
+    }
   ];
 
   // Group indicators by their group property
@@ -350,7 +360,10 @@ export function SideNav() {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [drawerOpen]);
 
-  const handleItemClick = useCallback((itemId: string) => {
+  const handleItemClick = useCallback((itemId: string | undefined) => {
+    if (!itemId) {
+      return;
+    }
     if (selectedItem === itemId) {
       setDrawerOpen(!drawerOpen);
     } else {
@@ -359,7 +372,10 @@ export function SideNav() {
     }
   }, [selectedItem, drawerOpen]);
 
-  const handleItemKeyDown = useCallback((event: React.KeyboardEvent, itemId: string) => {
+  const handleItemKeyDown = useCallback((event: React.KeyboardEvent, itemId: string | undefined) => {
+    if (!itemId) {
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleItemClick(itemId);
@@ -526,6 +542,57 @@ export function SideNav() {
               </DrawerContent>
             </>
           );
+        case 'settings':
+          return (
+            <>
+              <DrawerHeader>
+                <CloseButton onClick={() => setDrawerOpen(false)} aria-label="Close panel">
+                  <Box 
+                    display='flex' 
+                    alignItems='center' 
+                    sx={{ 
+                      display: { xs: 'none', md: 'block' },
+                      height: '24px',
+                    }}
+                  >
+                    <ArrowBackIcon />
+                  </Box>
+                  <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <CloseIcon />
+                  </Box>
+                </CloseButton>
+                <Typography variant="h2" color="primary.darkest">
+                  Settings
+                </Typography>
+                <Box width={40} />
+              </DrawerHeader>
+              <DrawerContent>
+                <GroupTitle variant='h2'>
+                  Privacy
+                </GroupTitle>
+                <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column'}}>
+                  <Typography variant="paragraph" sx={{ mb: 2 }}>
+                    Manage your cookie and privacy preferences.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={openPreferences}
+                    startIcon={<SettingsIcon />}
+                    sx={{ width: '100%' }}
+                  >
+                    Cookie Preferences
+                  </Button>
+                </Box>
+
+                <GroupTitle variant='h2'>
+                  Language
+                </GroupTitle>
+                <Typography variant="paragraph" color="text.secondary">
+                  Language selection coming soon
+                </Typography>
+              </DrawerContent>
+            </>
+          );
         default:
           return null;
       }
@@ -555,44 +622,51 @@ export function SideNav() {
               Innocap Portal
             </Typography>
           </LogoSection>
-          {menuItems.map((item) => (
-            <NavItem
-              key={item.id}
-              onClick={() => handleItemClick(item.id)}
-              onKeyDown={(e) => handleItemKeyDown(e, item.id)}
-              className={selectedItem === item.id ? 'selected' : ''}
-              aria-expanded={selectedItem === item.id && drawerOpen}
-              aria-haspopup="dialog"
-              aria-controls={`drawer-${item.id}`}
-              role="menuitem"
-              tabIndex={0}
-            >
-              <Box
-                sx={{
-                  width: { xs: 20, md: 24 },
-                  height: { xs: 20, md: 24 },
-                  '& img': {
-                    width: '100%',
-                    height: '100%'
-                  }
-                }}
-                aria-hidden="true"
+          {menuItems.map((item) => {
+            // Pre-compute aria attributes to avoid duplicates
+            const ariaAttrs = item.id ? {
+              'aria-expanded': selectedItem === item.id && drawerOpen,
+              'aria-haspopup': "dialog" as const,
+              'aria-controls': `drawer-${item.id}`
+            } : {};
+
+            return (
+              <NavItem
+                key={item.id || item.label}
+                onClick={item.onClick || (() => handleItemClick(item.id))}
+                onKeyDown={(e) => handleItemKeyDown(e, item.id)}
+                className={item.id && selectedItem === item.id ? 'selected' : ''}
+                role="menuitem"
+                tabIndex={0}
+                {...ariaAttrs}
               >
-                {item.icon}
-              </Box>
-              <Typography
-                variant="caption"
-                component="span"
-                sx={{
-                  mt: { xs: 0.25, md: 0.5 },
-                  textAlign: 'center',
-                  fontSize: { xs: '0.65rem', md: '0.75rem' },
-                }}
-              >
-                {item.text}
-              </Typography>
-            </NavItem>
-          ))}
+                <Box
+                  sx={{
+                    width: { xs: 20, md: 24 },
+                    height: { xs: 20, md: 24 },
+                    '& img': {
+                      width: '100%',
+                      height: '100%'
+                    }
+                  }}
+                  aria-hidden="true"
+                >
+                  {item.icon}
+                </Box>
+                <Typography
+                  variant="caption"
+                  component="span"
+                  sx={{
+                    mt: { xs: 0.25, md: 0.5 },
+                    textAlign: 'center',
+                    fontSize: { xs: '0.65rem', md: '0.75rem' },
+                  }}
+                >
+                  {item.text}
+                </Typography>
+              </NavItem>
+            );
+          })}
         </NavList>
       </StyledNav>
 
