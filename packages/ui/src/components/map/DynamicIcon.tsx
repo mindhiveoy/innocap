@@ -8,6 +8,12 @@ import WaterDropIcon from '@mui/icons-material/WaterDrop';
 import EnergySavingsLeafIcon from '@mui/icons-material/EnergySavingsLeaf';
 import Co2 from '@mui/icons-material/Co2';
 import Recycling from '@mui/icons-material/Recycling';
+import ShoppingBag from '@mui/icons-material/ShoppingBag';
+import ElectricalServices from '@mui/icons-material/ElectricalServices';
+import DryCleaning from '@mui/icons-material/DryCleaning';
+import Groups from '@mui/icons-material/Groups';
+import EvStation from '@mui/icons-material/EvStation';
+import LocalGasStation from '@mui/icons-material/LocalGasStation';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -22,6 +28,12 @@ export const iconComponents = {
   'EnergySavingsLeaf': EnergySavingsLeafIcon,
   'Co2': Co2,
   'Recycling': Recycling,
+  'ShoppingBag': ShoppingBag,
+  'ElectricalServices': ElectricalServices,
+  'DryCleaning': DryCleaning,
+  'EvStation': EvStation,
+  'Groups': Groups,
+  'LocalGasStation': LocalGasStation,
   'Default': LocationOnIcon,
 } as const;
 
