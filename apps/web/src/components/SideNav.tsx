@@ -279,6 +279,16 @@ const LanguageSelector = styled(ToggleButtonGroup)(({ theme }) => `
   }
 `);
 
+const StyledLink = styled(Link)(({ theme }) => `
+  font-size: 14px;
+  letter-spacing: 0.14px;
+  font-weight: 500;
+  color: ${theme.palette.primary.main};
+  &:hover {
+    font-weight: 600;
+  }
+`);
+
 interface GroupedIndicators {
   [key: string]: {
     group: string;
@@ -455,7 +465,7 @@ export function SideNav() {
                     i18nKey="welcome.content.about.text"
                     components={{
                       innocapLink: (
-                        <Link 
+                        <StyledLink 
                           href={t('welcome.content.about.links.innocapHref')} 
                           target="_blank" 
                           rel="noopener noreferrer"
@@ -463,7 +473,7 @@ export function SideNav() {
                         />
                       ),
                       hidseLink: (
-                        <Link 
+                        <StyledLink 
                           href={t('welcome.content.about.links.hidseHref')} 
                           target="_blank" 
                           rel="noopener noreferrer"
@@ -471,7 +481,7 @@ export function SideNav() {
                         />
                       ),
                       ruraliaLink: (
-                        <Link 
+                        <StyledLink 
                           href={t('welcome.content.about.links.ruraliaHref')} 
                           target="_blank" 
                           rel="noopener noreferrer"
@@ -479,7 +489,7 @@ export function SideNav() {
                         />
                       ),
                       mindhiveLink: (
-                        <Link 
+                        <StyledLink 
                           href={t('welcome.content.about.links.mindhiveHref')} 
                           target="_blank" 
                           rel="noopener noreferrer"
@@ -614,7 +624,7 @@ export function SideNav() {
                 <GroupTitle variant='h2'>
                   {t('information.sections.ai.title')}
                 </GroupTitle>
-                <Typography variant="paragraph">
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
                   {(t('information.sections.ai.items', { returnObjects: true }) as string[]).map((item: string) => (
                     <React.Fragment key={item}>
                       • {item}
@@ -622,6 +632,18 @@ export function SideNav() {
                     </React.Fragment>
                   ))}
                 </Typography>
+                <GroupTitle variant='h2'>
+                  {t('information.sections.terms.title')}
+                </GroupTitle>
+                <Box sx={{ mb: 3 }}>
+                  • <StyledLink href={t('information.sections.terms.termsLink')} target="_blank" rel="noopener noreferrer">
+                  {t('information.sections.terms.terms')}
+                  </StyledLink>
+                  <br />
+                  • <StyledLink href={t('information.sections.terms.privacyLink')} target="_blank" rel="noopener noreferrer">
+                    {t('information.sections.terms.privacy')}
+                  </StyledLink>
+                </Box>
               </DrawerContent>
             </>
           );

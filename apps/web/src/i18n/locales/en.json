@@ -108,6 +108,13 @@
           "Please note that the AI assistant is in the development phase and may have limited knowledge",
           "The AI has focal knowledge on the municipalities of South Savo (municipality strategies and climate programmes), open access research considering green and digital transitions, and European Union's green and digital transition policy documents"
         ]
+      },
+      "terms": {
+        "title": "Terms and privacy",
+        "terms": "Terms of service",
+        "privacy": "Privacy policy",
+        "termsLink": "https://docs.google.com/document/d/1i4j8K3aIsMMXsRO05ZR2trJa_s4NJfwpZ2KOXDefq5o/edit?usp=sharing",
+        "privacyLink": "https://docs.google.com/document/d/1TBHHMFOwtu3wbeZEORglMAoGxNqkPlzxCUFyZJ8-xHU/edit?usp=sharing"
       }
     }
   }

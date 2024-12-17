@@ -103,6 +103,13 @@
           "Huomaa, että tekoälyavustaja on kehitysvaiheessa ja sillä on vain rajallisesti tietoa käytössä",
           "Tekoälyavustajalla on kuitenkin tarkkaa tietoa Etelä-Savon kunnista (kuntastrategiat ja ilmasto-ohjelmat), avoimesti saatavilla olevaa tieteellistä tutkimusta vihreästä ja digitaalisesta siirtymästä ja Euroopan Unionin siirtymiin liittyvistä politiikkadokumenteista"
         ]
+      },
+      "terms": {
+        "title": "Käyttöehdot ja tietosuoja",
+        "terms": "Käyttöehdot",
+        "privacy": "Tietosuojaseloste",
+        "termsLink": "https://docs.google.com/document/d/1YIIx1rpJY-NuC0Ln3voX01ErDpkvglL8I_BWZW7G8bc/edit?usp=sharing",
+        "privacyLink": "https://docs.google.com/document/d/1zxL0CTESSbYopzYJHEHfhzFv0q15LZVD2f8umtRG-Dg/edit?usp=sharing"
       }
     }
   }
