@@ -34,7 +34,7 @@
   "navigation": {
     "welcome": "Welcome",
     "green": "Green",
-    "about": "About",
+    "about": "Info",
     "settings": "Settings"
   },
   "settings": {
@@ -47,35 +47,6 @@
     "language": {
       "title": "Language",
       "select": "Select language"
-    }
-  },
-  "about": {
-    "title": "About",
-    "lead": "Learn how to use the platform and understand the indicators",
-    "description": "The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.",
-    "sections": {
-      "navigation": {
-        "title": "Basic Navigation",
-        "items": [
-          "Click on municipalities to see detailed information",
-          "Use the side navigation to switch between different indicator categories",
-          "Explore the map to understand regional patterns"
-        ]
-      },
-      "indicators": {
-        "title": "Working with Indicators",
-        "items": [
-          "Select an indicator to view it on the map",
-          "Pin an indicator to compare it with another"
-        ]
-      },
-      "ai": {
-        "title": "AI Assistant",
-        "items": [
-          "An AI assistant is available to help answer your questions",
-          "Please note that the assistant is in development phase and may have limited knowledge"
-        ]
-      }
     }
   },
   "indicators": {

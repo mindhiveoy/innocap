@@ -44,35 +44,6 @@
       "select": "Valitse kieli"
     }
   },
-  "about": {
-    "title": "Tietoa",
-    "lead": "Opi käyttämään alustaa ja ymmärtämään indikaattoreita",
-    "description": "Mittaristo tarjoaa interaktiivisen tavan tutkia ja vertailla eri indikaattoreita Etelä-Savon kunnissa.",
-    "sections": {
-      "navigation": {
-        "title": "Perustoiminnot",
-        "items": [
-          "Klikkaa kuntia nähdäksesi yksityiskohtaiset tiedot",
-          "Käytä sivunavigaatiota vaihtaaksesi eri indikaattoriluokkien välillä",
-          "Tutki karttaa ymmärtääksesi alueellisia malleja"
-        ]
-      },
-      "indicators": {
-        "title": "Indikaattorien käyttö",
-        "items": [
-          "Valitse indikaattori nähdäksesi sen kartalla",
-          "Kiinnitä indikaattori verrataksesi sitä toiseen"
-        ]
-      },
-      "ai": {
-        "title": "Tekoälyavustaja",
-        "items": [
-          "Tekoälyavustaja on käytettävissä vastaamaan kysymyksiisi",
-          "Huomaa, että avustaja on kehitysvaiheessa ja sen tietämys voi olla rajallista"
-        ]
-      }
-    }
-  },
   "indicators": {
     "pinToMap": "Kiinnitä karttaan",
     "unpinFromMap": "Poista kiinnitys",
