@@ -1,0 +1,86 @@
+{
+  "welcome": {
+    "title": "Etelä-Savon vihreän ja digitaalisen siirtymän mittaristo",
+    "lead": "Rakennamme julkisen sektorin innovaatiokapasiteettia kohti digitaalisia NPA-yhteisöjä",
+    "description": "Tämä mittaristo visualisoi Etelä-Savon alueen vihreän ja digitaalisen siirtymän indikaattorit.\n\nIndikaattorit auttavat seuraamaan ja ymmärtämään kuntien edistymistä kohti kestävää ja digitaalista tulevaisuutta."
+  },
+  "navigation": {
+    "welcome": "Tervetuloa",
+    "green": "Vihreä",
+    "about": "Tietoa",
+    "settings": "Asetukset"
+  },
+  "settings": {
+    "privacy": {
+      "title": "Yksityisyys",
+      "description": "Hallitse eväste- ja yksityisyysasetuksiasi.",
+      "cookiePreferences": "Evästeasetukset"
+    },
+    "title": "Asetukset",
+    "language": {
+      "title": "Kieli",
+      "select": "Valitse kieli"
+    }
+  },
+  "about": {
+    "title": "Tietoa",
+    "lead": "Opi käyttämään alustaa ja ymmärtämään indikaattoreita",
+    "description": "Mittaristo tarjoaa interaktiivisen tavan tutkia ja vertailla eri indikaattoreita Etelä-Savon kunnissa.",
+    "sections": {
+      "navigation": {
+        "title": "Perustoiminnot",
+        "items": [
+          "Klikkaa kuntia nähdäksesi yksityiskohtaiset tiedot",
+          "Käytä sivunavigaatiota vaihtaaksesi eri indikaattoriluokkien välillä",
+          "Tutki karttaa ymmärtääksesi alueellisia malleja"
+        ]
+      },
+      "indicators": {
+        "title": "Indikaattorien käyttö",
+        "items": [
+          "Valitse indikaattori nähdäksesi sen kartalla",
+          "Kiinnitä indikaattori verrataksesi sitä toiseen"
+        ]
+      },
+      "ai": {
+        "title": "Tekoälyavustaja",
+        "items": [
+          "Tekoälyavustaja on käytettävissä vastaamaan kysymyksiisi",
+          "Huomaa, että avustaja on kehitysvaiheessa ja sen tietämys voi olla rajallista"
+        ]
+      }
+    }
+  },
+  "indicators": {
+    "pinToMap": "Kiinnitä karttaan",
+    "unpinFromMap": "Poista kiinnitys",
+    "maxPinsReached": "Maksimimäärä kiinnityksiä",
+    "selectYear": "Valitse vuosi indikaattorille {{indicator}}"
+  },
+  "cookieConsent": {
+    "modal": {
+      "title": "Yksityisyysasetukset",
+      "description": "Tämä sivusto käyttää evästeitä liikenteen analysointiin ja käyttökokemuksen parantamiseen.",
+      "acceptAll": "Hyväksy kaikki",
+      "acceptNecessary": "Hyväksy vain välttämättömät",
+      "showPreferences": "Hallitse asetuksia"
+    },
+    "preferences": {
+      "title": "Evästeasetukset",
+      "sections": {
+        "usage": {
+          "title": "Miten käytämme evästeitä",
+          "description": "Käytämme evästeitä varmistaaksemme perustoiminnallisuuden ja analysoidaksemme liikennettä anonymisoidulla datalla."
+        },
+        "necessary": {
+          "title": "Välttämättömät evästeet",
+          "description": "Nämä evästeet ovat välttämättömiä sivuston toiminnan kannalta."
+        },
+        "analytics": {
+          "title": "Analytiikkaevästeet",
+          "description": "Nämä evästeet auttavat meitä ymmärtämään, miten kävijät käyttävät sivustoamme. Kaikki data on anonymisoitu."
+        }
+      }
+    }
+  }
+} 

@@ -72,7 +72,8 @@ export default function Home() {
             maxBounds={MAP_BOUNDS}
           />
         ) : (
-          <Map
+            <Map
+              tabIndex={0}
             center={center}
             zoom={zoom}
             maxBounds={MAP_BOUNDS}

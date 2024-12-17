@@ -3,7 +3,8 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 import { NextResponse } from 'next/server';
 import credentials from '@/utils/innocap-f5563b67295e.json';
-import { SPECIAL_INDICATORS, type Indicator } from '@repo/ui/types/indicators';
+import { SPECIAL_INDICATORS, type Indicator, type BarChartData, type MarkerData } from '@repo/ui/types/indicators';
+import { updateFirebaseData } from '@/utils/firebaseOperations';
 
 const SPREADSHEET_ID = '1gWZkBQ0LV9-u59B_BUTt0FuWSBo2FTW_-WZTMEhn-Jg';
 
@@ -41,52 +42,61 @@ const naturaIndicator: Indicator = {
   showOnMap: 'true'
 } as const;
 
+// Shared function to fetch and process data
+async function fetchAndProcessData() {
+  const doc = await getAuthenticatedDoc();
+
+  // Get all required sheets
+  const indicatorsSheet = doc.sheetsByTitle['Indicators'];
+  const municipalityDataSheet = doc.sheetsByTitle['Municipality Level Data'];
+  const markerDataSheet = doc.sheetsByTitle['Marker'];
+  const barChartSheet = doc.sheetsByTitle['Bar Chart'];
+
+  if (!indicatorsSheet || !municipalityDataSheet) {
+    throw new Error('Required sheets not found');
+  }
+
+  // Fetch all data in parallel
+  const [indicatorRows, municipalityRows, markerRows, barChartRows] = await Promise.all([
+    indicatorsSheet.getRows(),
+    municipalityDataSheet.getRows(),
+    markerDataSheet?.getRows() || Promise.resolve([]),
+    barChartSheet?.getRows() || Promise.resolve([]),
+  ]);
+
+  // Process all data
+  const sheetIndicators = processIndicatorRows(indicatorRows);
+  const filteredIndicators = sheetIndicators.filter(
+    indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000
+  );
+  const allIndicators = [naturaIndicator, ...filteredIndicators];
+
+  const municipalityData = processMunicipalityRows(municipalityRows);
+  const markerData = markerRows.length > 0 ? processMarkerRows(markerRows) : [];
+  const barChartData = processBarChartRows(barChartRows);
+
+  return {
+    indicators: allIndicators,
+    municipalityLevelData: municipalityData,
+    markerData: markerData,
+    barChartData: barChartData
+  };
+}
+
+// Regular GET endpoint for UI
 export async function GET() {
   try {
-    const doc = await getAuthenticatedDoc();
+    const data = await fetchAndProcessData();
 
-    // Get all required sheets
-    const indicatorsSheet = doc.sheetsByTitle['Indicators'];
-    const municipalityDataSheet = doc.sheetsByTitle['Municipality Level Data'];
-    const markerDataSheet = doc.sheetsByTitle['Marker'];
-    const barChartSheet = doc.sheetsByTitle['Bar Chart'];
-
-    if (!indicatorsSheet || !municipalityDataSheet) {
-      throw new Error('Required sheets not found');
-    }
-
-    // Fetch all data in parallel
-    const [indicatorRows, municipalityRows, barChartRows] = await Promise.all([
-      indicatorsSheet.getRows(),
-      municipalityDataSheet.getRows(),
-      barChartSheet?.getRows() || Promise.resolve([]),
-    ]);
-
-    // Process all data
-    const sheetIndicators = processIndicatorRows(indicatorRows);
-
-    // Filter out any existing Natura indicators from sheet data
-    const filteredIndicators = sheetIndicators.filter(
-      indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000
-    );
-
-    // Combine indicators with Natura always first
-    const allIndicators = [naturaIndicator, ...filteredIndicators];
-
-    const municipalityData = processMunicipalityRows(municipalityRows);
-    const markerData = markerDataSheet ? await processMarkerRows(await markerDataSheet.getRows()) : [];
-    const barChartData = processBarChartRows(barChartRows);
-
-    const response = {
-      indicators: allIndicators,
+    // Return in the format expected by the UI
+    return NextResponse.json({
+      indicators: data.indicators,
       data: {
-        'Municipality Level Data': municipalityData,
-        'Marker': markerData,
-        'Bar Chart': barChartData
+        'Municipality Level Data': data.municipalityLevelData,
+        'Marker': data.markerData,
+        'Bar Chart': data.barChartData
       }
-    };
-
-    return NextResponse.json(response);
+    });
   } catch (error: any) {
     console.error('Error in GET:', error);
     return NextResponse.json(
@@ -96,7 +106,40 @@ export async function GET() {
   }
 }
 
-function processBarChartRows(rows: any[]) {
+// POST endpoint for cron job
+export async function POST() {
+  try {
+    const startTime = new Date().toISOString();
+    const data = await fetchAndProcessData();
+    const timestamp = await updateFirebaseData(data);
+
+    return NextResponse.json({
+      status: 200,
+      message: 'Data update completed successfully',
+      startTime,
+      endTime: new Date().toISOString(),
+      lastUpdateTimestamp: timestamp,
+      dataCounts: {
+        indicators: data.indicators.length,
+        municipalityData: data.municipalityLevelData.length,
+        markerData: data.markerData.length,
+        barChartData: data.barChartData.length
+      }
+    });
+  } catch (error) {
+    console.error('Scheduled update failed:', error);
+    return NextResponse.json(
+      {
+        status: 500,
+        message: error instanceof Error ? error.message : 'Unknown error occurred',
+        timestamp: new Date().toISOString()
+      },
+      { status: 500 }
+    );
+  }
+}
+
+function processBarChartRows(rows: any[]): BarChartData[] {
   // Group data by municipality and indicator
   const groupedData = rows.reduce((acc, row) => {
     const [
@@ -136,7 +179,7 @@ function processBarChartRows(rows: any[]) {
     acc[key].values.push(parseFloat(value.replace(',', '.')));
 
     return acc;
-  }, {});
+  }, {} as Record<string, BarChartData>);
 
   return Object.values(groupedData);
 }
@@ -205,44 +248,59 @@ function processMunicipalityRows(rows: any[]) {
   });
 }
 
-function processMarkerRows(rows: any[]) {
-  return rows.map(row => {
-    const [
-      id,
-      indicatorNameEn,
-      descriptionEn,
-      descriptionFi,
-      municipalityName,
-      municipalityCode,
-      year,
-      value,
-      unit,
-      location,
-      theme,
-      markerIcon,
-      phase,
-      sourceUrl,
-      info
-    ] = row._rawData;
+function processMarkerRows(rows: any[]): MarkerData[] {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return [];
+  }
 
-    const [latitude, longitude] = location.split(',').map((coord: string) => parseFloat(coord.trim()));
+  return rows
+    .map(row => {
+      if (!row?._rawData) return undefined;
 
-    return {
-      id,
-      indicatorNameEn,
-      descriptionEn,
-      descriptionFi,
-      municipalityName,
-      municipalityCode,
-      year: parseInt(year),
-      value: parseFloat(value.replace(',', '.')),
-      unit,
-      location: [latitude, longitude] as [number, number],
-      theme,
-      markerIcon,
-      phase,
-      sourceUrl,
-      info
-    };
-  });
+      const [
+        id,
+        indicatorNameEn,
+        descriptionEn,
+        descriptionFi,
+        municipalityName,
+        municipalityCode,
+        year,
+        value,
+        unit,
+        location,
+        theme,
+        markerIcon,
+        phase,
+        sourceUrl,
+        info
+      ] = row._rawData;
+
+      // Handle case where location is empty or invalid
+      let coordinates: [number, number] = [0, 0];
+      if (location && typeof location === 'string') {
+        const [latitude, longitude] = location.split(',').map((coord: string) => parseFloat(coord.trim()));
+        if (!isNaN(latitude) && !isNaN(longitude)) {
+          coordinates = [latitude, longitude];
+        }
+      }
+
+      return {
+        id,
+        indicatorNameEn,
+        descriptionEn,
+        descriptionFi,
+        municipalityName,
+        municipalityCode,
+        year: parseInt(year) || 0,
+        value: parseFloat(value?.replace(',', '.')) || 0,
+        unit,
+        location: coordinates,
+        theme: theme || '',
+        markerIcon: markerIcon || '',
+        phase: phase || '',
+        sourceUrl: sourceUrl || '',
+        info: info || ''
+      } as MarkerData;
+    })
+    .filter((marker): marker is MarkerData => marker !== undefined);
 } 
