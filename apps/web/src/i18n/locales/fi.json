@@ -1,8 +1,30 @@
 {
+  "global": {
+    "name": "Vihreä siirtymä Etelä-Savossa"
+  },
   "welcome": {
-    "title": "Etelä-Savon vihreän ja digitaalisen siirtymän mittaristo",
-    "lead": "Rakennamme julkisen sektorin innovaatiokapasiteettia kohti digitaalisia NPA-yhteisöjä",
-    "description": "Tämä mittaristo visualisoi Etelä-Savon alueen vihreän ja digitaalisen siirtymän indikaattorit.\n\nIndikaattorit auttavat seuraamaan ja ymmärtämään kuntien edistymistä kohti kestävää ja digitaalista tulevaisuutta."
+    "title": "Tervetuloa",
+    "subtitle": "Vihreä siirtymä Etelä-Savossa",
+    "content": {
+      "intro": {
+        "title": "Tietoa palvelusta",
+        "text": "Tässä digitaalisessa ja vuorovaikutteisessa palvelussa esitellään vihreän siirtymän mittareita havainnollistavaa paikkatietoa Etelä-Savon alueella. Palvelussa visualisoidaan vihreään siirtymään liittyviä toimintoja, kuten esimerkiksi kestävää liikkumista, energiatehokkuutta ja kasvihuonekaasupäästöjä. Ennakkoluulottomimmille on myös tarjolla tekoälypohjainen analyysi- ja strategiankehittämistyökalu."
+      },
+      "purpose": {
+        "title": "Tarkoitus",
+        "text": "Digitaalinen paikkatietopalvelu mahdollistaa vihreän siirtymän mittareiden helpon vertailun. Tiedon visuaalinen esittäminen parantaa ymmärrystä kestävyyssiirtymän nykytilanteesta kunnissa, mahdollistaa haluttaessa tarkemman seurannan ja osoittaa kunnille mahdollisia kehitystavoitteita matkalla kohti kestävämpää tulevaisuutta."
+      },
+      "about": {
+        "title": "Kehitys",
+        "text": "Palvelu edistää alueellista yhteistyötä ja vihreää siirtymää Etelä-Savossa. Palvelua kehitetään <innocapLink>INNOCAP-hankkeessa</innocapLink>, jota rahoittaa Euroopan Unionin Pohjoinen periferia ja arktinen -ohjelma. Palvelun on suunnitellut ja sitä ylläpitää Helsingin yliopiston <ruraliaLink>Ruralia-instituutin</ruraliaLink> <hidseLink>Ihminen digitaalisissa ja kestävissä talouksissa -tutkimusryhmä</hidseLink> yhteistyössä <mindhiveLink>Mindhive-yrityksen</mindhiveLink> kanssa.",
+        "links": {
+          "innocapHref": "https://www.interreg-npa.eu/projects/innocap/",
+          "ruraliaHref": "https://www.helsinki.fi/fi/ruralia-instituutti",
+          "hidseHref": "https://www.helsinki.fi/en/researchgroups/human-in-digital-and-sustainable-economies?fbclid=IwAR3KN0wogbYTKv3T3GfCGwIxZKmjgrNAzA44g-vD-aemY1zewX8oyZT3JTg",
+          "mindhiveHref": "https://www.mindhive.fi/"
+        }
+      }
+    }
   },
   "navigation": {
     "welcome": "Tervetuloa",
@@ -80,6 +102,36 @@
           "title": "Analytiikkaevästeet",
           "description": "Nämä evästeet auttavat meitä ymmärtämään, miten kävijät käyttävät sivustoamme. Kaikki data on anonymisoitu."
         }
+      }
+    }
+  },
+  "information": {
+    "title": "Tietoa sivuista",
+    "description": "Täältä löydät lisätietoa \"Vihreä siirtymä Etelä-Savossa\" -palvelusta ja vihreän siirtymän tunnuslukujen perusteista. Palvelu tarjoaa interaktiivisen tavan tutkia ja vertailla erilaisia vihreän siirtymän mittareita Etelä-Savon kunnissa.",
+    "sections": {
+      "navigation": {
+        "title": "Perusnavigointi",
+        "items": [
+          "Klikkaa kuntaa nähdäksesi tarkemmat tiedot",
+          "Vasemman reunan sivunavigoinnin avulla voit vaihtaa näkymää vihreän siirtymän mittareiden välillä",
+          "Tutki karttaa ymmärtääksesi paikallisia ja alueellisia eroja"
+        ]
+      },
+      "indicators": {
+        "title": "Indikaattoreiden kanssa työskentely",
+        "items": [
+          "Valitse indikaattori, jotta näet sen kartalla",
+          "Kiinnitä (\"pin\") haluamasi mittari, jotta voit verrata sitä toiseen. Kuvaketta painamalla avautuu lisätietoa",
+          "Vihreän siirtymän mittarit on luokiteltu keskeisiin luokkiin: esim. suojellut alueet, kestävä liikkuminen, energiatehokkuus, kestävät investoinnit, kierrätys ja kasvihuonekaasupäästöt"
+        ]
+      },
+      "ai": {
+        "title": "Tekoälyavustaja",
+        "items": [
+          "Tekoälyavustaja vastaa tekstimuotoisiin kysymyksiin (kuvake oikeassa alakulmassa)",
+          "Huomaa, että tekoälyavustaja on kehitysvaiheessa ja sillä on vain rajallisesti tietoa käytössä",
+          "Tekoälyavustajalla on kuitenkin tarkkaa tietoa Etelä-Savon kunnista (kuntastrategiat ja ilmasto-ohjelmat), avoimesti saatavilla olevaa tieteellistä tutkimusta vihreästä ja digitaalisesta siirtymästä ja Euroopan Unionin siirtymiin liittyvistä politiikkadokumenteista"
+        ]
       }
     }
   }

@@ -8,6 +8,7 @@ import {
   Button,
   ToggleButtonGroup,
   ToggleButton,
+  Link,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import HomeIcon from '@mui/icons-material/Home';
@@ -22,6 +23,8 @@ import { openPreferences } from '@/utils/cookieConsent';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
+import React from 'react';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -306,12 +309,12 @@ export function SideNav() {
 
   const menuItems: MenuItem[] = [
     {
-      text: 'Welcome',
+      text: t('navigation.welcome'),
       icon: <HomeIcon />,
       id: 'welcome'
     },
     {
-      text: 'Green',
+      text: t('navigation.green'),
       icon: (
         <Box
           component="img"
@@ -328,7 +331,7 @@ export function SideNav() {
       id: 'green'
     },
     {
-      text: 'About',
+      text: t('navigation.about'),
       icon: (
         <Box
           component="img"
@@ -336,14 +339,14 @@ export function SideNav() {
           sx={{
             width: 24,
             height: 24,
-            filter: selectedItem === 'about' ? 'brightness(0) invert(1)' : 'none'
+            filter: selectedItem === 'information' ? 'brightness(0) invert(1)' : 'none'
           }}
         />
       ),
-      id: 'about'
+      id: 'information'
     },
     {
-      text: 'Settings',
+      text: t('navigation.settings'),
       icon: <SettingsIcon />,
       id: 'settings'
     }
@@ -433,20 +436,65 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  Southern Savo Green and Digital Transition Dashboard
+                  {t('welcome.title')}
                 </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
+                <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
-                <Typography variant="lead" gutterBottom>
-                  We are building public sector innovation capacity towards digital-driven NPA communities
-                </Typography>
-                <Typography variant="paragraph" sx={{ mb: 4 }}>
-                  This dashboard visualizes the green and digital transition indicators for the Southern Savo region.
+                <GroupTitle variant='h2'>
+                  {t('welcome.subtitle')}
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {t('welcome.content.intro.text')}
                   <br />
                   <br />
-                  The indicators help monitor and understand the progress of municipalities in their journey towards
-                  sustainable and digital future.
+                  {t('welcome.content.purpose.text')}
+                  <br />
+                  <br />
+                  <Trans
+                    i18nKey="welcome.content.about.text"
+                    components={{
+                      innocapLink: (
+                        <Link 
+                          href={t('welcome.content.about.links.innocapHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      ),
+                      hidseLink: (
+                        <Link 
+                          href={t('welcome.content.about.links.hidseHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      ),
+                      ruraliaLink: (
+                        <Link 
+                          href={t('welcome.content.about.links.ruraliaHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      ),
+                      mindhiveLink: (
+                        <Link 
+                          href={t('welcome.content.about.links.mindhiveHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      )
+                    }}
+                    values={{
+                      innocap: t('welcome.content.about.links.innocap'),
+                      innocapText: t('welcome.content.about.innocapText'),
+                      hidse: t('welcome.content.about.links.hidse'),
+                      ruralia: t('welcome.content.about.links.ruralia'),
+                      mindhive: t('welcome.content.about.links.mindhive')
+                    }}
+                  />
                 </Typography>
                 <LogoContainer>
                   <Box 
@@ -510,7 +558,7 @@ export function SideNav() {
               </DrawerContent>
             </>
           );
-        case 'about':
+        case 'information':
           return (
             <>
               <DrawerHeader>
@@ -530,42 +578,49 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  About
+                  {t('information.title')}
                 </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
+                <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
-                <Typography variant="lead" gutterBottom>
-                  Learn how to use the platform and understand the indicators
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {t('information.description')}
                 </Typography>
-                <Typography variant="paragraph" sx={{ mb: 2 }}>
-                  The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.
-                </Typography>
+
                 <GroupTitle variant='h2'>
-                  Basic Navigation
+                  {t('information.sections.navigation.title')}
                 </GroupTitle>
-                <Typography variant="paragraph" sx={{ mb: 2 }}>
-                  • Click on municipalities to see detailed information
-                  <br />
-                  • Use the side navigation to switch between different indicator categories
-                  <br />
-                  • Explore the map to understand regional patterns
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {(t('information.sections.navigation.items', { returnObjects: true }) as string[]).map((item: string) => (
+                    <React.Fragment key={item}>
+                      • {item}
+                      <br />
+                    </React.Fragment>
+                  ))}
                 </Typography>
+
                 <GroupTitle variant='h2'>
-                  Working with Indicators
+                  {t('information.sections.indicators.title')}
                 </GroupTitle>
-                <Typography variant="paragraph" sx={{ mb: 2 }}>
-                  • Select an indicator to view it on the map
-                  <br />
-                  • Pin an indicator to compare it with another
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {(t('information.sections.indicators.items', { returnObjects: true }) as string[]).map((item: string) => (
+                    <React.Fragment key={item}>
+                      • {item}
+                      <br />
+                    </React.Fragment>
+                  ))}
                 </Typography>
+
                 <GroupTitle variant='h2'>
-                  AI Assistant
+                  {t('information.sections.ai.title')}
                 </GroupTitle>
                 <Typography variant="paragraph">
-                  • An AI assistant is available to help answer your questions
-                  <br />
-                  • Please note that the assistant is in development phase and may have limited knowledge
+                  {(t('information.sections.ai.items', { returnObjects: true }) as string[]).map((item: string) => (
+                    <React.Fragment key={item}>
+                      • {item}
+                      <br />
+                    </React.Fragment>
+                  ))}
                 </Typography>
               </DrawerContent>
             </>
@@ -659,7 +714,7 @@ export function SideNav() {
               color="primary.dark"
               textAlign="center"
             >
-              Vihreä siirtymä Etelä-Savossa
+              {t('global.name')}
             </Typography>
           </LogoSection>
           {menuItems.map((item) => {

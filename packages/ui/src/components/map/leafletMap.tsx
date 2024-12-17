@@ -371,6 +371,8 @@ export function LeafletMap({
       return null;
     }
 
+    console.log('markerElements', filteredMarkerData);
+
     return (
       <LayerGroup>
         {filteredMarkerData.map((marker, i) => {
@@ -411,17 +413,28 @@ export function LeafletMap({
                     <PopupContent>
                       <PhaseText variant='paragraph'>{marker.phase}</PhaseText>
                       <PopupTitle variant='label'>{marker.descriptionEn}</PopupTitle>
-                      <Box display='flex' gap={2}>
-                        {marker.year &&
-                          <Typography variant='paragraph'>{marker.year}</Typography>}
-                        {marker.value !== null &&
-                          <Box display='flex' gap={0.3}>
-                            <Typography variant='paragraph'>{marker.value}</Typography>
-                            <Typography variant='paragraph'>{marker.unit}</Typography>
-                          </Box>}
-                      </Box>
-                      {marker.info &&
-                        <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
+                      
+                      {/* Year is non-zero or value exists */}
+                      {((marker.year && marker.year !== 0) || (marker.value !== null && marker.value !== 0)) && (
+                        <Box display='flex' gap={2}>
+                          {/* Year exists and is not 0 */}
+                          {marker.year !== 0 && marker.year && (
+                            <Typography variant='paragraph'>{marker.year}</Typography>
+                          )}
+                          
+                          {/*Value exists and is not 0 */}
+                          {marker.value !== null && marker.value !== 0 && (
+                            <Box display='flex' gap={0.3}>
+                              <Typography variant='paragraph'>{marker.value}</Typography>
+                              <Typography variant='paragraph'>{marker.unit}</Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+                      
+                      {marker.info && (
+                        <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>
+                      )}
                       <Typography variant='paragraph'>{marker.municipalityName}</Typography>
                       {marker.sourceUrl && (
                         <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
