@@ -236,53 +236,6 @@ export const ChatBubble = () => {
       isInitialized.current = false
     }
   }, [loadChatbot])
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && window.Chatbot?.close) {
-        window.Chatbot.close();
-      }
-      
-      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
-        e.preventDefault();
-        loadChatbot();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [loadChatbot]);
-
-  useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-          const chatWindow = document.querySelector('.flowise-chat-window');
-          if (chatWindow) {
-            chatWindow.setAttribute('role', 'dialog');
-            chatWindow.setAttribute('aria-label', 'Chat with AI Assistant');
-            
-            const messageList = chatWindow.querySelector('.chat-messages-container');
-            if (messageList) {
-              messageList.setAttribute('role', 'log');
-              messageList.setAttribute('aria-live', 'polite');
-            }
-
-            // Focus the chat input when window opens
-            setTimeout(() => {
-              const chatInput = chatWindow.querySelector<HTMLElement>('.chat-input-textarea');
-              if (chatInput) {
-                chatInput.focus();
-              }
-            }, 100); // Small delay to ensure the input is rendered
-          }
-        }
-      });
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
-
+  
   return null
 } 
