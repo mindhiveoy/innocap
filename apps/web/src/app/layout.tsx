@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { initCookieConsent } from '@/utils/cookieConsent';
 import { initGA } from '@/utils/analytics';
 import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
+import '@/i18n/config';
 
 const openSans = Open_Sans({
   subsets: ['latin'],

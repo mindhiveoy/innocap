@@ -6,6 +6,8 @@ import {
   Box,
   Typography,
   Button,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import HomeIcon from '@mui/icons-material/Home';
@@ -18,6 +20,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
 import { openPreferences } from '@/utils/cookieConsent';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -226,7 +230,9 @@ const LogoSection = styled(Box)(({ theme }) => `
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: ${theme.spacing(2)};
+  gap: ${theme.spacing(1)};
+  padding-top: ${theme.spacing(2)};
+  margin-bottom: ${theme.spacing(2)};
 
   @media (max-width: 768px) {
     display: none;
@@ -247,6 +253,26 @@ const LogoImage = styled(Box)(({ theme }) => `
     height: 50px;
     object-fit: contain;
     margin-bottom: -5px;
+  }
+`);
+
+const LanguageSelector = styled(ToggleButtonGroup)(({ theme }) => `
+  width: 100%;
+  gap: ${theme.spacing(2)};
+  .MuiToggleButton-root {
+    flex: 1;
+    text-transform: none;
+    border-radius: ${theme.shape.borderRadius}px;
+    color: ${theme.palette.text.primary};
+    border-color: ${theme.palette.divider};
+    
+    &.Mui-selected {
+      background-color: ${theme.palette.primary.main};
+      color: ${theme.palette.primary.contrastText};
+      &:hover {
+        background-color: ${theme.palette.primary.dark};
+      }
+    }
   }
 `);
 
@@ -273,6 +299,8 @@ export function SideNav() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { indicators, error } = useData();
+  const { t } = useTranslation();
+  const { currentLanguage, changeLanguage } = useLanguage();
   const drawerRef = useRef<HTMLDivElement>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
 
@@ -562,17 +590,17 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  Settings
+                  {t('settings.title')}
                 </Typography>
                 <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
                 <GroupTitle variant='h2'>
-                  Privacy
+                  {t('settings.privacy.title')}
                 </GroupTitle>
                 <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column'}}>
                   <Typography variant="paragraph" sx={{ mb: 2 }}>
-                    Manage your cookie and privacy preferences.
+                    {t('settings.privacy.description')}
                   </Typography>
                   <Button
                     variant="outlined"
@@ -580,16 +608,27 @@ export function SideNav() {
                     startIcon={<SettingsIcon />}
                     sx={{ width: '100%' }}
                   >
-                    Cookie Preferences
+                    {t('settings.privacy.cookiePreferences')}
                   </Button>
                 </Box>
 
                 <GroupTitle variant='h2'>
-                  Language
+                  {t('settings.language.title')}
                 </GroupTitle>
-                <Typography variant="paragraph" color="text.secondary">
-                  Language selection coming soon
-                </Typography>
+                <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column'}}>
+                  <Typography variant="paragraph" sx={{ mb: 2 }}>
+                    {t('settings.language.select')}
+                  </Typography>
+                  <LanguageSelector
+                    value={currentLanguage}
+                    exclusive
+                    onChange={(_, value) => value && changeLanguage(value)}
+                    aria-label={t('settings.language.select')}
+                  >
+                    <ToggleButton value="en">English</ToggleButton>
+                    <ToggleButton value="fi">Suomi</ToggleButton>
+                  </LanguageSelector>
+                </Box>
               </DrawerContent>
             </>
           );
@@ -615,11 +654,12 @@ export function SideNav() {
               />
             </LogoImage>
             <Typography
-              variant="label"
+              variant="paragraph"
+              fontWeight={600}
               color="primary.dark"
               textAlign="center"
             >
-              Innocap Portal
+              Vihreä siirtymä Etelä-Savossa
             </Typography>
           </LogoSection>
           {menuItems.map((item) => {
