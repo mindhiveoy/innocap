@@ -1,0 +1,86 @@
+{
+  "welcome": {
+    "title": "Southern Savo Green and Digital Transition Dashboard",
+    "lead": "We are building public sector innovation capacity towards digital-driven NPA communities",
+    "description": "This dashboard visualizes the green and digital transition indicators for the Southern Savo region.\n\nThe indicators help monitor and understand the progress of municipalities in their journey towards sustainable and digital future."
+  },
+  "navigation": {
+    "welcome": "Welcome",
+    "green": "Green",
+    "about": "About",
+    "settings": "Settings"
+  },
+  "settings": {
+    "privacy": {
+      "title": "Privacy",
+      "description": "Manage your cookie and privacy preferences.",
+      "cookiePreferences": "Cookie Preferences"
+    },
+    "title": "Settings",
+    "language": {
+      "title": "Language",
+      "select": "Select language"
+    }
+  },
+  "about": {
+    "title": "About",
+    "lead": "Learn how to use the platform and understand the indicators",
+    "description": "The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.",
+    "sections": {
+      "navigation": {
+        "title": "Basic Navigation",
+        "items": [
+          "Click on municipalities to see detailed information",
+          "Use the side navigation to switch between different indicator categories",
+          "Explore the map to understand regional patterns"
+        ]
+      },
+      "indicators": {
+        "title": "Working with Indicators",
+        "items": [
+          "Select an indicator to view it on the map",
+          "Pin an indicator to compare it with another"
+        ]
+      },
+      "ai": {
+        "title": "AI Assistant",
+        "items": [
+          "An AI assistant is available to help answer your questions",
+          "Please note that the assistant is in development phase and may have limited knowledge"
+        ]
+      }
+    }
+  },
+  "indicators": {
+    "pinToMap": "Pin to map",
+    "unpinFromMap": "Unpin from map",
+    "maxPinsReached": "Maximum pins reached",
+    "selectYear": "Select year for {{indicator}}"
+  },
+  "cookieConsent": {
+    "modal": {
+      "title": "Privacy Settings",
+      "description": "This website uses cookies to analyze our traffic and improve user experience.",
+      "acceptAll": "Accept all",
+      "acceptNecessary": "Accept necessary only",
+      "showPreferences": "Manage preferences"
+    },
+    "preferences": {
+      "title": "Cookie Preferences",
+      "sections": {
+        "usage": {
+          "title": "How we use cookies",
+          "description": "We use cookies to ensure basic functionality and analyze our traffic with anonymized data."
+        },
+        "necessary": {
+          "title": "Necessary Cookies",
+          "description": "These cookies are essential for the website to function properly."
+        },
+        "analytics": {
+          "title": "Analytics Cookies",
+          "description": "These cookies help us understand how visitors interact with our website. All data is anonymized."
+        }
+      }
+    }
+  }
+} 

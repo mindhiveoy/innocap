@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Indicator, MunicipalityLevelData, MarkerData, BarChartData } from '@repo/ui/types/indicators';
+import { fetchFirebaseData } from '@/utils/firebaseOperations';
 
 interface DataContextType {
   indicators: Indicator[];
@@ -25,23 +26,29 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/sheets');
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('API Error:', errorData);
-          throw new Error(errorData.details || 'Failed to fetch data');
-        }
+        const data = await fetchFirebaseData();
+        
+        // Sort all data by year in descending order (latest first)
+        const sortedMunicipalityData = [...(data.municipalityLevelData || [])].sort(
+          (a, b) => b.year - a.year
+        );
+        
+        const sortedMarkerData = [...(data.markerData || [])].sort(
+          (a, b) => b.year - a.year
+        );
+        
+        const sortedBarChartData = [...(data.barChartData || [])].sort(
+          (a, b) => b.year - a.year
+        );
 
-        const responseData = await response.json();
-        setIndicators(responseData.indicators);
-
-        const { data } = responseData;
-        setMunicipalityData(data['Municipality Level Data'] || []);
-        setMarkerData(data['Marker'] || []);
-        setBarChartData(data['Bar Chart'] || []);
+        setIndicators(data.indicators || []);
+        setMunicipalityData(sortedMunicipalityData);
+        setMarkerData(sortedMarkerData);
+        setBarChartData(sortedBarChartData);
+        setError(null);
       } catch (err) {
-        console.error('Error in DataProvider:', err);
-        setError(err as Error);
+        console.error('Error loading data:', err);
+        setError(err instanceof Error ? err : new Error('Failed to load data'));
       } finally {
         setIsLoading(false);
       }

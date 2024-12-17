@@ -253,7 +253,7 @@ export function SplitMapView({
 
   return (
     <Box sx={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-      <Box sx={topContainerStyle}>
+      <Box sx={topContainerStyle} role="region" aria-label={`Map showing ${pinnedIndicator?.indicatorNameEn || 'pinned indicator'}`}>
         <LeafletMap
           {...topMapProps}
           center={topMapAdjustments.center}
@@ -272,11 +272,16 @@ export function SplitMapView({
         onMouseDown={handleDragStart}
         onTouchStart={handleDragStart}
         style={dragHandleStyle}
+        role="separator"
+        aria-label="Drag to resize map views"
+        aria-valuemin={MIN_SPLIT}
+        aria-valuemax={MAX_SPLIT}
+        aria-valuenow={splitPosition}
       >
-        <DragHandleIcon />
+        <DragHandleIcon aria-hidden="true" />
       </DragHandle>
 
-      <Box sx={bottomContainerStyle}>
+      <Box sx={bottomContainerStyle} role="region" aria-label={`Map showing ${selectedIndicator?.indicatorNameEn || 'selected indicator'}`}>
         <LeafletMap
           {...bottomMapProps}
           center={bottomMapAdjustments.center}
