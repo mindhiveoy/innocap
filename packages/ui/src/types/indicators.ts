@@ -21,7 +21,7 @@ export interface Indicator {
   indicatorNameEn: string;
   indicatorNameFi: string;
   category: string;
-  indicatorType: 'Municipality Level Data' | 'Marker' | 'Bar Chart' | 'Natura';
+  indicatorType: 'Municipality Level Data' | 'Marker' | 'Bar Chart' | 'Special';
   indicatorTypeIcon: string;
   group: string;
   groupFI: string;
@@ -38,7 +38,7 @@ export enum IndicatorType {
   MunicipalityLevel = "Municipality Level Data",
   Marker = "Marker",
   BarChart = "Bar Chart",
-  Natura = "Natura"
+  Special = "Special"
 }
 
 export interface BaseIndicatorData {

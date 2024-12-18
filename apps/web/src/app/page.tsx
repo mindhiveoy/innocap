@@ -33,7 +33,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 
 const isOverlayCompatibleType = (indicator: Indicator | null) => {
   return indicator?.indicatorType === IndicatorType.MunicipalityLevel || 
-         indicator?.indicatorType === IndicatorType.Natura;
+         indicator?.indicatorType === IndicatorType.Special;
 };
 
 export default function Home() {

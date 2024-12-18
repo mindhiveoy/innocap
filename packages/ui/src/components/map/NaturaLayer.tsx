@@ -5,7 +5,7 @@ import type { Feature, GeoJsonProperties, Geometry, FeatureCollection } from 'ge
 import { LayerGroup, GeoJSON } from 'react-leaflet';
 import { useMap } from 'react-leaflet';
 import { naturaAreas } from './data/natura-areas';
-import { Indicator, SPECIAL_INDICATORS } from '@repo/ui/types/indicators';
+import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
 import { createRoot } from 'react-dom/client';
 import { DraggablePopup } from './DraggablePopup';
 import { Typography } from '@mui/material';
@@ -66,8 +66,8 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
   const popupRefs = useRef<(L.Popup | null)[]>([]);
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
 
-  const isVisible = selectedIndicator?.id === SPECIAL_INDICATORS.NATURA_2000 ||
-    pinnedIndicator?.id === SPECIAL_INDICATORS.NATURA_2000;
+  const isVisible = selectedIndicator?.indicatorType === IndicatorType.Special ||
+    pinnedIndicator?.indicatorType === IndicatorType.Special;
 
   if (!isVisible) return null;
 

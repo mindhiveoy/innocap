@@ -3,7 +3,7 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 import { NextResponse } from 'next/server';
 import credentials from '@/utils/innocap-f5563b67295e.json';
-import { SPECIAL_INDICATORS, type Indicator, type BarChartData, type MarkerData } from '@repo/ui/types/indicators';
+import { type BarChartData, type MarkerData } from '@repo/ui/types/indicators';
 import { updateFirebaseData } from '@/utils/firebaseOperations';
 
 const SPREADSHEET_ID = '1gWZkBQ0LV9-u59B_BUTt0FuWSBo2FTW_-WZTMEhn-Jg';
@@ -24,39 +24,6 @@ async function getAuthenticatedDoc() {
     throw error;
   }
 }
-
-const naturaIndicator: Indicator = {
-  id: SPECIAL_INDICATORS.NATURA_2000,
-  category: 'Green',
-  group: 'Land use',
-  groupFI: 'Maankäyttö',
-  indicatorNameEn: 'Natura 2000 areas',
-  indicatorNameFi: 'Natura 2000 -suojelualueet',
-  indicatorType: 'Natura',
-  indicatorTypeIcon: 'Terrain',
-  iconName: 'Forest',
-  color: '#155415',
-  sourceEn: 'Finnish Environment Institute (SYKE)',
-  sourceFi: 'Suomen ympäristökeskus (SYKE)',
-  sourceUrl: 'https://paikkatiedot.ymparisto.fi',
-  showOnMap: 'true'
-} as const;
-
-const organicFieldIndicator: Indicator = {
-  id: SPECIAL_INDICATORS.ORGANIC_FARMING,
-  category: 'Green',
-  group: 'Land use',
-  groupFI: 'Maankäyttö',
-  indicatorNameEn: 'Organic farming areas',
-  indicatorNameFi: 'Luomupellot',
-  indicatorType: 'Natura',
-  indicatorTypeIcon: 'Terrain',
-  iconName: 'Agriculture',
-  color: '#A7C63A',
-  sourceEn: 'Finnish Food Authority',
-  sourceFi: 'Ruokavirasto',
-  showOnMap: 'true'
-} as const;
 
 // Shared function to fetch and process data
 async function fetchAndProcessData() {
@@ -82,11 +49,7 @@ async function fetchAndProcessData() {
 
   // Process all data
   const sheetIndicators = processIndicatorRows(indicatorRows);
-  const filteredIndicators = sheetIndicators.filter(
-    indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000 && 
-                 indicator.id !== SPECIAL_INDICATORS.ORGANIC_FARMING
-  );
-  const allIndicators = [naturaIndicator, organicFieldIndicator, ...filteredIndicators];
+  const allIndicators = sheetIndicators;
 
   const municipalityData = processMunicipalityRows(municipalityRows);
   const markerData = markerRows.length > 0 ? processMarkerRows(markerRows) : [];
