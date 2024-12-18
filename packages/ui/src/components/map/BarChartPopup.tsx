@@ -13,6 +13,7 @@ interface BarChartPopupProps {
   dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
   color?: string;
   map: L.Map;
+  language?: string;
 }
 
 const PopupContainer = styled(Box)(({ theme }) => `
@@ -87,15 +88,15 @@ export function BarChartPopup({
   popupRefs,
   dragRefs,
   map,
-  color = '#8884d8'
+  color = '#8884d8',
+  language = 'en'
 }: BarChartPopupProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const chartData = data.labels.map((label, index) => ({
+  const chartData = (language === 'fi' ? data.labelsFi : data.labels).map((label, index) => ({
     name: label,
-    value: data.values[index],
-    nameFi: data.labelsFi[index]
+    value: data.values[index]
   }));
 
   return (
@@ -153,7 +154,10 @@ export function BarChartPopup({
               />
               <Tooltip
                 cursor={false}
-                formatter={(value: number) => [`${value} ${data.unit}`, data.indicatorNameEn]}
+                formatter={(value: number) => [
+                  `${value} ${data.unit}`, 
+                  language === 'fi' ? data.indicatorNameFi : data.indicatorNameEn
+                ]}
                 contentStyle={isMobile ? {
                   fontSize: '10px',
                   padding: '4px 8px'
@@ -168,6 +172,9 @@ export function BarChartPopup({
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
+        <Typography>
+          {language === 'fi' ? data.descriptionFi : data.descriptionEn}
+        </Typography>
       </PopupContainer>
     </DraggablePopup>
   );

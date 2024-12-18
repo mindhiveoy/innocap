@@ -297,9 +297,6 @@ interface GroupedIndicators {
   };
 }
 
-
-
-
 interface MenuItem {
   text?: string;
   icon: React.ReactNode;
@@ -541,18 +538,18 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  Green Transition Indicators
+                  {t('indicators.title')}
                 </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
+                <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
                 {error ? (
                   <Typography color="error">Error loading indicators</Typography>
                 ) : (
-                  Object.values(groupedIndicators || {}).map(({ group, indicators }) => (
+                  Object.values(groupedIndicators || {}).map(({ group, groupFI, indicators }) => (
                     <span key={group}>
                       <GroupTitle variant='h2'>
-                        {group}
+                        {currentLanguage === 'fi' ? groupFI : group}
                       </GroupTitle>
                       <Box key={group}>
                         {indicators.map((indicator, index) => (

@@ -27,6 +27,7 @@ interface SplitMapViewProps {
   center: LatLngTuple;
   zoom: number;
   maxBounds: LatLngBoundsExpression;
+  language?: string;
 }
 
 /**
@@ -97,7 +98,8 @@ export function SplitMapView({
   barChartData,
   center,
   zoom,
-  maxBounds
+  maxBounds,
+  language = 'en'
 }: SplitMapViewProps) {
   const [splitPosition, setSplitPosition] = useState<number>(INITIAL_SPLIT);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -253,7 +255,7 @@ export function SplitMapView({
 
   return (
     <Box sx={{ position: 'relative', height: '100%', overflow: 'hidden' }}>
-      <Box sx={topContainerStyle} role="region" aria-label={`Map showing ${pinnedIndicator?.indicatorNameEn || 'pinned indicator'}`}>
+      <Box sx={topContainerStyle} role="region" aria-label={`Map showing ${language === 'fi' ? pinnedIndicator?.indicatorNameFi : pinnedIndicator?.indicatorNameEn || 'pinned indicator'}`}>
         <LeafletMap
           {...topMapProps}
           center={topMapAdjustments.center}
@@ -264,6 +266,7 @@ export function SplitMapView({
           onMapMount={(map) => {
             topMapRef.current = map;
           }}
+          language={language}
         />
       </Box>
 
@@ -281,7 +284,7 @@ export function SplitMapView({
         <DragHandleIcon aria-hidden="true" />
       </DragHandle>
 
-      <Box sx={bottomContainerStyle} role="region" aria-label={`Map showing ${selectedIndicator?.indicatorNameEn || 'selected indicator'}`}>
+      <Box sx={bottomContainerStyle} role="region" aria-label={`Map showing ${language === 'fi' ? selectedIndicator?.indicatorNameFi : selectedIndicator?.indicatorNameEn || 'selected indicator'}`}>
         <LeafletMap
           {...bottomMapProps}
           center={bottomMapAdjustments.center}
@@ -292,6 +295,7 @@ export function SplitMapView({
           onMapMount={(map) => {
             bottomMapRef.current = map;
           }}
+          language={language}
         />
       </Box>
     </Box>

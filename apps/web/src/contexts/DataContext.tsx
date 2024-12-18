@@ -28,7 +28,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       try {
         const data = await fetchFirebaseData();
         
-        // Sort all data by year in descending order (latest first)
         const sortedMunicipalityData = [...(data.municipalityLevelData || [])].sort(
           (a, b) => b.year - a.year
         );

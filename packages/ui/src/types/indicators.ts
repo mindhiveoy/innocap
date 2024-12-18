@@ -80,6 +80,7 @@ export interface BarChartData extends BaseIndicatorData {
   municipalityCode: string;
   year: number;
   unit: string;
+  indicatorNameFi: string;
 }
 
 export type IndicatorData = MunicipalityLevelData | MarkerData | BarChartData; 

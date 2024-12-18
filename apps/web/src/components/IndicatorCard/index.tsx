@@ -29,6 +29,7 @@ import EvStation from '@mui/icons-material/EvStation';
 import DryCleaning from '@mui/icons-material/DryCleaning';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 interface IndicatorCardProps {
@@ -313,6 +314,9 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const { t } = useTranslation();
+  // currentLanguage is used in JSX for conditional rendering
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+  const { currentLanguage } = useLanguage();
 
   const isSelected = useMemo(() =>
     selectedIndicator?.id === indicator?.id,
@@ -430,12 +434,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
     if (element) {
       setIsTextTruncated(element.scrollWidth > element.clientWidth);
     }
-  }, [indicator?.sourceEn]);
-
-  const tooltipContent = useMemo(() =>
-    indicator?.sourceEn || '',
-    [indicator?.sourceEn]
-  );
+  }, [indicator?.sourceEn, indicator?.sourceFi]);
 
   if (!indicator) return null;
   return (
@@ -445,7 +444,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
-      aria-label={`${indicator.indicatorNameEn} indicator card`}
+      aria-label={`${currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn} indicator card`}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -466,23 +465,26 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
           </Box>
           <TitleRow>
             <Typography variant="label">
-              {indicator?.indicatorNameEn}
+              {currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn}
             </Typography>
           </TitleRow>
         </TitleSection>
       </CardHeader>
       {isTextTruncated ? (
-        <Tooltip title={tooltipContent} placement="right">
+        <Tooltip 
+          title={currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn} 
+          placement="right"
+        >
           <SourceTextWrapper>
             <SourceText ref={sourceRef} variant='paragraph'>
-              {indicator?.sourceEn}
+              {currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn}
             </SourceText>
           </SourceTextWrapper>
         </Tooltip>
       ) : (
         <SourceTextWrapper>
           <SourceText ref={sourceRef} variant='paragraph'>
-            {indicator?.sourceEn}
+            {currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn}
           </SourceText>
         </SourceTextWrapper>
       )}
@@ -522,7 +524,9 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
               value={selectedYear}
               exclusive
               onChange={handleYearChange}
-              aria-label={t('indicators.selectYear', { indicator: indicator.indicatorNameEn })}
+              aria-label={t('indicators.selectYear', { 
+                indicator: currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn 
+              })}
             >
               {years.map((year) => (
                 <ToggleButton 

@@ -55,7 +55,8 @@
     "maxPinsReached": "Maximum pins reached",
     "selectYear": "Select year for {{indicator}}",
     "yearButton": "Year {{year}}",
-    "greenTransition": "Green transition"
+    "greenTransition": "Green transition",
+    "title": "Green Transition Indicators"
   },
   "cookieConsent": {
     "modal": {

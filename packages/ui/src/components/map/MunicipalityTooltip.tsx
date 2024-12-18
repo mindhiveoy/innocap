@@ -60,6 +60,7 @@ interface MunicipalityTooltipProps {
   popupRefs: React.MutableRefObject<(L.Popup | null)[]>;
   dragRefs: React.MutableRefObject<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>;
   map: L.Map;
+  language?: string;
 }
 
 export function MunicipalityTooltip({
@@ -70,8 +71,10 @@ export function MunicipalityTooltip({
   index,
   popupRefs,
   dragRefs,
-  map
+  map,
+  language = 'en',
 }: MunicipalityTooltipProps) {
+
   const isMunicipalityData = (data: IndicatorData | undefined): data is MunicipalityLevelData => {
     return data !== undefined && 'value' in data;
   };
@@ -115,11 +118,9 @@ export function MunicipalityTooltip({
             )}
 
           </Box>
-          {data?.descriptionFi && (
             <TooltipDescription variant="paragraph">
-              {data.descriptionFi}
+              {language === 'fi' ? data?.descriptionFi : data?.descriptionEn}
             </TooltipDescription>
-          )}
         </RightColumn>
       </TooltipContainer>
     </DraggablePopup>

@@ -50,7 +50,8 @@
     "maxPinsReached": "Maksimimäärä kiinnityksiä",
     "selectYear": "Valitse vuosi indikaattorille {{indicator}}",
     "yearButton": "Vuosi {{year}}",
-    "greenTransition": "Vihreä siirtymä"
+    "greenTransition": "Vihreä siirtymä",
+    "title": "Vihreän siirtymän indikaattorit"
   },
   "cookieConsent": {
     "modal": {

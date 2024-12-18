@@ -39,6 +39,7 @@ interface LeafletMapProps {
   onMapMount?: (map: L.Map) => void;
   pinnedIndicator?: Indicator | null;
   tabIndex?: number;
+  language?: string;
 }
 
 const geoJSONStyle = {
@@ -188,6 +189,7 @@ export function LeafletMap({
   onMapMount,
   pinnedIndicator,
   tabIndex,
+  language = 'en',
 }: LeafletMapProps) {
 
   const popupRefs = useRef<(L.Popup | null)[]>([]);
@@ -342,7 +344,7 @@ export function LeafletMap({
               initialLatLng: null
             });
           }
-
+          console.log('language from onEachFeatureCallback', language);
           root.render(
             <ThemeProvider theme={theme}>
               <MunicipalityTooltip
@@ -354,6 +356,7 @@ export function LeafletMap({
                 popupRefs={popupRefs}
                 dragRefs={dragRefs}
                 map={mapRef.current!}
+                language={language}
               />
             </ThemeProvider>
           );
@@ -364,14 +367,13 @@ export function LeafletMap({
         }
       });
     };
-  }, [activeIndicator, municipalityData, geoJsonStyle]);
+  }, [activeIndicator, municipalityData, geoJsonStyle, language]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
       return null;
     }
 
-    console.log('markerElements', filteredMarkerData);
 
     return (
       <LayerGroup>
@@ -412,7 +414,9 @@ export function LeafletMap({
                   <PopupContainer>
                     <PopupContent>
                       <PhaseText variant='paragraph'>{marker.phase}</PhaseText>
-                      <PopupTitle variant='label'>{marker.descriptionEn}</PopupTitle>
+                      <PopupTitle variant='label'>
+                        {language === 'fi' ? marker.descriptionFi : marker.descriptionEn}
+                      </PopupTitle>
                       
                       {/* Year is non-zero or value exists */}
                       {((marker.year && marker.year !== 0) || (marker.value !== null && marker.value !== 0)) && (
@@ -450,7 +454,7 @@ export function LeafletMap({
         })}
       </LayerGroup>
     );
-  }, [filteredMarkerData]);
+  }, [filteredMarkerData, language]);
 
   const barChartElements = useMemo(() => {
     if (!barChartData || !mapRef.current) return null;
@@ -535,6 +539,7 @@ export function LeafletMap({
                   popupRefs={popupRefs}
                   dragRefs={dragRefs}
                   map={mapRef.current!}
+                  language={language}
                 />
               </Popup>
             </Marker>
@@ -542,7 +547,7 @@ export function LeafletMap({
         })}
       </LayerGroup>
     );
-  }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current]);
+  }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current, language]);
 
   const mapContainerProps = useMemo(() => ({
     center,
@@ -599,7 +604,7 @@ export function LeafletMap({
               <PushPinIcon fontSize="small" />
             </span>
             <Typography variant='label'>
-              {pinnedIndicator.indicatorNameEn}
+              {language === 'fi' ? pinnedIndicator.indicatorNameFi : pinnedIndicator.indicatorNameEn}
               {pinnedIndicator.selectedYear && (
                 <YearText variant='label'>
                   ({pinnedIndicator.selectedYear})
@@ -611,7 +616,7 @@ export function LeafletMap({
         {selectedIndicator && selectedIndicator.id !== pinnedIndicator?.id && (
           <SelectedOverlay>
             <Typography variant='label'>
-              {selectedIndicator.indicatorNameEn}
+              {language === 'fi' ? selectedIndicator.indicatorNameFi : selectedIndicator.indicatorNameEn}
               {selectedIndicator.selectedYear && (
                 <YearText variant='label'>
                   ({selectedIndicator.selectedYear})
@@ -650,7 +655,14 @@ export function LeafletMap({
         {/* Choropleth layer */}
         {activeIndicator && (
           <GeoJSON
-            key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
+            key={[
+              'geojson',
+              selectedIndicator?.id || '',
+              pinnedIndicator?.id || '',
+              pinnedIndicator?.selectedYear || '',
+              isPinned,
+              language
+            ].join('-')}
             data={municipalityBoundaries}
             style={geoJsonStyle}
             onEachFeature={onEachFeatureCallback}
