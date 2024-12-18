@@ -1,6 +1,5 @@
 import 'vanilla-cookieconsent/dist/cookieconsent.css';
 import * as CookieConsent from 'vanilla-cookieconsent';
-
 export const COOKIE_CATEGORIES = {
   NECESSARY: 'necessary',
   ANALYTICS: 'analytics'
@@ -9,6 +8,7 @@ export const COOKIE_CATEGORIES = {
 export const initCookieConsent = () => {
   // Add custom styles to match our theme
   const style = document.createElement('style');
+
   style.innerHTML = `
     #cc-main {
       /* Font */
@@ -100,12 +100,63 @@ export const initCookieConsent = () => {
                     {
                       name: '_ga',
                       domain: window.location.hostname,
-                      desc: ' Used by Google Analytics to distinguish unique users.'
+                      desc: 'Used by Google Analytics to distinguish unique users.'
                     },
                     {
                       name: '_gid',
                       domain: window.location.hostname,
                       desc: 'Used by Google Analytics to distinguish unique users.'
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        fi: {
+          consentModal: {
+            title: 'Yksityisyysasetukset',
+            description: 'Tämä sivusto käyttää evästeitä liikenteen analysointiin ja käyttökokemuksen parantamiseen.',
+            acceptAllBtn: 'Hyväksy kaikki',
+            acceptNecessaryBtn: 'Hyväksy vain välttämättömät',
+            showPreferencesBtn: 'Hallitse asetuksia',
+          },
+          preferencesModal: {
+            title: 'Evästeasetukset',
+            acceptAllBtn: 'Hyväksy kaikki',
+            acceptNecessaryBtn: 'Hyväksy vain välttämättömät',
+            savePreferencesBtn: 'Tallenna asetukset',
+            closeIconLabel: 'Sulje ikkuna',
+            sections: [
+              {
+                title: 'Miten käytämme evästeitä',
+                description: 'Käytämme evästeitä varmistaaksemme perustoiminnallisuuden ja analysoidaksemme liikennettä anonymisoidulla datalla.'
+              },
+              {
+                title: 'Välttämättömät evästeet',
+                description: 'Nämä evästeet ovat välttämättömiä sivuston toiminnan kannalta.',
+                linkedCategory: 'necessary'
+              },
+              {
+                title: 'Analytiikkaevästeet',
+                description: 'Nämä evästeet auttavat meitä ymmärtämään, miten kävijät käyttävät sivustoamme. Kaikki data on anonymisoitu.',
+                linkedCategory: 'analytics',
+                cookieTable: {
+                  headers: {
+                    name: 'Eväste',
+                    domain: 'Verkkotunnus',
+                    desc: 'Kuvaus'
+                  },
+                  body: [
+                    {
+                      name: '_ga',
+                      domain: window.location.hostname,
+                      desc: 'Google Analyticsin käyttämä eväste yksilöllisten käyttäjien tunnistamiseen.'
+                    },
+                    {
+                      name: '_gid',
+                      domain: window.location.hostname,
+                      desc: 'Google Analyticsin käyttämä eväste yksilöllisten käyttäjien tunnistamiseen.'
                     }
                   ]
                 }

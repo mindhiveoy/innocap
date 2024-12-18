@@ -28,6 +28,7 @@ import LocalGasStation from '@mui/icons-material/LocalGasStation';
 import EvStation from '@mui/icons-material/EvStation';
 import DryCleaning from '@mui/icons-material/DryCleaning';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
+import { useTranslation } from 'react-i18next';
 
 
 interface IndicatorCardProps {
@@ -311,6 +312,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const { t } = useTranslation();
 
   const isSelected = useMemo(() =>
     selectedIndicator?.id === indicator?.id,
@@ -455,7 +457,9 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
         <TitleSection>
           <Box display='flex' alignItems='center' gap={1}>
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
-            <Typography variant='paragraph' color='text.secondary'>Green transition</Typography>
+            <Typography variant='paragraph' color='text.secondary'>
+              {indicator.category === 'Green' ? t('indicators.greenTransition') : ''}
+            </Typography>
             <IconWrapper>
               <GradientIcon color={indicator?.color || '#083553'} iconName={indicator?.iconName || 'HomeIcon'} />
             </IconWrapper>
@@ -493,7 +497,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
               }
             }}
             disabled={isPinningDisabled}
-            aria-label={pinned ? 'Unpin from map' : 'Pin to map'}
+            aria-label={pinned ? t('indicators.unpinFromMap') : t('indicators.pinToMap')}
             style={{
               color: pinned ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-primary-darkest)',
             }}
@@ -504,10 +508,10 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
             </span>
             <PinText className={pinned ? 'pinned' : ''}>
               {pinned
-                ? 'Unpin from map'
+                ? t('indicators.unpinFromMap')
                 : isPinningDisabled
-                  ? 'Maximum pins reached'
-                  : 'Pin to map'
+                  ? t('indicators.maxPinsReached')
+                  : t('indicators.pinToMap')
               }
             </PinText>
           </PinButtonContent>
@@ -518,14 +522,14 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
               value={selectedYear}
               exclusive
               onChange={handleYearChange}
-              aria-label={`Select year for ${indicator.indicatorNameEn}`}
+              aria-label={t('indicators.selectYear', { indicator: indicator.indicatorNameEn })}
             >
               {years.map((year) => (
                 <ToggleButton 
                   key={year} 
                   value={year}
                   onKeyDown={(e) => handleYearKeyDown(e, year)}
-                  aria-label={`Year ${year}`}
+                  aria-label={t('indicators.yearButton', { year })}
                 >
                   {year}
                 </ToggleButton>

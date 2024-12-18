@@ -53,7 +53,9 @@
     "pinToMap": "Pin to map",
     "unpinFromMap": "Unpin from map",
     "maxPinsReached": "Maximum pins reached",
-    "selectYear": "Select year for {{indicator}}"
+    "selectYear": "Select year for {{indicator}}",
+    "yearButton": "Year {{year}}",
+    "greenTransition": "Green transition"
   },
   "cookieConsent": {
     "modal": {

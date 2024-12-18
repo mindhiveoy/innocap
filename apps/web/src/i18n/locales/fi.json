@@ -48,7 +48,9 @@
     "pinToMap": "Kiinnitä karttaan",
     "unpinFromMap": "Poista kiinnitys",
     "maxPinsReached": "Maksimimäärä kiinnityksiä",
-    "selectYear": "Valitse vuosi indikaattorille {{indicator}}"
+    "selectYear": "Valitse vuosi indikaattorille {{indicator}}",
+    "yearButton": "Vuosi {{year}}",
+    "greenTransition": "Vihreä siirtymä"
   },
   "cookieConsent": {
     "modal": {

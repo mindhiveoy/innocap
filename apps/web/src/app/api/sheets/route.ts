@@ -28,8 +28,8 @@ async function getAuthenticatedDoc() {
 const naturaIndicator: Indicator = {
   id: SPECIAL_INDICATORS.NATURA_2000,
   category: 'Green',
-  group: 'Protected Areas',
-  groupFI: 'Suojelualueet',
+  group: 'Land use',
+  groupFI: 'Maankäyttö',
   indicatorNameEn: 'Natura 2000 areas',
   indicatorNameFi: 'Natura 2000 -suojelualueet',
   indicatorType: 'Natura',
@@ -39,6 +39,22 @@ const naturaIndicator: Indicator = {
   sourceEn: 'Finnish Environment Institute (SYKE)',
   sourceFi: 'Suomen ympäristökeskus (SYKE)',
   sourceUrl: 'https://paikkatiedot.ymparisto.fi',
+  showOnMap: 'true'
+} as const;
+
+const organicFieldIndicator: Indicator = {
+  id: SPECIAL_INDICATORS.ORGANIC_FARMING,
+  category: 'Green',
+  group: 'Land use',
+  groupFI: 'Maankäyttö',
+  indicatorNameEn: 'Organic farming areas',
+  indicatorNameFi: 'Luomupellot',
+  indicatorType: 'Natura',
+  indicatorTypeIcon: 'Terrain',
+  iconName: 'Agriculture',
+  color: '#A7C63A',
+  sourceEn: 'Finnish Food Authority',
+  sourceFi: 'Ruokavirasto',
   showOnMap: 'true'
 } as const;
 
@@ -67,9 +83,10 @@ async function fetchAndProcessData() {
   // Process all data
   const sheetIndicators = processIndicatorRows(indicatorRows);
   const filteredIndicators = sheetIndicators.filter(
-    indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000
+    indicator => indicator.id !== SPECIAL_INDICATORS.NATURA_2000 && 
+                 indicator.id !== SPECIAL_INDICATORS.ORGANIC_FARMING
   );
-  const allIndicators = [naturaIndicator, ...filteredIndicators];
+  const allIndicators = [naturaIndicator, organicFieldIndicator, ...filteredIndicators];
 
   const municipalityData = processMunicipalityRows(municipalityRows);
   const markerData = markerRows.length > 0 ? processMarkerRows(markerRows) : [];

@@ -10,7 +10,8 @@ export const INDICATORS = {
 export type IndicatorId = typeof INDICATORS[keyof typeof INDICATORS];
 
 export const SPECIAL_INDICATORS = {
-  NATURA_2000: 'NATURA_2000'
+  NATURA_2000: 'NATURA_2000',
+  ORGANIC_FARMING: 'ORGANIC_FARMING'
 } as const;
 
 export type SpecialIndicatorId = typeof SPECIAL_INDICATORS[keyof typeof SPECIAL_INDICATORS];
