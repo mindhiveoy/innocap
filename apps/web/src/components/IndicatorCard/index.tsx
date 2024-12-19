@@ -93,17 +93,25 @@ const PinButton = styled.div(({ theme }) => `
   border-radius: ${theme.shape.borderRadius}px;
   margin-left: -1;
   width: 100%;
+  color: ${theme.palette.primary.darkest};
+  transition: color 0.2s ease;
 
-    &:hover {
-    background-color: transparent;
+  &:hover {
     color: #dd7c00;
+    
+    .pin-icon, ${PinText} {
+      color: #dd7c00;
+    }
   }
   
-  &.pinned .pin-icon {
-    position: relative;
-    top: -1px;
-    transform: rotate(-45deg);
+  &.pinned {
     color: #dd7c00;
+    
+    .pin-icon {
+      position: relative;
+      top: -1px;
+      transform: rotate(-45deg);
+    }
   }
 
   &.disabled {
@@ -128,11 +136,6 @@ const PinButtonContent = styled.button(({ theme }) => `
   color: inherit;
   text-align: left;
   
-  &:hover {
-    background-color: transparent;
-    color: #dd7c00;
-  }
-  
   &:focus-visible {
     outline: none;
     padding: ${theme.spacing(0, 1)};
@@ -146,29 +149,20 @@ const PinButtonContent = styled.button(({ theme }) => `
     transition: transform 0.2s ease-in-out;
   }
 
-  .MuiSvgIcon-root[data-testid="PushPinOutlinedIcon"] {
-    margin-left: -5px !important;
-    margin-right: 5px !important;
-  }
-
   &:disabled {
     cursor: not-allowed;
   }
 `);
 
-const PinText = styled(Typography)(({ theme }) => `
+const PinText = styled(Typography)`
   font-size: 0.75rem;
-  color: ${theme.palette.primary.darkest};
+  color: inherit;
   transition: font-weight 0.1s ease-in-out;
 
-  &:hover {
+  &.pinned {
     font-weight: 800;
   }
-
- &.pinned {
-    font-weight: 800;
-  }
-`);
+`;
 
 const SourceTextWrapper = styled.div`
   width: 100%;
