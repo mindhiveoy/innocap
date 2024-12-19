@@ -9,7 +9,7 @@ import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@repo/shared';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),

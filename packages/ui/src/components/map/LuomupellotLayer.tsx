@@ -12,6 +12,7 @@ import { Typography, Box } from '@mui/material';
 import styled from '@emotion/styled';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
+import { useLanguage, type Language } from '@repo/shared';
 
 const PopupContainer = styled.div(({ theme }) => `
   background-color: #fff;
@@ -40,8 +41,26 @@ const LUOMUPELLOT_STYLE = {
   fillOpacity: 0.3,
 };
 
+const translations = {
+  fi: {
+    organicField: 'Luomupelto',
+    area: 'Pinta-ala',
+    year: 'Vuosi'
+  },
+  en: {
+    organicField: 'Organic field',
+    area: 'Area',
+    year: 'Year'
+  }
+} as const;
+
+type TranslationsType = typeof translations;
+type TranslationKeys = keyof TranslationsType;
+
 export const LuomupellotLayer = ({ selectedIndicator, pinnedIndicator }: LuomupellotLayerProps) => {
   const map = useMap();
+  const { currentLanguage } = useLanguage();
+  const t = translations[currentLanguage as TranslationKeys];
   const popupRefs = useRef<(L.Popup | null)[]>([]);
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
   const zoom = map.getZoom();
@@ -125,14 +144,14 @@ export const LuomupellotLayer = ({ selectedIndicator, pinnedIndicator }: Luomupe
               >
                 <PopupContainer>
                   <Typography variant="label" color="primary.dark">
-                    Luomupelto {feature.properties?.PERUSLOHKOTUNNUS}
+                    {t.organicField} <br/> {feature.properties?.PERUSLOHKOTUNNUS}
                   </Typography>
-                  <Box display="flex" flexDirection="column" gap={0.5}>
+                  <Box display="flex" flexDirection="column" gap={0.5} mt={1}>
                     <Typography variant="paragraph">
-                      Pinta-ala: {feature.properties?.PINTA_ALA} ha
+                      {t.area}: {feature.properties?.PINTA_ALA} ha
                     </Typography>
                     <Typography variant="paragraph">
-                      Vuosi: {feature.properties?.VUOSI}
+                      {t.year}: {feature.properties?.VUOSI}
                     </Typography>
                   </Box>
                 </PopupContainer>
