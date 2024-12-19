@@ -77,6 +77,10 @@ const NavItem = styled.button(({ theme }) => `
   background: none;
   border-radius: ${theme.shape.borderRadius}px;
   transition: all 0.2s ease-in-out;
+  color: ${theme.palette.text.primary};
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
 
   &:hover {
     background-color: ${theme.palette.action.hover};
@@ -117,8 +121,8 @@ const ContentDrawer = styled.div(({ theme }) => `
     left: 0;
     bottom: ${NAV_HEIGHT}px;
     width: 100%;
-    height: calc(100vh - ${NAV_HEIGHT}px);
-    max-height: calc(100vh - ${NAV_HEIGHT}px);
+    height: calc(100dvh - ${NAV_HEIGHT}px);
+    max-height: calc(100dvh - ${NAV_HEIGHT}px);
     border-top: 1px solid ${theme.palette.divider};
     transform: translateY(100%);
     border-top-left-radius: ${theme.shape.borderRadius}px;
