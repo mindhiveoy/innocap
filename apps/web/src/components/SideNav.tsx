@@ -21,7 +21,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
 import { openPreferences } from '@/utils/cookieConsent';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@repo/shared';
 import { useTranslation } from 'react-i18next';
 import { Trans } from 'react-i18next';
 import React from 'react';

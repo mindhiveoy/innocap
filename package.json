@@ -5,7 +5,7 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "test": "turbo test"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
@@ -13,7 +13,7 @@
     "node-fetch": "^3.3.2",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
-    "turbo": "^2.2.3",
+    "turbo": "latest",
     "typescript": "^5.7.2",
     "vercel": "^37.12.1"
   },
@@ -22,9 +22,8 @@
   },
   "packageManager": "yarn@4.5.1",
   "workspaces": [
-    "packages/*",
     "apps/*",
-    "scripts"
+    "packages/*"
   ],
   "dependencies": {
     "@emotion/styled": "^11.13.0",
