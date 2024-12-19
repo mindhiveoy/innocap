@@ -87,7 +87,7 @@ export const LuomupellotLayer = ({ selectedIndicator, pinnedIndicator }: Luomupe
         closeButton: true,
         closeOnClick: false,
         autoClose: false,
-        className: 'draggable-popup',
+        className: 'draggable-popup municipality-popup',
         autoPan: false,
       });
 

@@ -15,7 +15,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
 import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
-import { Indicator } from '@repo/ui/types/indicators';
+import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
@@ -310,8 +310,8 @@ interface MenuItem {
 }
 
 export function SideNav() {
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [selectedItem, setSelectedItem] = useState<string | null>('welcome');
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(true);
   const { indicators, error } = useData();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
@@ -325,7 +325,7 @@ export function SideNav() {
       id: 'welcome'
     },
     {
-      text: t('navigation.green'),
+      text: t('navigation.indicators'),
       icon: (
         <Box
           component="img"
@@ -335,11 +335,11 @@ export function SideNav() {
           sx={{
             width: 24,
             height: 24,
-            filter: selectedItem === 'green' ? 'brightness(0) invert(1)' : 'none'
+            filter: selectedItem === 'indicators' ? 'brightness(0) invert(1)' : 'none'
           }}
         />
       ),
-      id: 'green'
+      id: 'indicators'
     },
     {
       text: t('navigation.about'),
@@ -374,14 +374,13 @@ export function SideNav() {
         indicators: []
       };
     }
-
     acc[indicator.group].indicators.push(indicator);
     return acc;
   }, {});
 
   // Focus management when opening/closing drawer
   useEffect(() => {
-    if (drawerOpen) {
+    if (drawerOpen && lastActiveElementRef.current) {  // Only focus if we have a previous element
       lastActiveElementRef.current = document.activeElement as HTMLElement;
       const closeButton = drawerRef.current?.querySelector('button') as HTMLElement;
       closeButton?.focus();
@@ -522,7 +521,7 @@ export function SideNav() {
               </DrawerContent>
             </>
           );
-        case 'green':
+        case 'indicators':
           return (
             <>
               <DrawerHeader>
@@ -550,21 +549,27 @@ export function SideNav() {
                 {error ? (
                   <Typography color="error">Error loading indicators</Typography>
                 ) : (
-                  Object.values(groupedIndicators || {}).map(({ group, groupFI, indicators }) => (
-                    <span key={group}>
-                      <GroupTitle variant='h2'>
-                        {currentLanguage === 'fi' ? groupFI : group}
-                      </GroupTitle>
-                      <Box key={group}>
-                        {indicators.map((indicator, index) => (
-                          <IndicatorCard
-                            key={`${indicator.id}-${index}`}
-                            indicator={indicator}
-                          />
-                        ))}
-                      </Box>
-                    </span>
-                  ))
+                  Object.entries(groupedIndicators || {})
+                    .sort(([, a], [, b]) => {
+                      const aHasSpecial = a.indicators.some(i => i.indicatorType === IndicatorType.Special);
+                      const bHasSpecial = b.indicators.some(i => i.indicatorType === IndicatorType.Special);
+                      return aHasSpecial ? -1 : bHasSpecial ? 1 : 0;
+                    })
+                    .map(([, groupData]) => (
+                      <span key={groupData.group}>
+                        <GroupTitle variant='h2'>
+                          {currentLanguage === 'fi' ? groupData.groupFI : groupData.group}
+                        </GroupTitle>
+                        <Box>
+                          {groupData.indicators.map((indicator, index) => (
+                            <IndicatorCard
+                              key={`${indicator.id}-${index}`}
+                              indicator={indicator}
+                            />
+                          ))}
+                        </Box>
+                      </span>
+                    ))
                 )}
               </DrawerContent>
             </>
