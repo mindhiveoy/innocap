@@ -8,20 +8,23 @@ import {
   Button,
   ToggleButtonGroup,
   ToggleButton,
+  Link,
 } from '@mui/material';
 import styled from '@emotion/styled';
 import HomeIcon from '@mui/icons-material/Home';
 import { IndicatorCard } from './IndicatorCard';
 import { useData } from '@/contexts/DataContext';
 import { NAV_WIDTH, NAV_HEIGHT, DRAWER_WIDTH } from '@/constants/layout';
-import { Indicator } from '@repo/ui/types/indicators';
+import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import Image from 'next/image';
 import { openPreferences } from '@/utils/cookieConsent';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useLanguage } from '@/contexts/LanguageContext';
+import { useLanguage } from '@repo/shared';
 import { useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
+import React from 'react';
 
 const StyledNav = styled.nav(({ theme }) => `
   background-color: ${theme.palette.background.paper};
@@ -74,6 +77,10 @@ const NavItem = styled.button(({ theme }) => `
   background: none;
   border-radius: ${theme.shape.borderRadius}px;
   transition: all 0.2s ease-in-out;
+  color: ${theme.palette.text.primary};
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: none;
+  appearance: none;
 
   &:hover {
     background-color: ${theme.palette.action.hover};
@@ -114,8 +121,8 @@ const ContentDrawer = styled.div(({ theme }) => `
     left: 0;
     bottom: ${NAV_HEIGHT}px;
     width: 100%;
-    height: calc(100vh - ${NAV_HEIGHT}px);
-    max-height: calc(100vh - ${NAV_HEIGHT}px);
+    height: calc(100dvh - ${NAV_HEIGHT}px);
+    max-height: calc(100dvh - ${NAV_HEIGHT}px);
     border-top: 1px solid ${theme.palette.divider};
     transform: translateY(100%);
     border-top-left-radius: ${theme.shape.borderRadius}px;
@@ -276,6 +283,16 @@ const LanguageSelector = styled(ToggleButtonGroup)(({ theme }) => `
   }
 `);
 
+const StyledLink = styled(Link)(({ theme }) => `
+  font-size: 14px;
+  letter-spacing: 0.14px;
+  font-weight: 500;
+  color: ${theme.palette.primary.main};
+  &:hover {
+    font-weight: 600;
+  }
+`);
+
 interface GroupedIndicators {
   [key: string]: {
     group: string;
@@ -283,9 +300,6 @@ interface GroupedIndicators {
     indicators: Indicator[];
   };
 }
-
-
-
 
 interface MenuItem {
   text?: string;
@@ -296,8 +310,8 @@ interface MenuItem {
 }
 
 export function SideNav() {
-  const [selectedItem, setSelectedItem] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [selectedItem, setSelectedItem] = useState<string | null>('welcome');
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(true);
   const { indicators, error } = useData();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
@@ -306,12 +320,12 @@ export function SideNav() {
 
   const menuItems: MenuItem[] = [
     {
-      text: 'Welcome',
+      text: t('navigation.welcome'),
       icon: <HomeIcon />,
       id: 'welcome'
     },
     {
-      text: 'Green',
+      text: t('navigation.indicators'),
       icon: (
         <Box
           component="img"
@@ -321,14 +335,14 @@ export function SideNav() {
           sx={{
             width: 24,
             height: 24,
-            filter: selectedItem === 'green' ? 'brightness(0) invert(1)' : 'none'
+            filter: selectedItem === 'indicators' ? 'brightness(0) invert(1)' : 'none'
           }}
         />
       ),
-      id: 'green'
+      id: 'indicators'
     },
     {
-      text: 'About',
+      text: t('navigation.about'),
       icon: (
         <Box
           component="img"
@@ -336,14 +350,14 @@ export function SideNav() {
           sx={{
             width: 24,
             height: 24,
-            filter: selectedItem === 'about' ? 'brightness(0) invert(1)' : 'none'
+            filter: selectedItem === 'information' ? 'brightness(0) invert(1)' : 'none'
           }}
         />
       ),
-      id: 'about'
+      id: 'information'
     },
     {
-      text: 'Settings',
+      text: t('navigation.settings'),
       icon: <SettingsIcon />,
       id: 'settings'
     }
@@ -360,14 +374,13 @@ export function SideNav() {
         indicators: []
       };
     }
-
     acc[indicator.group].indicators.push(indicator);
     return acc;
   }, {});
 
   // Focus management when opening/closing drawer
   useEffect(() => {
-    if (drawerOpen) {
+    if (drawerOpen && lastActiveElementRef.current) {  // Only focus if we have a previous element
       lastActiveElementRef.current = document.activeElement as HTMLElement;
       const closeButton = drawerRef.current?.querySelector('button') as HTMLElement;
       closeButton?.focus();
@@ -433,20 +446,65 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  Southern Savo Green and Digital Transition Dashboard
+                  {t('welcome.title')}
                 </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
+                <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
-                <Typography variant="lead" gutterBottom>
-                  We are building public sector innovation capacity towards digital-driven NPA communities
-                </Typography>
-                <Typography variant="paragraph" sx={{ mb: 4 }}>
-                  This dashboard visualizes the green and digital transition indicators for the Southern Savo region.
+                <GroupTitle variant='h2'>
+                  {t('welcome.subtitle')}
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {t('welcome.content.intro.text')}
                   <br />
                   <br />
-                  The indicators help monitor and understand the progress of municipalities in their journey towards
-                  sustainable and digital future.
+                  {t('welcome.content.purpose.text')}
+                  <br />
+                  <br />
+                  <Trans
+                    i18nKey="welcome.content.about.text"
+                    components={{
+                      innocapLink: (
+                        <StyledLink 
+                          href={t('welcome.content.about.links.innocapHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      ),
+                      hidseLink: (
+                        <StyledLink 
+                          href={t('welcome.content.about.links.hidseHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      ),
+                      ruraliaLink: (
+                        <StyledLink 
+                          href={t('welcome.content.about.links.ruraliaHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      ),
+                      mindhiveLink: (
+                        <StyledLink 
+                          href={t('welcome.content.about.links.mindhiveHref')} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          color="primary"
+                        />
+                      )
+                    }}
+                    values={{
+                      innocap: t('welcome.content.about.links.innocap'),
+                      innocapText: t('welcome.content.about.innocapText'),
+                      hidse: t('welcome.content.about.links.hidse'),
+                      ruralia: t('welcome.content.about.links.ruralia'),
+                      mindhive: t('welcome.content.about.links.mindhive')
+                    }}
+                  />
                 </Typography>
                 <LogoContainer>
                   <Box 
@@ -463,7 +521,7 @@ export function SideNav() {
               </DrawerContent>
             </>
           );
-        case 'green':
+        case 'indicators':
           return (
             <>
               <DrawerHeader>
@@ -483,34 +541,40 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  Green Transition Indicators
+                  {t('indicators.title')}
                 </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
+                <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
                 {error ? (
                   <Typography color="error">Error loading indicators</Typography>
                 ) : (
-                  Object.values(groupedIndicators || {}).map(({ group, indicators }) => (
-                    <span key={group}>
-                      <GroupTitle variant='h2'>
-                        {group}
-                      </GroupTitle>
-                      <Box key={group}>
-                        {indicators.map((indicator, index) => (
-                          <IndicatorCard
-                            key={`${indicator.id}-${index}`}
-                            indicator={indicator}
-                          />
-                        ))}
-                      </Box>
-                    </span>
-                  ))
+                  Object.entries(groupedIndicators || {})
+                    .sort(([, a], [, b]) => {
+                      const aHasSpecial = a.indicators.some(i => i.indicatorType === IndicatorType.Special);
+                      const bHasSpecial = b.indicators.some(i => i.indicatorType === IndicatorType.Special);
+                      return aHasSpecial ? -1 : bHasSpecial ? 1 : 0;
+                    })
+                    .map(([, groupData]) => (
+                      <span key={groupData.group}>
+                        <GroupTitle variant='h2'>
+                          {currentLanguage === 'fi' ? groupData.groupFI : groupData.group}
+                        </GroupTitle>
+                        <Box>
+                          {groupData.indicators.map((indicator, index) => (
+                            <IndicatorCard
+                              key={`${indicator.id}-${index}`}
+                              indicator={indicator}
+                            />
+                          ))}
+                        </Box>
+                      </span>
+                    ))
                 )}
               </DrawerContent>
             </>
           );
-        case 'about':
+        case 'information':
           return (
             <>
               <DrawerHeader>
@@ -530,43 +594,62 @@ export function SideNav() {
                   </Box>
                 </CloseButton>
                 <Typography variant="h2" color="primary.darkest">
-                  About
+                  {t('information.title')}
                 </Typography>
-                <Box width={40} /> {/* Spacer to balance the close button */}
+                <Box width={40} />
               </DrawerHeader>
               <DrawerContent>
-                <Typography variant="lead" gutterBottom>
-                  Learn how to use the platform and understand the indicators
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {t('information.description')}
                 </Typography>
-                <Typography variant="paragraph" sx={{ mb: 2 }}>
-                  The dashboard provides an interactive way to explore and compare different indicators across municipalities in the Southern Savo region.
+
+                <GroupTitle variant='h2'>
+                  {t('information.sections.navigation.title')}
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {(t('information.sections.navigation.items', { returnObjects: true }) as string[]).map((item: string) => (
+                    <React.Fragment key={item}>
+                      • {item}
+                      <br />
+                    </React.Fragment>
+                  ))}
+                </Typography>
+
+                <GroupTitle variant='h2'>
+                  {t('information.sections.indicators.title')}
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {(t('information.sections.indicators.items', { returnObjects: true }) as string[]).map((item: string) => (
+                    <React.Fragment key={item}>
+                      • {item}
+                      <br />
+                    </React.Fragment>
+                  ))}
+                </Typography>
+
+                <GroupTitle variant='h2'>
+                  {t('information.sections.ai.title')}
+                </GroupTitle>
+                <Typography variant="paragraph" sx={{ mb: 3 }}>
+                  {(t('information.sections.ai.items', { returnObjects: true }) as string[]).map((item: string) => (
+                    <React.Fragment key={item}>
+                      • {item}
+                      <br />
+                    </React.Fragment>
+                  ))}
                 </Typography>
                 <GroupTitle variant='h2'>
-                  Basic Navigation
+                  {t('information.sections.terms.title')}
                 </GroupTitle>
-                <Typography variant="paragraph" sx={{ mb: 2 }}>
-                  • Click on municipalities to see detailed information
+                <Box sx={{ mb: 3 }}>
+                  • <StyledLink href={t('information.sections.terms.termsLink')} target="_blank" rel="noopener noreferrer">
+                  {t('information.sections.terms.terms')}
+                  </StyledLink>
                   <br />
-                  • Use the side navigation to switch between different indicator categories
-                  <br />
-                  • Explore the map to understand regional patterns
-                </Typography>
-                <GroupTitle variant='h2'>
-                  Working with Indicators
-                </GroupTitle>
-                <Typography variant="paragraph" sx={{ mb: 2 }}>
-                  • Select an indicator to view it on the map
-                  <br />
-                  • Pin an indicator to compare it with another
-                </Typography>
-                <GroupTitle variant='h2'>
-                  AI Assistant
-                </GroupTitle>
-                <Typography variant="paragraph">
-                  • An AI assistant is available to help answer your questions
-                  <br />
-                  • Please note that the assistant is in development phase and may have limited knowledge
-                </Typography>
+                  • <StyledLink href={t('information.sections.terms.privacyLink')} target="_blank" rel="noopener noreferrer">
+                    {t('information.sections.terms.privacy')}
+                  </StyledLink>
+                </Box>
               </DrawerContent>
             </>
           );
@@ -659,7 +742,7 @@ export function SideNav() {
               color="primary.dark"
               textAlign="center"
             >
-              Vihreä siirtymä Etelä-Savossa
+              {t('global.name')}
             </Typography>
           </LogoSection>
           {menuItems.map((item) => {
