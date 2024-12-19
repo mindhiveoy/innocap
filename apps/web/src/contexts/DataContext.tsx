@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { Indicator, MunicipalityLevelData, MarkerData, BarChartData } from '@repo/ui/types/indicators';
+import { Indicator, MunicipalityLevelData, MarkerData, BarChartData, IndicatorType, SPECIAL_INDICATORS } from '@repo/ui/types/indicators';
 import { fetchFirebaseData } from '@/utils/firebaseOperations';
 
 interface DataContextType {
@@ -28,7 +28,20 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       try {
         const data = await fetchFirebaseData();
         
-        // Sort all data by year in descending order (latest first)
+        const sortedIndicators = [...(data.indicators || [])].sort((a, b) => {
+          const aIsSpecial = a.indicatorType === IndicatorType.Special;
+          const bIsSpecial = b.indicatorType === IndicatorType.Special;
+          
+          // Natura 2000 is always first
+          if (aIsSpecial && bIsSpecial) {
+            if (a.id === SPECIAL_INDICATORS.NATURA_2000) return -1;
+            if (b.id === SPECIAL_INDICATORS.NATURA_2000) return 1;
+          }
+          
+          // Otherwise sort by special type
+          return aIsSpecial ? -1 : bIsSpecial ? 1 : 0;
+        });
+
         const sortedMunicipalityData = [...(data.municipalityLevelData || [])].sort(
           (a, b) => b.year - a.year
         );
@@ -41,7 +54,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           (a, b) => b.year - a.year
         );
 
-        setIndicators(data.indicators || []);
+        setIndicators(sortedIndicators);
         setMunicipalityData(sortedMunicipalityData);
         setMarkerData(sortedMarkerData);
         setBarChartData(sortedBarChartData);

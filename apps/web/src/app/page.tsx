@@ -9,6 +9,7 @@ import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
 import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
 import { LoadingOverlay } from '@/components/LoadingOverlay';
 import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
+import { useLanguage } from '@repo/shared';
 
 const Map = dynamic(
   () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
@@ -32,7 +33,7 @@ const MAP_BOUNDS: LatLngBoundsExpression = [
 
 const isOverlayCompatibleType = (indicator: Indicator | null) => {
   return indicator?.indicatorType === IndicatorType.MunicipalityLevel || 
-         indicator?.indicatorType === IndicatorType.Natura;
+         indicator?.indicatorType === IndicatorType.Special;
 };
 
 export default function Home() {
@@ -40,6 +41,7 @@ export default function Home() {
   const { selectedIndicator, pinnedIndicator, isCompareMode } = useIndicator();
   const center: LatLngTuple = [61.90, 27.70];
   const zoom = 9;
+  const { currentLanguage } = useLanguage();
 
   const showSplitView = isCompareMode &&
     isOverlayCompatibleType(pinnedIndicator) &&
@@ -70,6 +72,7 @@ export default function Home() {
             center={center}
             zoom={zoom}
             maxBounds={MAP_BOUNDS}
+            language={currentLanguage}
           />
         ) : (
             <Map
@@ -78,13 +81,14 @@ export default function Home() {
             zoom={zoom}
             maxBounds={MAP_BOUNDS}
             minZoom={8}
-            maxZoom={12}
+            maxZoom={13}
             municipalityData={municipalityData}
             markerData={markerData}
             barChartData={barChartData}
             selectedIndicator={selectedIndicator}
             pinnedIndicator={pinnedIndicator}
             isPinned={!!pinnedIndicator}
+            language={currentLanguage}
           />
         )}
       </Box>

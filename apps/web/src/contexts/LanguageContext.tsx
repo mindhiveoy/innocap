@@ -1,18 +1,11 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as CookieConsent from 'vanilla-cookieconsent';
+import { LanguageContext, useLanguage, type Language } from '@repo/shared';
 
-type Language = 'en' | 'fi';
-
-interface LanguageContextType {
-  currentLanguage: Language;
-  changeLanguage: (lang: Language) => void;
-}
-
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
+export { useLanguage };
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState<Language>(
@@ -31,12 +24,4 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       {children}
     </LanguageContext.Provider>
   );
-}
-
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  return context;
-}; 
+} 

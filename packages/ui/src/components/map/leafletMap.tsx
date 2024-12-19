@@ -22,6 +22,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
 import { DraggablePopup } from './DraggablePopup';
 import { NaturaLayer } from './NaturaLayer';
+import { LuomupellotLayer } from './LuomupellotLayer';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -39,6 +40,7 @@ interface LeafletMapProps {
   onMapMount?: (map: L.Map) => void;
   pinnedIndicator?: Indicator | null;
   tabIndex?: number;
+  language?: string;
 }
 
 const geoJSONStyle = {
@@ -188,6 +190,7 @@ export function LeafletMap({
   onMapMount,
   pinnedIndicator,
   tabIndex,
+  language = 'en',
 }: LeafletMapProps) {
 
   const popupRefs = useRef<(L.Popup | null)[]>([]);
@@ -342,7 +345,7 @@ export function LeafletMap({
               initialLatLng: null
             });
           }
-
+          console.log('language from onEachFeatureCallback', language);
           root.render(
             <ThemeProvider theme={theme}>
               <MunicipalityTooltip
@@ -354,6 +357,7 @@ export function LeafletMap({
                 popupRefs={popupRefs}
                 dragRefs={dragRefs}
                 map={mapRef.current!}
+                language={language}
               />
             </ThemeProvider>
           );
@@ -364,12 +368,13 @@ export function LeafletMap({
         }
       });
     };
-  }, [activeIndicator, municipalityData, geoJsonStyle]);
+  }, [activeIndicator, municipalityData, geoJsonStyle, language]);
 
   const markerElements = useMemo(() => {
     if (!filteredMarkerData.length) {
       return null;
     }
+
 
     return (
       <LayerGroup>
@@ -410,18 +415,31 @@ export function LeafletMap({
                   <PopupContainer>
                     <PopupContent>
                       <PhaseText variant='paragraph'>{marker.phase}</PhaseText>
-                      <PopupTitle variant='label'>{marker.descriptionEn}</PopupTitle>
-                      <Box display='flex' gap={2}>
-                        {marker.year &&
-                          <Typography variant='paragraph'>{marker.year}</Typography>}
-                        {marker.value !== null &&
-                          <Box display='flex' gap={0.3}>
-                            <Typography variant='paragraph'>{marker.value}</Typography>
-                            <Typography variant='paragraph'>{marker.unit}</Typography>
-                          </Box>}
-                      </Box>
-                      {marker.info &&
-                        <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>}
+                      <PopupTitle variant='label'>
+                        {language === 'fi' ? marker.descriptionFi : marker.descriptionEn}
+                      </PopupTitle>
+                      
+                      {/* Year is non-zero or value exists */}
+                      {((marker.year && marker.year !== 0) || (marker.value !== null && marker.value !== 0)) && (
+                        <Box display='flex' gap={2}>
+                          {/* Year exists and is not 0 */}
+                          {marker.year !== 0 && marker.year && (
+                            <Typography variant='paragraph'>{marker.year}</Typography>
+                          )}
+                          
+                          {/*Value exists and is not 0 */}
+                          {marker.value !== null && marker.value !== 0 && (
+                            <Box display='flex' gap={0.3}>
+                              <Typography variant='paragraph'>{marker.value}</Typography>
+                              <Typography variant='paragraph'>{marker.unit}</Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      )}
+                      
+                      {marker.info && (
+                        <PopupDescription variant='paragraph'>{marker.info}</PopupDescription>
+                      )}
                       <Typography variant='paragraph'>{marker.municipalityName}</Typography>
                       {marker.sourceUrl && (
                         <PopupLink href={marker.sourceUrl} target="_blank" rel="noopener noreferrer">
@@ -437,7 +455,7 @@ export function LeafletMap({
         })}
       </LayerGroup>
     );
-  }, [filteredMarkerData]);
+  }, [filteredMarkerData, language]);
 
   const barChartElements = useMemo(() => {
     if (!barChartData || !mapRef.current) return null;
@@ -522,6 +540,7 @@ export function LeafletMap({
                   popupRefs={popupRefs}
                   dragRefs={dragRefs}
                   map={mapRef.current!}
+                  language={language}
                 />
               </Popup>
             </Marker>
@@ -529,7 +548,7 @@ export function LeafletMap({
         })}
       </LayerGroup>
     );
-  }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current]);
+  }, [selectedIndicator, pinnedIndicator, barChartData, mapRef.current, language]);
 
   const mapContainerProps = useMemo(() => ({
     center,
@@ -543,6 +562,12 @@ export function LeafletMap({
     zoomControl,
     zoomSnap: 0.5,
     zoomDelta: 1,
+    renderer: new L.Canvas({ 
+      tolerance: 5,  // Reduce tolerance for more precise interactions
+      padding: 0.5   // Add minimal padding
+    }),
+    preferCanvas: true,
+    attributionControl: false
   }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
 
   const handleMapMount = useCallback((map: L.Map) => {
@@ -586,7 +611,7 @@ export function LeafletMap({
               <PushPinIcon fontSize="small" />
             </span>
             <Typography variant='label'>
-              {pinnedIndicator.indicatorNameEn}
+              {language === 'fi' ? pinnedIndicator.indicatorNameFi : pinnedIndicator.indicatorNameEn}
               {pinnedIndicator.selectedYear && (
                 <YearText variant='label'>
                   ({pinnedIndicator.selectedYear})
@@ -598,7 +623,7 @@ export function LeafletMap({
         {selectedIndicator && selectedIndicator.id !== pinnedIndicator?.id && (
           <SelectedOverlay>
             <Typography variant='label'>
-              {selectedIndicator.indicatorNameEn}
+              {language === 'fi' ? selectedIndicator.indicatorNameFi : selectedIndicator.indicatorNameEn}
               {selectedIndicator.selectedYear && (
                 <YearText variant='label'>
                   ({selectedIndicator.selectedYear})
@@ -609,7 +634,6 @@ export function LeafletMap({
         )}
       </OverlaysContainer>
       <MapContainer
-        attributionControl={false}
         {...mapContainerProps}
         ref={handleMapMount}
         className="leaflet-container-focusable"
@@ -619,7 +643,8 @@ export function LeafletMap({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
           className="grayscale-tiles"
         />
-        {/* Static base layer for borders */}
+        
+        {/* Base municipality boundaries */}
         <GeoJSON
           key="geojson-base"
           data={municipalityBoundaries}
@@ -627,17 +652,17 @@ export function LeafletMap({
           interactive={false}
         />
 
-        {/* Natura areas */}
-        <NaturaLayer
-          key="natura-layer"
-          selectedIndicator={selectedIndicator}
-          pinnedIndicator={pinnedIndicator}
-        />
-
         {/* Choropleth layer */}
         {activeIndicator && (
           <GeoJSON
-            key={`geojson-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}-${pinnedIndicator?.selectedYear || ''}-${isPinned}`}
+            key={[
+              'geojson',
+              selectedIndicator?.id || '',
+              pinnedIndicator?.id || '',
+              pinnedIndicator?.selectedYear || '',
+              isPinned,
+              language
+            ].join('-')}
             data={municipalityBoundaries}
             style={geoJsonStyle}
             onEachFeature={onEachFeatureCallback}
@@ -645,6 +670,18 @@ export function LeafletMap({
             bubblingMouseEvents={false}
           />
         )}
+
+        {/* Special layers */}
+        <NaturaLayer
+          key="natura-layer"
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={pinnedIndicator}
+        />
+        <LuomupellotLayer
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={pinnedIndicator}
+        />
+
         {markerElements}
         {barChartElements}
         {children}

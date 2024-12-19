@@ -28,6 +28,8 @@ import LocalGasStation from '@mui/icons-material/LocalGasStation';
 import EvStation from '@mui/icons-material/EvStation';
 import DryCleaning from '@mui/icons-material/DryCleaning';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 
 interface IndicatorCardProps {
@@ -91,12 +93,25 @@ const PinButton = styled.div(({ theme }) => `
   border-radius: ${theme.shape.borderRadius}px;
   margin-left: -1;
   width: 100%;
+  color: ${theme.palette.primary.darkest};
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #dd7c00;
+    
+    .pin-icon, ${PinText} {
+      color: #dd7c00;
+    }
+  }
   
-  &.pinned .pin-icon {
-    position: relative;
-    top: -1px;
-    transform: rotate(-45deg);
-    color: ${theme.palette.primary.dark};
+  &.pinned {
+    color: #dd7c00;
+    
+    .pin-icon {
+      position: relative;
+      top: -1px;
+      transform: rotate(-45deg);
+    }
   }
 
   &.disabled {
@@ -121,10 +136,6 @@ const PinButtonContent = styled.button(({ theme }) => `
   color: inherit;
   text-align: left;
   
-  &:hover {
-    background-color: transparent;
-  }
-  
   &:focus-visible {
     outline: none;
     padding: ${theme.spacing(0, 1)};
@@ -138,29 +149,20 @@ const PinButtonContent = styled.button(({ theme }) => `
     transition: transform 0.2s ease-in-out;
   }
 
-  .MuiSvgIcon-root[data-testid="PushPinOutlinedIcon"] {
-    margin-left: -5px !important;
-    margin-right: 5px !important;
-  }
-
   &:disabled {
     cursor: not-allowed;
   }
 `);
 
-const PinText = styled(Typography)(({ theme }) => `
+const PinText = styled(Typography)`
   font-size: 0.75rem;
-  color: ${theme.palette.primary.darkest};
+  color: inherit;
   transition: font-weight 0.1s ease-in-out;
 
-  &:hover {
+  &.pinned {
     font-weight: 800;
   }
-
- &.pinned {
-    font-weight: 800;
-  }
-`);
+`;
 
 const SourceTextWrapper = styled.div`
   width: 100%;
@@ -311,6 +313,10 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
   const sourceRef = useRef<HTMLDivElement>(null);
   const [isTextTruncated, setIsTextTruncated] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const { t } = useTranslation();
+  // currentLanguage is used in JSX for conditional rendering
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+  const { currentLanguage } = useLanguage();
 
   const isSelected = useMemo(() =>
     selectedIndicator?.id === indicator?.id,
@@ -428,12 +434,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
     if (element) {
       setIsTextTruncated(element.scrollWidth > element.clientWidth);
     }
-  }, [indicator?.sourceEn]);
-
-  const tooltipContent = useMemo(() =>
-    indicator?.sourceEn || '',
-    [indicator?.sourceEn]
-  );
+  }, [indicator?.sourceEn, indicator?.sourceFi]);
 
   if (!indicator) return null;
   return (
@@ -443,7 +444,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
-      aria-label={`${indicator.indicatorNameEn} indicator card`}
+      aria-label={`${currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn} indicator card`}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
@@ -455,30 +456,35 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
         <TitleSection>
           <Box display='flex' alignItems='center' gap={1}>
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
-            <Typography variant='paragraph' color='text.secondary'>Green transition</Typography>
+            <Typography variant='paragraph' color='text.secondary'>
+              {indicator.category === 'Green' ? t('indicators.greenTransition') : ''}
+            </Typography>
             <IconWrapper>
               <GradientIcon color={indicator?.color || '#083553'} iconName={indicator?.iconName || 'HomeIcon'} />
             </IconWrapper>
           </Box>
           <TitleRow>
             <Typography variant="label">
-              {indicator?.indicatorNameEn}
+              {currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn}
             </Typography>
           </TitleRow>
         </TitleSection>
       </CardHeader>
       {isTextTruncated ? (
-        <Tooltip title={tooltipContent} placement="right">
+        <Tooltip 
+          title={currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn} 
+          placement="right"
+        >
           <SourceTextWrapper>
             <SourceText ref={sourceRef} variant='paragraph'>
-              {indicator?.sourceEn}
+              {currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn}
             </SourceText>
           </SourceTextWrapper>
         </Tooltip>
       ) : (
         <SourceTextWrapper>
           <SourceText ref={sourceRef} variant='paragraph'>
-            {indicator?.sourceEn}
+            {currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn}
           </SourceText>
         </SourceTextWrapper>
       )}
@@ -493,7 +499,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
               }
             }}
             disabled={isPinningDisabled}
-            aria-label={pinned ? 'Unpin from map' : 'Pin to map'}
+            aria-label={pinned ? t('indicators.unpinFromMap') : t('indicators.pinToMap')}
             style={{
               color: pinned ? 'var(--mui-palette-primary-main)' : 'var(--mui-palette-primary-darkest)',
             }}
@@ -504,10 +510,10 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
             </span>
             <PinText className={pinned ? 'pinned' : ''}>
               {pinned
-                ? 'Unpin from map'
+                ? t('indicators.unpinFromMap')
                 : isPinningDisabled
-                  ? 'Maximum pins reached'
-                  : 'Pin to map'
+                  ? t('indicators.maxPinsReached')
+                  : t('indicators.pinToMap')
               }
             </PinText>
           </PinButtonContent>
@@ -518,14 +524,16 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
               value={selectedYear}
               exclusive
               onChange={handleYearChange}
-              aria-label={`Select year for ${indicator.indicatorNameEn}`}
+              aria-label={t('indicators.selectYear', { 
+                indicator: currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn 
+              })}
             >
               {years.map((year) => (
                 <ToggleButton 
                   key={year} 
                   value={year}
                   onKeyDown={(e) => handleYearKeyDown(e, year)}
-                  aria-label={`Year ${year}`}
+                  aria-label={t('indicators.yearButton', { year })}
                 >
                   {year}
                 </ToggleButton>
