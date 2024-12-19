@@ -93,12 +93,17 @@ const PinButton = styled.div(({ theme }) => `
   border-radius: ${theme.shape.borderRadius}px;
   margin-left: -1;
   width: 100%;
+
+    &:hover {
+    background-color: transparent;
+    color: #dd7c00;
+  }
   
   &.pinned .pin-icon {
     position: relative;
     top: -1px;
     transform: rotate(-45deg);
-    color: ${theme.palette.primary.dark};
+    color: #dd7c00;
   }
 
   &.disabled {
@@ -125,6 +130,7 @@ const PinButtonContent = styled.button(({ theme }) => `
   
   &:hover {
     background-color: transparent;
+    color: #dd7c00;
   }
   
   &:focus-visible {
