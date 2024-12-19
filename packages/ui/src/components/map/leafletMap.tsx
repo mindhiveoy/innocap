@@ -22,6 +22,7 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import { createMarkerIcon } from './DynamicIcon';
 import { DraggablePopup } from './DraggablePopup';
 import { NaturaLayer } from './NaturaLayer';
+import { LuomupellotLayer } from './LuomupellotLayer';
 
 interface LeafletMapProps {
   center: LatLngTuple;
@@ -561,6 +562,12 @@ export function LeafletMap({
     zoomControl,
     zoomSnap: 0.5,
     zoomDelta: 1,
+    renderer: new L.Canvas({ 
+      tolerance: 5,  // Reduce tolerance for more precise interactions
+      padding: 0.5   // Add minimal padding
+    }),
+    preferCanvas: true,
+    attributionControl: false
   }), [center, zoom, maxBounds, minZoom, maxZoom, zoomControl]);
 
   const handleMapMount = useCallback((map: L.Map) => {
@@ -627,7 +634,6 @@ export function LeafletMap({
         )}
       </OverlaysContainer>
       <MapContainer
-        attributionControl={false}
         {...mapContainerProps}
         ref={handleMapMount}
         className="leaflet-container-focusable"
@@ -637,19 +643,13 @@ export function LeafletMap({
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
           className="grayscale-tiles"
         />
-        {/* Static base layer for borders */}
+        
+        {/* Base municipality boundaries */}
         <GeoJSON
           key="geojson-base"
           data={municipalityBoundaries}
           style={baseStyle}
           interactive={false}
-        />
-
-        {/* Natura areas */}
-        <NaturaLayer
-          key="natura-layer"
-          selectedIndicator={selectedIndicator}
-          pinnedIndicator={pinnedIndicator}
         />
 
         {/* Choropleth layer */}
@@ -670,6 +670,18 @@ export function LeafletMap({
             bubblingMouseEvents={false}
           />
         )}
+
+        {/* Special layers */}
+        <NaturaLayer
+          key="natura-layer"
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={pinnedIndicator}
+        />
+        <LuomupellotLayer
+          selectedIndicator={selectedIndicator}
+          pinnedIndicator={pinnedIndicator}
+        />
+
         {markerElements}
         {barChartElements}
         {children}

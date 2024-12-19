@@ -2792,6 +2792,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@repo/scripts@workspace:scripts":
+  version: 0.0.0-use.local
+  resolution: "@repo/scripts@workspace:scripts"
+  dependencies:
+    geofire-common: "npm:^6.0.0"
+    proj4: "npm:^2.9.2"
+  languageName: unknown
+  linkType: soft
+
 "@repo/shared@npm:*, @repo/shared@workspace:packages/shared":
   version: 0.0.0-use.local
   resolution: "@repo/shared@workspace:packages/shared"
@@ -7221,6 +7230,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"geofire-common@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "geofire-common@npm:6.0.0"
+  checksum: 10c0/26b80a0a395551c4b2b35b33352686e8490b27792bc14e6bfefaa5bdca9596b7e109427980536d110f9dfefc5bfea4800a95cc50b51187a5e78f704f6041fabb
+  languageName: node
+  linkType: hard
+
 "get-caller-file@npm:^2.0.5":
   version: 2.0.5
   resolution: "get-caller-file@npm:2.0.5"
@@ -9833,7 +9849,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proj4@npm:^2.7.0":
+"proj4@npm:^2.7.0, proj4@npm:^2.9.2":
   version: 2.15.0
   resolution: "proj4@npm:2.15.0"
   dependencies:

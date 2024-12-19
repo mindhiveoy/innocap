@@ -23,7 +23,8 @@
   "packageManager": "yarn@4.5.1",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "scripts"
   ],
   "dependencies": {
     "@emotion/styled": "^11.13.0",

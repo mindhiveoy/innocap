@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import L from 'leaflet';
 import type { Layer } from 'leaflet';
 import type { Feature, GeoJsonProperties, Geometry, FeatureCollection } from 'geojson';
@@ -12,6 +12,7 @@ import { Typography } from '@mui/material';
 import styled from '@emotion/styled';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '@repo/shared';
+import { SPECIAL_INDICATORS } from '@repo/ui/types/indicators';
 
 const typedNaturaAreas = naturaAreas as FeatureCollection;
 
@@ -50,7 +51,7 @@ const NATURA_COLORS: Record<NaturaAreaType, {
   fillOpacity: number;
 }> = {
   SAC: {
-    fillColor: '#00ff00',
+    fillColor: '#00ff00c8',
     color: '#006400',
     fillOpacity: 0.3,
   },
@@ -66,8 +67,8 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
   const popupRefs = useRef<(L.Popup | null)[]>([]);
   const dragRefs = useRef<{ isDragging: boolean; startPos: L.Point | null; initialLatLng: L.LatLng | null }[]>([]);
 
-  const isVisible = selectedIndicator?.indicatorType === IndicatorType.Special ||
-    pinnedIndicator?.indicatorType === IndicatorType.Special;
+  const isVisible = selectedIndicator?.id === SPECIAL_INDICATORS.NATURA_2000 ||
+    pinnedIndicator?.id === SPECIAL_INDICATORS.NATURA_2000;
 
   if (!isVisible) return null;
 
@@ -82,22 +83,17 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
 
   const onEachFeature = (feature: Feature<Geometry, GeoJsonProperties>, layer: Layer) => {
     if (feature.properties) {
-      // Apply initial style
-      const initialStyle = getStyleForFeature(feature);
-      (layer as L.Path).setStyle(initialStyle);
-
       const popup = L.popup({
         closeButton: true,
         closeOnClick: false,
         autoClose: false,
         className: 'draggable-popup municipality-popup',
         autoPan: false,
-        offset: L.point(-100, 0),
+        offset: L.point(-150, 0),
       });
 
       layer.bindPopup(popup);
 
-      // Add click handler to the popup container to bring it to front
       popup.on('add', (e) => {
         const popupElement = e.target.getElement();
         if (popupElement) {
@@ -111,74 +107,73 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
         }
       });
 
-      layer.on('click', (e) => {
-        const index = feature.properties?.id || 0;
-        const geoJSONLayer = layer as L.Polygon;  // Cast to Polygon type
-        const center = geoJSONLayer.getBounds().getCenter();
-        layer.openPopup(center);
-
-        // Ensure we have space in our refs arrays
-        while (popupRefs.current.length <= index) {
-          popupRefs.current.push(null);
-          dragRefs.current.push({
-            isDragging: false,
-            startPos: null,
-            initialLatLng: null
-          });
-        }
-
-        const container = document.createElement('div');
-        const root = createRoot(container);
-
-        root.render(
-          <ThemeProvider theme={theme}>
-            <DraggablePopup
-              index={index}
-              popupRefs={popupRefs}
-              dragRefs={dragRefs}
-              map={map}
-            >
-              <PopupContainer>
-                <Typography variant="label" color="primary.dark">
-                  {feature.properties?.nimisuomi}
-                </Typography>
-                <Typography variant="paragraph" color="text.secondary">{feature.properties?.aluetyyppi}</Typography>
-                {feature.properties?.luontotyyppikoodi && (
-                  <Typography variant="label" color="text.secondary">
-                    {feature.properties.luontotyyppikoodi}
-                  </Typography>
-                )}
-                {feature.properties?.area_m2 && (
-                  <Typography variant="paragraph" color="text.secondary">
-                    {(feature.properties.area_m2 / 1000000).toFixed(1)} km²
-                  </Typography>
-                )}
-              </PopupContainer>
-            </DraggablePopup>
-          </ThemeProvider>
-        );
-
-        popup.setContent(container);
-        popupRefs.current[index] = popup;
-        layer.openPopup();
-      });
-
       layer.on({
         mouseover: (e) => {
           const layer = e.target;
-          const areaType = feature.properties?.aluetyyppi || 'SAC';
-          const colors = NATURA_COLORS[areaType as keyof typeof NATURA_COLORS];
           layer.setStyle({
-            ...colors,
-            fillOpacity: 0.6,
-            weight: 3,
+            ...NATURA_COLORS[feature.properties?.aluetyyppi as keyof typeof NATURA_COLORS || 'SAC'],
+            fillOpacity: 0.8,
+            weight: 2,
+            color: feature.properties?.aluetyyppi === 'SAC' ? '#006400' : '#325971',
           });
+          layer.bringToFront();
         },
         mouseout: (e) => {
           const layer = e.target;
-          const style = getStyleForFeature(feature);
-          layer.setStyle(style);
+          layer.setStyle(getStyleForFeature(feature));
         },
+        click: (e) => {
+          const layer = e.target;
+          const index = feature.properties?.id || 0;
+          const geoJSONLayer = layer as L.Polygon;  // Cast to Polygon type
+          const center = geoJSONLayer.getBounds().getCenter();
+          layer.openPopup(center);
+
+          // Ensure we have space in our refs arrays
+          while (popupRefs.current.length <= index) {
+            popupRefs.current.push(null);
+            dragRefs.current.push({
+              isDragging: false,
+              startPos: null,
+              initialLatLng: null
+            });
+          }
+
+          const container = document.createElement('div');
+          const root = createRoot(container);
+
+          root.render(
+            <ThemeProvider theme={theme}>
+              <DraggablePopup
+                index={index}
+                popupRefs={popupRefs}
+                dragRefs={dragRefs}
+                map={map}
+              >
+                <PopupContainer>
+                  <Typography variant="label" color="primary.dark">
+                    {feature.properties?.nimisuomi}
+                  </Typography>
+                  <Typography variant="paragraph" color="text.secondary">{feature.properties?.aluetyyppi}</Typography>
+                  {feature.properties?.luontotyyppikoodi && (
+                    <Typography variant="label" color="text.secondary">
+                      {feature.properties.luontotyyppikoodi}
+                    </Typography>
+                  )}
+                  {feature.properties?.area_m2 && (
+                    <Typography variant="paragraph" color="text.secondary">
+                      {(feature.properties.area_m2 / 1000000).toFixed(1)} km²
+                    </Typography>
+                  )}
+                </PopupContainer>
+              </DraggablePopup>
+            </ThemeProvider>
+          );
+
+          popup.setContent(container);
+          popupRefs.current[index] = popup;
+          layer.openPopup();
+        }
       });
     }
   };
@@ -192,12 +187,17 @@ export const NaturaLayer = ({ selectedIndicator, pinnedIndicator }: NaturaLayerP
           if (!feature) return {};
           return {
             ...getStyleForFeature(feature),
-            pane: 'naturaPane',
+            pane: 'overlayPane',
             className: 'natura-feature'
           };
         }}
         interactive={true}
         onEachFeature={onEachFeature}
+        eventHandlers={{
+          click: (e) => {
+            L.DomEvent.stopPropagation(e);
+          }
+        }}
       />
     </LayerGroup>
   );
