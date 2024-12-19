@@ -170,7 +170,12 @@ export const LuomupellotLayer = ({ selectedIndicator, pinnedIndicator }: Luomupe
   return (
     <LayerGroup>
       <GeoJSON
-        key={`luomupellot-${selectedIndicator?.id || ''}-${pinnedIndicator?.id || ''}`}
+        key={[
+          'luomupellot',
+          selectedIndicator?.id || '',
+          pinnedIndicator?.id || '',
+          currentLanguage
+        ].join('-')}
         data={luomupellot}
         style={getStyle}
         interactive={true}
