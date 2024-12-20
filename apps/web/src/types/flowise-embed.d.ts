@@ -1,66 +1,62 @@
 declare module 'flowise-embed/dist/web' {
-  interface FlowiseConfig {
-    chatflowid: string
-    apiHost: string
+  interface ChatbotConfig {
+    chatflowid: string;
+    apiHost: string;
     theme?: {
       button?: {
-        backgroundColor?: string
-        size?: string
-        bottom?: number
-        dragAndDrop?: boolean
-      }
+        backgroundColor?: string;
+        size?: 'small' | 'medium' | 'large';
+        bottom?: number;
+        right?: number;
+        dragAndDrop?: boolean;
+      };
       chatWindow?: {
-        showTitle?: boolean
-        title?: string
-        welcomeMessage?: string
-        backgroundColor?: string
-        height?: number
-        width?: number
-        fontSize?: number
-        starterPrompts?: string[]
-        starterPromptFontSize?: number
-        clearChatOnReload?: boolean
-        renderHTML?: boolean
+        welcomeMessage?: string;
+        backgroundColor?: string;
+        height?: number;
+        width?: number;
+        fontSize?: number;
+        poweredByTextColor?: string;
+        starterPrompts?: string[];
+        starterPromptFontSize?: number;
         botMessage?: {
-          backgroundColor?: string
-          textColor?: string
-          showAvatar?: boolean
-          avatarSrc?: string
-        }
+          backgroundColor?: string;
+          textColor?: string;
+          showAvatar?: boolean;
+          avatarSrc?: string;
+        };
         userMessage?: {
-          backgroundColor?: string
-          textColor?: string
-          showAvatar?: boolean
-          avatarSrc?: string
-        }
+          backgroundColor?: string;
+          textColor?: string;
+          showAvatar?: boolean;
+          avatarSrc?: string;
+        };
         textInput?: {
-          placeholder?: string
-          backgroundColor?: string
-          textColor?: string
-          sendButtonColor?: string
-          maxChars?: number
-          maxCharsWarningMessage?: string
-        }
-        dateTimeToggle?: {
-          date?: boolean
-          time?: boolean
-        }
+          placeholder?: string;
+          backgroundColor?: string;
+          textColor?: string;
+          sendButtonColor?: string;
+          maxChars?: number;
+        };
         footer?: {
-          textColor?: string
-          text?: string
-          company?: string
-          companyLink?: string
-          fontSize?: number
-        }
-      }
+          textColor?: string;
+          text?: string;
+          company?: string;
+          companyLink?: string;
+        };
+        feedback?: {
+          color?: string;
+        };
+      };
+    };
+    interceptor?: {
+      onMessage?: (message: string) => Promise<string>;
     }
   }
 
-  interface Chatbot {
-    init: (config: FlowiseConfig) => void
-    close?: () => void
-  }
+  const flowiseEmbed: {
+    init: (config: ChatbotConfig) => void;
+  };
 
-  const chatbot: Chatbot
-  export default chatbot
+  export default flowiseEmbed;
 } 
