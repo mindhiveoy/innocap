@@ -1,14 +1,32 @@
 declare module 'flowise-embed/dist/web' {
   interface ChatbotConfig {
     chatflowid: string;
-    apiHost: string;
+    apiHost?: string;
+    chatflowConfig?: {
+      topK?: number;
+      overrideConfig?: {
+        headers?: Record<string, string>;
+      };
+    };
+    observersConfig?: {
+      observeUserInput?: (userInput: string) => void;
+      observeMessages?: (messages: unknown[]) => void;
+      observeLoading?: (loading: boolean) => void;
+    };
     theme?: {
       button?: {
         backgroundColor?: string;
-        size?: 'small' | 'medium' | 'large';
-        bottom?: number;
+        iconColor?: string;
+        customIconSrc?: string;
+        size?: number | 'small' | 'medium' | 'large';
         right?: number;
+        bottom?: number;
         dragAndDrop?: boolean;
+        autoWindowOpen?: {
+          autoOpen?: boolean;
+          openDelay?: number;
+          autoOpenOnMobile?: boolean;
+        };
       };
       chatWindow?: {
         welcomeMessage?: string;
@@ -49,14 +67,11 @@ declare module 'flowise-embed/dist/web' {
         };
       };
     };
-    interceptor?: {
-      onMessage?: (message: string) => Promise<string>;
-    }
   }
 
-  const flowiseEmbed: {
-    init: (config: ChatbotConfig) => void;
+  const Chatbot: {
+    init(config: ChatbotConfig): void;
   };
 
-  export default flowiseEmbed;
+  export default Chatbot;
 } 

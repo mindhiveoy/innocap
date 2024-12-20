@@ -4,7 +4,8 @@ import { useEffect, useCallback, useRef } from 'react'
 import { theme } from '@repo/shared'
 import { useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-
+import { useIndicator } from '@/contexts/IndicatorContext';
+import { useData } from '@/contexts/DataContext';
 //Preload images and get data URLs
 const preloadImages = async (images: string[]): Promise<Record<string, string>> => {
   const loadImage = (src: string): Promise<[string, string]> =>
@@ -40,17 +41,22 @@ const preloadImages = async (images: string[]): Promise<Record<string, string>> 
 // Constants
 const CHATBOT_CONFIG = {
   FLOW_ID: "5f815f00-6aa4-4d73-801c-5623185319ba",
-  API_HOST: "https://bot.mindhive.fi",
+  API_HOST: "http://localhost:3001",
+  MIDDLEWARE_URL: "http://localhost:3001",
   ASSETS: {
     BOT_AVATAR: '/innocap_logo.png',
     USER_AVATAR: '/user.png',
   },
-} as const
+} as const;
 
 export const ChatBubble = () => {
   const muiTheme = useTheme()
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'))
   const preloadedImages = useRef<Record<string, string>>({})
+  const { selectedIndicator } = useIndicator()
+  const { municipalityData } = useData()
+   console.log("🚀 ~ ChatBubble ~ municipalityData:", municipalityData)
+  console.log("🚀 ~ ChatBubble ~ selectedIndicator:", selectedIndicator)
 
   const initChatbot = useCallback(async () => {
     try {
@@ -63,6 +69,9 @@ export const ChatBubble = () => {
       chatbot.default.init({
         chatflowid: CHATBOT_CONFIG.FLOW_ID,
         apiHost: CHATBOT_CONFIG.API_HOST,
+        chatflowConfig: {
+          topK: 2
+        },
         theme: {
           button: {
             backgroundColor: theme.palette.primary.light,
@@ -77,8 +86,8 @@ export const ChatBubble = () => {
             width: 400,
             fontSize: 14,
             starterPrompts: [
-              'Can you summarize the strategies?', 
-              'How will strategies impact the environment?', 
+              'Can you summarize the strategies?',
+              'How will strategies impact the environment?',
               'What are the main drivers for the strategies?'
             ],
             starterPromptFontSize: 12,
@@ -110,16 +119,63 @@ export const ChatBubble = () => {
               color: theme.palette.primary.light,
             },
           }
+        },
+        observersConfig: {
+          observeUserInput: (userInput) => {
+            // Add custom event with context data
+            const event = new CustomEvent('flowiseRequest', {
+              detail: {
+                selectedIndicator,
+                municipalityData
+              }
+            });
+            window.dispatchEvent(event);
+            console.log('User input:', userInput);
+          },
+          observeMessages: (messages) => {
+            console.log('Messages:', messages);
+          },
+          observeLoading: (loading) => {
+            console.log('Loading state:', loading);
+          }
         }
-      })
+      });
     } catch (error) {
       console.error('Failed to load chatbot:', error)
     }
-  }, [isMobile])
+  }, [isMobile, selectedIndicator, municipalityData])
 
   useEffect(() => {
     initChatbot()
   }, [initChatbot])
-  
+
+  useEffect(() => {
+    // Define the event type
+    type FlowiseRequestEvent = CustomEvent<{
+      selectedIndicator: typeof selectedIndicator;
+      municipalityData: typeof municipalityData;
+    }>;
+
+    const handleFlowiseRequest = async (event: Event) => {
+      try {
+        const customEvent = event as FlowiseRequestEvent;
+        await fetch(`${CHATBOT_CONFIG.MIDDLEWARE_URL}/api/context`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(customEvent.detail)
+        });
+      } catch (error) {
+        console.error('Failed to update context:', error);
+      }
+    };
+
+    window.addEventListener('flowiseRequest', handleFlowiseRequest);
+    return () => {
+      window.removeEventListener('flowiseRequest', handleFlowiseRequest);
+    };
+  }, [selectedIndicator, municipalityData]);
+
   return null
 } 
