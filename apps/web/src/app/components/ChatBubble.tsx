@@ -40,7 +40,7 @@ const preloadImages = async (images: string[]): Promise<Record<string, string>> 
 
 // Constants
 const CHATBOT_CONFIG = {
-  FLOW_ID: "5f815f00-6aa4-4d73-801c-5623185319ba",
+  FLOW_ID: "104f68db-a8d6-4135-acfc-6bb496040981",
   API_HOST: "http://localhost:3001",
   MIDDLEWARE_URL: "http://localhost:3001",
   ASSETS: {
@@ -55,8 +55,8 @@ export const ChatBubble = () => {
   const preloadedImages = useRef<Record<string, string>>({})
   const { selectedIndicator } = useIndicator()
   const { municipalityData } = useData()
-   console.log("🚀 ~ ChatBubble ~ municipalityData:", municipalityData)
-  console.log("🚀 ~ ChatBubble ~ selectedIndicator:", selectedIndicator)
+  // console.log("🚀 ~ ChatBubble ~ municipalityData:", municipalityData)
+  // console.log("🚀 ~ ChatBubble ~ selectedIndicator:", selectedIndicator)
 
   const initChatbot = useCallback(async () => {
     try {
