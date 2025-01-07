@@ -24,15 +24,13 @@ let currentContext = {
 // Add endpoint to update context
 app.post('/api/context', (req, res) => {
   currentContext = req.body;
-  res.json({ success: true });
+  res.json({ success: true, updated: Date.now() });
 });
 
 // Middleware route for chatbot
 app.post('/api/chat', async (req, res) => {
   try {
     const { question, context } = req.body;
-    console.log("🚀 ~ app.post ~ context:", context);
-    console.log("🚀 ~ app.post ~ question:", question);
 
     // Enrich the question with context from the map
     const enrichedQuestion = `Context: ${JSON.stringify(context)}. Question: ${question}`;
@@ -55,46 +53,75 @@ app.post('/api/chat', async (req, res) => {
 // Proxy all Flowise API requests
 app.use('/api/v1', async (req, res) => {
   try {
-    console.log('Incoming request to:', req.path);
-    console.log('Request method:', req.method);
-    console.log('Request body:', req.body);
-    console.log('Request headers:', req.headers);
     // If this is a prediction request, enrich the question with context
     if (req.path.includes('/prediction/')) {
-      // Get indicator data
-      const indicatorData = currentContext.municipalityData
-        ?.filter(m => m.id === currentContext.selectedIndicator?.id)
-        ?.map(m => ({
-          municipality: m.municipalityName,
-          value: m.value,
-          year: m.year
-        }));
+      //console.log('Current context in prediction:', {
+      //  selected: currentContext.selected?.indicator.name,
+      //  pinned: currentContext.pinned?.indicator.name
+      //});
+      const { selected, pinned } = currentContext;
+      
+      let contextDescription = '';
+      
+      // Add selected indicator context if available
+      if (selected) {
+        contextDescription += `
+          Selected Indicator Analysis:
+          Name: ${selected.indicator.name}
+          Type: ${selected.indicator.type}
+          Group: ${selected.indicator.group}
+          ${selected.indicator.description ? `Description: ${selected.indicator.description}` : ''}
+          ${selected.indicator.unit ? `Unit: ${selected.indicator.unit}` : ''}
+          Year: ${selected.summary?.latest.year || 'N/A'}
+
+          Summary:
+          Average: ${selected.summary?.latest.average.toFixed(2) || 'N/A'}
+          Highest: ${selected.summary?.latest.highest.municipality} (${selected.summary?.latest.highest.value})
+          Lowest: ${selected.summary?.latest.lowest.municipality} (${selected.summary?.latest.lowest.value})
+          Overall Trend: ${selected.summary?.trend || 'N/A'}
+
+          Latest Data by Municipality:
+          ${Object.entries(selected.data.byMunicipality)
+            .map(([municipality, data]) => 
+              `${municipality}: ${data.latest?.value} (${data.latest?.year})`
+            ).join('\n')}
+        `;
+      }
+
+      // Add pinned indicator context if available
+      if (pinned) {
+        contextDescription += `
+          \nPinned Indicator for Comparison:
+          Name: ${pinned.indicator.name}
+          Type: ${pinned.indicator.type}
+          Group: ${pinned.indicator.group}
+          ${pinned.indicator.description ? `Description: ${pinned.indicator.description}` : ''}
+          ${pinned.indicator.unit ? `Unit: ${pinned.indicator.unit}` : ''}
+          Year: ${pinned.summary?.latest.year || 'N/A'}
+
+          ${pinned.summary ? `
+          Summary:
+          Average: ${pinned.summary.latest.average.toFixed(2) || 'N/A'}
+          Highest: ${pinned.summary.latest.highest.municipality} (${pinned.summary.latest.highest.value})
+          Lowest: ${pinned.summary.latest.lowest.municipality} (${pinned.summary.latest.lowest.value})
+          Overall Trend: ${pinned.summary.trend || 'N/A'}
+          ` : ''}
+
+          Latest Data by Municipality:
+          ${Object.entries(pinned.data.byMunicipality)
+            .map(([municipality, data]) => 
+              `${municipality}: ${data.latest?.value} (${data.latest?.year})`
+            ).join('\n')}
+        `;
+      }
 
       const enrichedQuestion = `
-        Current Analysis Context:
-        
-        Selected Indicator: ${currentContext.selectedIndicator?.indicatorNameEn || 'None'}
-        Type: ${currentContext.selectedIndicator?.indicatorType || 'None'}
-        Group: ${currentContext.selectedIndicator?.group || 'None'}
-        Description: ${currentContext.selectedIndicator?.descriptionEn || 'None'}
-        Unit: ${indicatorData?.[0]?.unit || 'None'}
-        Year: ${currentContext.selectedIndicator?.selectedYear || 'None'}
-
-        Data Points:
-        ${indicatorData?.map(d => 
-          `${d.municipality}: ${d.value} (${d.year})`
-        ).join('\n')}
-
-        Statistical Summary:
-        Average: ${calculateAverage(indicatorData)}
-        Highest: ${findHighest(indicatorData)}
-        Lowest: ${findLowest(indicatorData)}
+        ${contextDescription}
 
         Question: ${req.body.question}
       `.trim();
 
       req.body.question = enrichedQuestion;
-      console.log('Enriched question:', enrichedQuestion);
     }
 
     // Handle streaming responses
@@ -135,7 +162,7 @@ app.use('/api/v1', async (req, res) => {
       },
     });
 
-    console.log('Flowise API response:', response.data);
+   // console.log('Flowise API response:', response.data);
     res.json(response.data);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -147,25 +174,6 @@ app.use('/api/v1', async (req, res) => {
     res.status(500).json({ error: 'Failed to proxy request', details: errorMessage });
   }
 });
-
-// Helper functions
-function calculateAverage(data) {
-  if (!data?.length) return 'No data';
-  const avg = data.reduce((sum, d) => sum + d.value, 0) / data.length;
-  return `${avg.toFixed(2)}`;
-}
-
-function findHighest(data) {
-  if (!data?.length) return 'No data';
-  const highest = data.reduce((max, d) => d.value > max.value ? d : max, data[0]);
-  return `${highest.municipality} (${highest.value})`;
-}
-
-function findLowest(data) {
-  if (!data?.length) return 'No data';
-  const lowest = data.reduce((min, d) => d.value < min.value ? d : min, data[0]);
-  return `${lowest.municipality} (${lowest.value})`;
-}
 
 const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {

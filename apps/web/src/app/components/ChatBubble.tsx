@@ -6,6 +6,8 @@ import { useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useIndicator } from '@/contexts/IndicatorContext';
 import { useData } from '@/contexts/DataContext';
+import { processChatData } from '@/utils/chatDataProcessor';
+
 //Preload images and get data URLs
 const preloadImages = async (images: string[]): Promise<Record<string, string>> => {
   const loadImage = (src: string): Promise<[string, string]> =>
@@ -53,19 +55,61 @@ export const ChatBubble = () => {
   const muiTheme = useTheme()
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'))
   const preloadedImages = useRef<Record<string, string>>({})
-  const { selectedIndicator } = useIndicator()
-  const { municipalityData } = useData()
-  // console.log("🚀 ~ ChatBubble ~ municipalityData:", municipalityData)
-  // console.log("🚀 ~ ChatBubble ~ selectedIndicator:", selectedIndicator)
+  const { selectedIndicator, pinnedIndicator } = useIndicator();
+  const { municipalityData, markerData, barChartData } = useData();
+  const chatInitialized = useRef(false);
+
+  const updateContext = useCallback(async () => {
+    try {
+      if (!selectedIndicator && !pinnedIndicator) {
+        console.log('No indicators selected, skipping context update');
+        return;
+      }
+
+      const processedData = processChatData(
+        selectedIndicator,
+        municipalityData,
+        markerData,
+        barChartData,
+        pinnedIndicator,
+        municipalityData,
+        markerData,
+        barChartData,
+        '' 
+      );
+
+      const contextData = {
+        selected: processedData.selected,
+        pinned: processedData.pinned,
+        specialStats: processedData.specialStats
+      };
+
+      // Log the actual data being sent
+     // console.log('Full context data being sent:', JSON.stringify(contextData, null, 2));
+
+      const response = await fetch(`${CHATBOT_CONFIG.MIDDLEWARE_URL}/api/context`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contextData)
+      });
+
+      const responseData = await response.json();
+      console.log('Context update response:', responseData);
+    } catch (error) {
+      console.error('Failed to update context:', error);
+    }
+  }, [selectedIndicator, pinnedIndicator, municipalityData, markerData, barChartData]);
 
   const initChatbot = useCallback(async () => {
     try {
       preloadedImages.current = await preloadImages([
         CHATBOT_CONFIG.ASSETS.BOT_AVATAR,
         CHATBOT_CONFIG.ASSETS.USER_AVATAR
-      ])
+      ]);
 
-      const chatbot = await import('flowise-embed/dist/web')
+      const chatbot = await import('flowise-embed/dist/web');
       chatbot.default.init({
         chatflowid: CHATBOT_CONFIG.FLOW_ID,
         apiHost: CHATBOT_CONFIG.API_HOST,
@@ -121,61 +165,39 @@ export const ChatBubble = () => {
           }
         },
         observersConfig: {
-          observeUserInput: (userInput) => {
-            // Add custom event with context data
-            const event = new CustomEvent('flowiseRequest', {
-              detail: {
-                selectedIndicator,
-                municipalityData
-              }
-            });
-            window.dispatchEvent(event);
-            console.log('User input:', userInput);
-          },
-          observeMessages: (messages) => {
-            console.log('Messages:', messages);
+          observeUserInput: () => {
+            // Only call updateContext if we have indicators
+            if (selectedIndicator || pinnedIndicator) {
+              updateContext();
+            }
           },
           observeLoading: (loading) => {
             console.log('Loading state:', loading);
           }
         }
       });
+      
+      chatInitialized.current = true;
+      // Initial context update after chat is initialized
+      updateContext();
     } catch (error) {
-      console.error('Failed to load chatbot:', error)
+      console.error('Failed to load chatbot:', error);
     }
-  }, [isMobile, selectedIndicator, municipalityData])
+  }, [isMobile, updateContext, selectedIndicator, pinnedIndicator]);
 
+  // Initialize chat
   useEffect(() => {
-    initChatbot()
-  }, [initChatbot])
+    if (!chatInitialized.current) {
+      initChatbot();
+    }
+  }, [initChatbot]);
 
+  // Update context when indicators change
   useEffect(() => {
-    // Define the event type
-    type FlowiseRequestEvent = CustomEvent<{
-      selectedIndicator: typeof selectedIndicator;
-      municipalityData: typeof municipalityData;
-    }>;
+    if (chatInitialized.current && (selectedIndicator || pinnedIndicator)) {
+      updateContext();
+    }
+  }, [selectedIndicator, pinnedIndicator, updateContext]);
 
-    const handleFlowiseRequest = async (event: Event) => {
-      try {
-        const customEvent = event as FlowiseRequestEvent;
-        await fetch(`${CHATBOT_CONFIG.MIDDLEWARE_URL}/api/context`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(customEvent.detail)
-        });
-      } catch (error) {
-        console.error('Failed to update context:', error);
-      }
-    };
-
-    window.addEventListener('flowiseRequest', handleFlowiseRequest);
-    return () => {
-      window.removeEventListener('flowiseRequest', handleFlowiseRequest);
-    };
-  }, [selectedIndicator, municipalityData]);
-
-  return null
+  return null;
 } 
