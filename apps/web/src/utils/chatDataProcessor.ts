@@ -185,10 +185,9 @@ export function processIndicatorData(
     }
 
     case IndicatorType.Marker: {
-      // Special handling for charging stations
       const isChargingStation = indicator.id === 'ELECTRIC_CHARGING';
       
-      // Group data by municipality
+      // Group by municipality
       const byMunicipality: Record<string, { values: number[]; years: number[]; count?: number }> = {};
       
       markerData
@@ -203,11 +202,10 @@ export function processIndicatorData(
           }
           
           if (isChargingStation) {
-            // For charging stations, count the number of locations
+            // number of locations
             byMunicipality[d.municipalityName].count! += 1;
-            byMunicipality[d.municipalityName].values.push(1); // Use 1 for each station
+            byMunicipality[d.municipalityName].values.push(1);
           } else if (typeof d.value === 'number') {
-            // Normal case for other markers
             byMunicipality[d.municipalityName].values.push(d.value);
           }
           byMunicipality[d.municipalityName].years.push(d.year || 0);
@@ -270,7 +268,7 @@ export function processIndicatorData(
     }
 
     case IndicatorType.BarChart: {
-      // Group data by municipality
+      // Group by municipality
       const byMunicipality: Record<string, { values: number[][]; years: number[] }> = {};
       
       barChartData

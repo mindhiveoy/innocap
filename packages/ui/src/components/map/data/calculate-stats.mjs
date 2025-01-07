@@ -17,12 +17,12 @@ function calculateDistance(point1, point2) {
   // point1 is [lon, lat] from features
   // point2 is [lat, lon] from municipality centers
   const [lon1, lat1] = point1;
-  const [lat2, lon2] = point2;  // Note the swap here for municipality centers
+  const [lat2, lon2] = point2;
   
   return Math.sqrt(Math.pow(lon2 - lon1, 2) + Math.pow(lat2 - lat1, 2));
 }
 
-// Helper function to find nearest municipality
+// Nearest municipality
 function findNearestMunicipality(coordinates) {
   if (!coordinates || !coordinates[0]) return "Region";
   
@@ -41,7 +41,7 @@ function findNearestMunicipality(coordinates) {
   return nearestMunicipality;
 }
 
-// Add municipality name mapping
+// Municipality name mapping
 const MUNICIPALITY_NAMES = {
   '046': 'Enonkoski',
   '090': 'Heinävesi',
@@ -59,7 +59,7 @@ const MUNICIPALITY_NAMES = {
   '768': 'Sulkava'
 };
 
-// Calculate Natura 2000 statistics
+// Natura 2000 statistics
 function calculateNaturaStats() {
   const municipalities = {};
   let totalArea = 0;
@@ -98,7 +98,7 @@ function calculateNaturaStats() {
   };
 }
 
-// Calculate Organic Farming statistics
+// Organic Farming statistics
 function calculateOrganicStats() {
   const municipalities = {};
   let totalArea = 0;

@@ -84,7 +84,6 @@ export const ChatBubble = () => {
         specialStats: processedData.specialStats
       };
 
-      // Log the actual data being sent
      // console.log('Full context data being sent:', JSON.stringify(contextData, null, 2));
 
       const response = await fetch(`${CHATBOT_CONFIG.MIDDLEWARE_URL}/api/context`, {
@@ -166,7 +165,6 @@ export const ChatBubble = () => {
         },
         observersConfig: {
           observeUserInput: () => {
-            // Only call updateContext if we have indicators
             if (selectedIndicator || pinnedIndicator) {
               updateContext();
             }
