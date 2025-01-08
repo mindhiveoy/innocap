@@ -1,13 +1,4 @@
 import { LatLngTuple } from 'leaflet';
-import { type Unit } from './units';
-
-export const INDICATORS = {
-  PUBLIC_TRANSPORT: 'PT_AREAS',
-  BUILDING_EMISSIONS: 'EMISSIONS',
-  ENERGY_CONSUMPTION: 'ENERGY',
-} as const;
-
-export type IndicatorId = typeof INDICATORS[keyof typeof INDICATORS];
 
 export const SPECIAL_INDICATORS = {
   NATURA_2000: 'NATURA_2000',

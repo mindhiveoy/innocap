@@ -10,7 +10,8 @@
     "./components/map": "./src/components/map/index.tsx",
     "./types/indicators": "./src/types/indicators.ts",
     "./types/*": "./src/types/*",
-    "./components/*": "./src/components/*"
+    "./components/*": "./src/components/*",
+    "./components/map/data/natura-stats": "./src/components/map/data/natura-stats.ts"
   },
   "typesVersions": {
     "*": {
@@ -19,6 +20,9 @@
       ],
       "components/map": [
         "./src/components/map/index.tsx"
+      ],
+      "components/map/data/natura-stats": [
+        "./src/components/map/data/natura-stats.ts"
       ]
     }
   },
