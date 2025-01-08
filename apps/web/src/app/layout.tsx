@@ -42,10 +42,10 @@ export default function RootLayout({
           <DataProvider>
             <IndicatorProvider>
               {children}
+              <ChatBubble />
             </IndicatorProvider>
           </DataProvider>
         </Providers>
-        <ChatBubble />
       </body>
     </html>
   );

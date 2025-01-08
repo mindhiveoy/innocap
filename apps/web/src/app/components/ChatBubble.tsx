@@ -4,238 +4,200 @@ import { useEffect, useCallback, useRef } from 'react'
 import { theme } from '@repo/shared'
 import { useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
+import { useIndicator } from '@/contexts/IndicatorContext';
+import { useData } from '@/contexts/DataContext';
+import { processChatData } from '@/utils/chatDataProcessor';
+//import WbIncandescentIcon from '@mui/icons-material/WbIncandescent';
 
-// Types
-interface BotMessageConfig {
-  backgroundColor?: string
-  textColor?: string
-  showAvatar?: boolean
-  avatarSrc?: string
-}
-
-interface TextInputConfig {
-  placeholder?: string
-  backgroundColor?: string
-  textColor?: string
-  sendButtonColor?: string
-  maxChars?: number
-  maxCharsWarningMessage?: string
-  ariaLabel?: string
-  sendButtonAriaLabel?: string
-}
-
-interface ChatWindowConfig {
-  showTitle?: boolean
-  title?: string
-  welcomeMessage?: string
-  backgroundColor?: string
-  height?: number
-  width?: number
-  fontSize?: number
-  starterPrompts?: string[]
-  starterPromptFontSize?: number
-  clearChatOnReload?: boolean
-  renderHTML?: boolean
-  botMessage?: BotMessageConfig
-  userMessage?: BotMessageConfig
-  textInput?: TextInputConfig
-  dateTimeToggle?: {
-    date?: boolean
-    time?: boolean
-  }
-  feedback?: {
-    color?: string
-  }
-  footer?: {
-    textColor?: string
-    text?: string
-    company?: string
-    companyLink?: string
-    fontSize?: number
-  }
-  accessibility?: {
-    role?: string
-    ariaLabel?: string
-    closeButtonAriaLabel?: string
-    messageListAriaLabel?: string
-    starterPromptsAriaLabel?: string
-  }
-}
-
-interface FlowiseConfig {
-  chatflowid: string
-  apiHost: string
-  theme?: {
-    button?: {
-      backgroundColor?: string
-      size?: string
-      bottom?: number
-      dragAndDrop?: boolean
-    }
-    chatWindow?: ChatWindowConfig
-  }
-}
-
-interface ChatbotType {
-  init: (config: FlowiseConfig) => void
-  close?: () => void
-}
-
-declare global {
-  interface Window {
-    Chatbot?: ChatbotType
-  }
-}
-
-// Helper function to preload image and convert to data URL
-const preloadImage = (src: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = img.width
-      canvas.height = img.height
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.drawImage(img, 0, 0)
-        resolve(canvas.toDataURL('image/png'))
-      } else {
-        reject(new Error('Failed to get canvas context'))
+//Preload images and get data URLs
+const preloadImages = async (images: string[]): Promise<Record<string, string>> => {
+  const loadImage = (src: string): Promise<[string, string]> =>
+    new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0)
+          resolve([src, canvas.toDataURL('image/png')])
+        } else {
+          reject(new Error('Failed to get canvas context'))
+        }
       }
-    }
-    img.onerror = () => reject(new Error('Failed to load image'))
-    img.src = src
-  })
+      img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
+      img.src = src
+    })
+
+  try {
+    const results = await Promise.all(images.map(loadImage))
+    return Object.fromEntries(results)
+  } catch (error) {
+    console.error('Failed to preload images:', error)
+    // Return original URLs as fallback
+    return Object.fromEntries(images.map(src => [src, src]))
+  }
 }
 
-// Constants 
+// Constants
 const CHATBOT_CONFIG = {
-  FLOW_ID: "5f815f00-6aa4-4d73-801c-5623185319ba",
-  API_HOST: "https://bot.mindhive.fi",
-  MAX_CHARS: 100,
-  WINDOW: {
-    HEIGHT: 700,
-    WIDTH: 400,
-    FONT_SIZE: 14,
-    STARTER_PROMPT_SIZE: 12,
-  },
+  FLOW_ID: "104f68db-a8d6-4135-acfc-6bb496040981",
+  API_HOST: '', // Empty string to use relative paths from root
   ASSETS: {
     BOT_AVATAR: '/innocap_logo.png',
     USER_AVATAR: '/user.png',
   },
-} as const
+} as const;
 
 export const ChatBubble = () => {
-  const isInitialized = useRef(false)
-  const botAvatarDataUrl = useRef<string>('')
   const muiTheme = useTheme()
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'))
+  const preloadedImages = useRef<Record<string, string>>({})
+  const { selectedIndicator, pinnedIndicator } = useIndicator();
+  const { municipalityData, markerData, barChartData } = useData();
+  const chatInitialized = useRef(false);
 
-  // Preload bot avatar
-  const preloadBotAvatar = useCallback(async () => {
+  const updateContext = useCallback(async () => {
     try {
-      botAvatarDataUrl.current = await preloadImage(CHATBOT_CONFIG.ASSETS.BOT_AVATAR)
+      if (!selectedIndicator && !pinnedIndicator) {
+        console.log('No indicators selected, skipping context update');
+        return;
+      }
+
+      const processedData = processChatData(
+        selectedIndicator,
+        municipalityData,
+        markerData,
+        barChartData,
+        pinnedIndicator,
+        municipalityData,
+        markerData,
+        barChartData,
+        '' 
+      );
+
+      const contextData = {
+        selected: processedData.selected,
+        pinned: processedData.pinned,
+        specialStats: processedData.specialStats
+      };
+
+      const response = await fetch('/api/v1/chat/context', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contextData)
+      });
+
+      await response.json();
     } catch (error) {
-      console.error('Failed to preload bot avatar:', error)
-      botAvatarDataUrl.current = CHATBOT_CONFIG.ASSETS.BOT_AVATAR // Fallback to original URL
+      console.error('Failed to update context:', error);
     }
-  }, [])
+  }, [selectedIndicator, pinnedIndicator, municipalityData, markerData, barChartData]);
 
-  const getChatWindowConfig = useCallback((): ChatWindowConfig => ({
-    welcomeMessage: 'Hi! How can I help you today with Mikkeli, Kangasniemi and Juva strategies?',
-    backgroundColor: '#ffffff',
-    height: CHATBOT_CONFIG.WINDOW.HEIGHT,
-    width: CHATBOT_CONFIG.WINDOW.WIDTH,
-    fontSize: CHATBOT_CONFIG.WINDOW.FONT_SIZE,
-    starterPrompts: ['Can you summarize the strategies?', 'How will strategies impact the environment?', 'What are the main drivers for the strategies?'],
-    starterPromptFontSize: CHATBOT_CONFIG.WINDOW.STARTER_PROMPT_SIZE,
-    clearChatOnReload: false,
-    botMessage: {
-      backgroundColor: theme.palette.primary.light + '1A',
-      textColor: '#303235',
-      showAvatar: true,
-      avatarSrc: botAvatarDataUrl.current,
-    },
-    userMessage: {
-      backgroundColor: theme.palette.primary.light,
-      textColor: '#ffffff',
-      showAvatar: true,
-      avatarSrc: CHATBOT_CONFIG.ASSETS.USER_AVATAR,
-    },
-    textInput: {
-      placeholder: 'Type your question',
-      backgroundColor: '#ffffff',
-      textColor: '#303235',
-      sendButtonColor: theme.palette.primary.light,
-      maxChars: CHATBOT_CONFIG.MAX_CHARS,
-      maxCharsWarningMessage: `You exceeded the characters limit. Please input less than ${CHATBOT_CONFIG.MAX_CHARS} characters.`,
-      ariaLabel: 'Chat message input',
-      sendButtonAriaLabel: 'Send message',
-    },
-    dateTimeToggle: {
-      date: true,
-      time: true,
-    },
-    feedback: {
-      color: '#303235',
-    },
-    footer: {
-      textColor: theme.palette.primary.light,
-      text: 'Powered by',
-      company: 'Mindhive',
-      companyLink: 'https://mindhive.fi/mainio',
-    },
-    accessibility: {
-      role: 'complementary',
-      ariaLabel: 'Chat with AI Assistant',
-      closeButtonAriaLabel: 'Close chat',
-      messageListAriaLabel: 'Chat messages',
-      starterPromptsAriaLabel: 'Suggested questions',
-    }
-  }), [])
-
-  const loadChatbot = useCallback(async () => {
+  const initChatbot = useCallback(async () => {
     try {
-      if (!window.Chatbot && !isInitialized.current) {
-        await preloadBotAvatar()
-        const chatbot = await import('flowise-embed/dist/web')
-        window.Chatbot = chatbot.default as ChatbotType
-        isInitialized.current = true
+      preloadedImages.current = await preloadImages([
+        CHATBOT_CONFIG.ASSETS.BOT_AVATAR,
+        CHATBOT_CONFIG.ASSETS.USER_AVATAR
+      ]);
 
-        window.Chatbot.init({
-          chatflowid: CHATBOT_CONFIG.FLOW_ID,
-          apiHost: CHATBOT_CONFIG.API_HOST,
-          theme: {
-            button: {
-              backgroundColor: theme.palette.primary.light,
-              size: 'medium',
-              bottom: isMobile ? 70 : 20,
-              dragAndDrop: true,
+      const chatbot = await import('flowise-embed/dist/web');
+      chatbot.default.init({
+        chatflowid: CHATBOT_CONFIG.FLOW_ID,
+        apiHost: window.location.origin,
+        chatflowConfig: {
+          topK: 2
+        },
+        theme: {
+          button: {
+            backgroundColor: theme.palette.primary.light,
+            size: 'medium',
+            bottom: isMobile ? 70 : 20,
+            dragAndDrop: true,
+/*             customIconSrc: 'data:image/svg+xml;base64,' + btoa(`
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style="transform: rotate(180deg)">
+                <path d="M3.55 18.54l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8zM11 22.45h2V19.5h-2v2.95zM4 10.5H1v2h3v-2zm11-4.19V1.5H9v4.81C7.21 7.35 6 9.28 6 11.5c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.22-1.21-4.15-3-5.19zm5 4.19v2h3v-2h-3zm-2.76 7.66l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4z"/>
+              </svg>
+            `), */
+          },
+          chatWindow: {
+            welcomeMessage: 'Hi! How can I help you today with Mikkeli, Kangasniemi and Juva strategies?',
+            backgroundColor: '#ffffff',
+            height: 700,
+            width: 500,
+            fontSize: 14,
+            starterPrompts: [
+              'Can you summarize the strategies?',
+              'How will strategies impact the environment?',
+              'What are the main drivers for the strategies?'
+            ],
+            starterPromptFontSize: 12,
+            botMessage: {
+              textColor: '#303235',
+              showAvatar: true,
+              avatarSrc: preloadedImages.current[CHATBOT_CONFIG.ASSETS.BOT_AVATAR],
             },
-            chatWindow: getChatWindowConfig(),
+            userMessage: {
+              backgroundColor: theme.palette.primary.light,
+              textColor: '#ffffff',
+              showAvatar: true,
+              avatarSrc: preloadedImages.current[CHATBOT_CONFIG.ASSETS.USER_AVATAR],
+            },
+            textInput: {
+              placeholder: 'Type your question',
+              backgroundColor: '#ffffff',
+              textColor: '#303235',
+              sendButtonColor: theme.palette.primary.light,
+              maxChars: 200,
+            },
+            footer: {
+              textColor: theme.palette.primary.light,
+              text: 'Powered by',
+              company: 'Mindhive',
+              companyLink: 'https://mindhive.fi/mainio',
+            },
+            feedback: {
+              color: theme.palette.primary.light,
+            },
           }
-        })
-      }
-    } catch (error) {
-      console.error('Failed to load chatbot:', error)
-    }
-  }, [getChatWindowConfig, preloadBotAvatar, isMobile])
-
-  useEffect(() => {
-    loadChatbot()
-
-    return () => {
-      if (window.Chatbot?.close && typeof window.Chatbot.close === 'function') {
-        try {
-          window.Chatbot.close()
-        } catch (error) {
-          console.error('Failed to close chatbot:', error)
+        },
+        observersConfig: {
+          observeUserInput: () => {
+            if (selectedIndicator || pinnedIndicator) {
+              updateContext();
+            }
+          },
+          observeLoading: (loading) => {
+            console.log('Loading state:', loading);
+          }
         }
-      }
-      isInitialized.current = false
+      });
+      
+      chatInitialized.current = true;
+      // Initial context update after chat is initialized
+      updateContext();
+    } catch (error) {
+      console.error('Failed to load chatbot:', error);
     }
-  }, [loadChatbot])
-  
-  return null
+  }, [isMobile, updateContext, selectedIndicator, pinnedIndicator]);
+
+  // Initialize chat
+  useEffect(() => {
+    if (!chatInitialized.current) {
+      initChatbot();
+    }
+  }, [initChatbot]);
+
+  // Update context when indicators change
+  useEffect(() => {
+    if (chatInitialized.current && (selectedIndicator || pinnedIndicator)) {
+      updateContext();
+    }
+  }, [selectedIndicator, pinnedIndicator, updateContext]);
+
+  return null;
 } 
