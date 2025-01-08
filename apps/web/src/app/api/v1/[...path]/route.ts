@@ -44,21 +44,20 @@ export async function OPTIONS(req: NextRequest) {
   }
   return new Response(null, { status: 403 });
 }
-
 export async function GET(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: { params: Promise<{ path: string[] }> }
 ) {
-  const args = await params;
-  return handleRequest(req, args.path, 'GET');
+  const { path } = await context.params;
+  return handleRequest(req, path, 'GET');
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: { params: Promise<{ path: string[] }> }
 ) {
-  const args = await params;
-  return handleRequest(req, args.path, 'POST');
+  const { path } = await context.params;
+  return handleRequest(req, path, 'POST');
 }
 
 async function handleRequest(
