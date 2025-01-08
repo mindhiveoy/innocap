@@ -55,10 +55,6 @@ app.use('/api/v1', async (req, res) => {
   try {
     // If this is a prediction request, enrich the question with context
     if (req.path.includes('/prediction/')) {
-      //console.log('Current context in prediction:', {
-      //  selected: currentContext.selected?.indicator.name,
-      //  pinned: currentContext.pinned?.indicator.name
-      //});
       const { selected, pinned } = currentContext;
       
       let contextDescription = '';

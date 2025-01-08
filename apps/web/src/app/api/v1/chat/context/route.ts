@@ -10,11 +10,13 @@ let currentContext: IndicatorContext = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('Updating context with:', body); // Debug log
     currentContext = body;
     
     return new Response(JSON.stringify({ 
       success: true, 
-      updated: Date.now() 
+      updated: Date.now(),
+      context: currentContext // Return current context for verification
     }), {
       headers: { 'Content-Type': 'application/json' }
     });

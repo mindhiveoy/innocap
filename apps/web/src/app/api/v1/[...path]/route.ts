@@ -68,25 +68,25 @@ async function handleRequest(
 ) {
   try {
     const path = pathSegments.join('/');
-    
+    console.log('Incoming request to path:', path);
+
     // Create URL with the correct host
     const targetUrl = new URL(`/api/v1/${path}`, FLOWISE_HOST);
 
-    // Properly forward all query parameters from the original URL
+    // Only handle POST requests to the specific prediction endpoint
+    if (path.includes('prediction') && method === 'POST') {
+      const predictionResponse = await fetch(`${req.nextUrl.origin}/api/v1/chat/prediction`, {
+        method: 'POST',
+        headers: getForwardHeaders(req),
+        body: req.body
+      });
+      return predictionResponse;
+    }
+
+    // All other requests go directly to Flowise
     const originalSearchParams = new URL(req.url).searchParams;
     originalSearchParams.forEach((value, key) => {
       targetUrl.searchParams.append(key, value);
-    });
-
-    // Debug logging for request routing
-    console.log('Request routing info:', {
-      originalUrl: req.url,
-      targetUrl: targetUrl.toString(),
-      method: method,
-      path: path,
-      pathSegments: pathSegments,
-      searchParams: Object.fromEntries(originalSearchParams),
-      flowiseHost: FLOWISE_HOST
     });
 
     // Get the request body if it exists
@@ -95,7 +95,6 @@ async function handleRequest(
       try {
         const clonedReq = req.clone();
         const contentType = req.headers.get('Content-Type') || '';
-        
         if (contentType.includes('application/json')) {
           body = await clonedReq.json();
         } else if (contentType.includes('text/plain')) {
@@ -108,17 +107,7 @@ async function handleRequest(
       }
     }
 
-    // Add this before the Flowise fetch call
-    if (method !== 'GET') {
-      console.log('Outgoing request:', {
-        url: targetUrl.toString(),
-        method,
-        headers: getForwardHeaders(req),
-        body
-      });
-    }
-
-    // Forward the request to Flowise with proper headers
+    // Forward the request to Flowise
     const flowiseResponse = await fetch(targetUrl, {
       method,
       headers: getForwardHeaders(req),

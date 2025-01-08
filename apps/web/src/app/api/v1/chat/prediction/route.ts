@@ -2,28 +2,45 @@ import { NextRequest } from 'next/server';
 import { CHAT_CONFIG } from '@/config/chat';
 import { IndicatorContext, IndicatorData, MunicipalityData } from '@/types/chat';
 
+// Define the Flowise host
+const FLOWISE_HOST = 'https://bot.mindhive.fi';
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    console.log('Prediction request body:', body);
     const headers = new Headers(req.headers);
     
-    const contextResponse = await fetch('/api/chat/context');
-    const context = (await contextResponse.json()).data as IndicatorContext;
+    const contextResponse = await fetch(`${req.nextUrl.origin}/api/v1/chat/context`);
+    const contextData = await contextResponse.json();
+    console.log('Context response:', contextData);
     
+    if (!contextData.data?.selected) {
+      console.warn('No indicator selected in context');
+    }
+
+    const context = contextData.data as IndicatorContext;
+    
+    const enrichedQuestion = `
+${generateContextDescription(context)}
+
+Question: ${body.question}`.trim();
+
     const enrichedBody = {
       ...body,
-      question: `
-        ${generateContextDescription(context)}
-        Question: ${body.question}
-      `.trim()
+      chatflowid: CHAT_CONFIG.CHATFLOW_ID,
+      question: enrichedQuestion
     };
 
+    console.log('Enriched body:', enrichedBody);
+    
     const response = await fetch(
-      `${CHAT_CONFIG.FLOWISE_API_HOST}/api/v1/prediction`,
+      `${FLOWISE_HOST}/api/v1/prediction/${CHAT_CONFIG.CHATFLOW_ID}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': req.headers.get('Authorization') || '',
           'x-selected-indicator': headers.get('x-selected-indicator') || '',
           'x-municipality-data': headers.get('x-municipality-data') || '',
         },
