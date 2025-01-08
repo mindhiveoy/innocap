@@ -10,7 +10,6 @@ let currentContext: IndicatorContext = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log('Updating context with:', body); // Debug log
     currentContext = body;
     
     return new Response(JSON.stringify({ 

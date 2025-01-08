@@ -92,8 +92,7 @@ export const ChatBubble = () => {
         body: JSON.stringify(contextData)
       });
 
-      const responseData = await response.json();
-      console.log('Context update response:', responseData);
+      await response.json();
     } catch (error) {
       console.error('Failed to update context:', error);
     }

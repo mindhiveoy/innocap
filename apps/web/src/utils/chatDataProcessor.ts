@@ -60,6 +60,13 @@ interface ProcessedIndicatorData {
         values: number[];
         years: number[];
       };
+      details?: Array<{
+        name: string;
+        phase?: string;
+        info?: string;
+        value?: number;
+        year?: number;
+      }>;
     }>;
   };
 }
@@ -77,7 +84,7 @@ function isNaturaStats(stats: NaturaStatsType | OrganicStatsType): stats is Natu
   return 'totalAreas' in stats;
 }
 
-export function processSpecialIndicators(municipalityCode: string) {
+function processSpecialIndicators(municipalityCode: string) {
   const result: string[] = [];
 
   // Natura 2000 stats
@@ -101,7 +108,7 @@ export function processSpecialIndicators(municipalityCode: string) {
   return result.join(' ');
 }
 
-export function processIndicatorData(
+function processIndicatorData(
   indicator: Indicator | null,
   municipalityData: MunicipalityLevelData[],
   markerData: MarkerData[],
@@ -176,7 +183,7 @@ export function processIndicatorData(
             highest,
             lowest,
           },
-          trend: calculateTrend(Object.values(byMunicipality).map(d => d.values))
+          trend: calculateTrend(Object.values(byMunicipality).map(d => d.values), indicator.indicatorType)
         },
         data: {
           byMunicipality: processedData
@@ -187,8 +194,19 @@ export function processIndicatorData(
     case IndicatorType.Marker: {
       const isChargingStation = indicator.id === 'ELECTRIC_CHARGING';
       
-      // Group by municipality
-      const byMunicipality: Record<string, { values: number[]; years: number[]; count?: number }> = {};
+      // Group by municipality and include additional info
+      const byMunicipality: Record<string, {
+        values: number[];
+        years: number[];
+        count?: number;
+        items: Array<{
+          name: string;
+          phase: string;
+          info?: string;
+          value?: number;
+          year?: number;
+        }>;
+      }> = {};
       
       markerData
         .filter(d => d.id === indicator.id)
@@ -197,12 +215,21 @@ export function processIndicatorData(
             byMunicipality[d.municipalityName] = { 
               values: [], 
               years: [],
-              count: 0 
+              count: 0,
+              items: []
             };
           }
           
+          // Add detailed item info
+          byMunicipality[d.municipalityName].items.push({
+            name: d.descriptionEn,
+            phase: d.phase,
+            info: d.info,
+            value: d.value,
+            year: d.year
+          });
+          
           if (isChargingStation) {
-            // number of locations
             byMunicipality[d.municipalityName].count! += 1;
             byMunicipality[d.municipalityName].values.push(1);
           } else if (typeof d.value === 'number') {
@@ -211,13 +238,16 @@ export function processIndicatorData(
           byMunicipality[d.municipalityName].years.push(d.year || 0);
         });
 
-      const processedData: ProcessedIndicatorData['data']['byMunicipality'] = {};
+      const firstMarker = markerData.find(d => d.id === indicator.id);
+      if (!firstMarker) return null;
+
+      // Process data for summary
       let latestYear = 0;
+      const processedData: ProcessedIndicatorData['data']['byMunicipality'] = {};
       const latestValues: { municipality: string; value: number }[] = [];
 
       Object.entries(byMunicipality).forEach(([municipality, data]) => {
         const value = isChargingStation ? data.count! : data.values[data.values.length - 1];
-        
         if (value !== undefined) {
           const latest = {
             value,
@@ -232,17 +262,13 @@ export function processIndicatorData(
             trend: {
               values: data.values,
               years: data.years
-            }
+            },
+            details: data.items // Add the detailed items
           };
         }
       });
 
-      if (Object.keys(processedData).length === 0) return null;
-
-      const firstMarker = markerData.find(d => d.id === indicator.id);
-      if (!firstMarker) return null;
-
-      // Add summary for markers with numerical values
+      // Create summary
       const summary = latestValues.length > 0 ? {
         latest: {
           year: latestYear,
@@ -250,13 +276,32 @@ export function processIndicatorData(
           highest: latestValues.reduce((max, d) => d.value > max.value ? d : max),
           lowest: latestValues.reduce((min, d) => d.value < min.value ? d : min)
         },
-        trend: calculateTrend(Object.values(byMunicipality).map(d => d.values))
+        trend: calculateTrend(Object.values(byMunicipality).map(d => d.values), indicator.indicatorType)
       } : undefined;
+
+      // Create enriched description
+      const description = firstMarker.descriptionEn + 
+        (isChargingStation 
+          ? ` (${Object.values(byMunicipality).reduce((sum, m) => sum + m.count!, 0)} stations in total)`
+          : '') +
+        '\nStatus breakdown: ' +
+        Object.entries(
+          Object.values(byMunicipality)
+            .flatMap(m => m.items)
+            .reduce((acc, item) => {
+              const key = item.phase;
+              if (!acc[key]) acc[key] = { count: 0 };
+              acc[key].count++;
+              return acc;
+            }, {} as Record<string, { count: number }>)
+        )
+        .map(([phase, data]) => `${phase}: ${data.count}`)
+        .join(', ');
 
       return {
         indicator: {
           ...baseIndicatorInfo,
-          description: firstMarker.descriptionEn,
+          description,
           unit: firstMarker.unit,
           year: latestYear,
         },
@@ -268,51 +313,69 @@ export function processIndicatorData(
     }
 
     case IndicatorType.BarChart: {
-      // Group by municipality
-      const byMunicipality: Record<string, { values: number[][]; years: number[] }> = {};
+      // Group by municipality with categories
+      const byMunicipality: Record<string, {
+        categories: Array<{
+          label: string;
+          value: number;
+          year: number;
+        }>;
+      }> = {};
       
       barChartData
         .filter(d => d.id === indicator.id)
         .forEach(d => {
           if (!byMunicipality[d.municipalityName]) {
-            byMunicipality[d.municipalityName] = { values: [], years: [] };
+            byMunicipality[d.municipalityName] = { 
+              categories: []
+            };
           }
-          byMunicipality[d.municipalityName].values.push(d.values);
-          byMunicipality[d.municipalityName].years.push(d.year);
+          
+          // Add each category with its value
+          byMunicipality[d.municipalityName].categories.push({
+            label: d.labels[0], // Each row has one category
+            value: d.values[0], // And one value
+            year: d.year
+          });
         });
 
+      // Process into summary format
       const processedData: ProcessedIndicatorData['data']['byMunicipality'] = {};
       let latestYear = 0;
+      const allCategories = new Set<string>();
 
       Object.entries(byMunicipality).forEach(([municipality, data]) => {
-        const latestIdx = data.years.indexOf(Math.max(...data.years));
-        const latest = {
-          value: data.values[latestIdx][0], // Using first value as representative
-          year: data.years[latestIdx]
-        };
-        
-        latestYear = Math.max(latestYear, latest.year);
+        data.categories.forEach(cat => {
+          allCategories.add(cat.label);
+          latestYear = Math.max(latestYear, cat.year);
+        });
 
         processedData[municipality] = {
-          latest,
-          trend: {
-            values: data.values.map(v => v[0]), // Using first value of each year
-            years: data.years
-          }
+          latest: {
+            value: data.categories.reduce((sum, cat) => sum + cat.value, 0),
+            year: Math.max(...data.categories.map(c => c.year))
+          },
+          details: data.categories.map(cat => ({
+            name: cat.label,
+            value: cat.value,
+            year: cat.year
+          }))
         };
       });
-
-      if (Object.keys(processedData).length === 0) return null;
 
       const firstBarChart = barChartData.find(d => d.id === indicator.id);
       if (!firstBarChart) return null;
 
+      // Create enriched description with category breakdown
+      const description = firstBarChart.descriptionEn + '\n' +
+        'Categories: ' + Array.from(allCategories).join(', ');
+
       return {
         indicator: {
           ...baseIndicatorInfo,
-          description: firstBarChart.descriptionEn,
+          description,
           unit: firstBarChart.unit,
-          year: latestYear,
+          year: latestYear
         },
         data: {
           byMunicipality: processedData
@@ -325,12 +388,37 @@ export function processIndicatorData(
   }
 }
 
-function calculateTrend(values: number[][]): string {
-  // Simple trend calculation based on average change
+function calculateTrend(values: number[][], indicatorType?: string): string {
   const allValues = values.flat();
-  const avgChange = (allValues[allValues.length - 1] - allValues[0]) / (allValues.length - 1);
-  if (Math.abs(avgChange) < 0.1) return 'stable';
-  return avgChange > 0 ? 'increasing' : 'decreasing';
+  if (allValues.length < 2) return 'N/A';
+
+  // Calculate year-over-year changes
+  const changes = [];
+  for (let i = 1; i < allValues.length; i++) {
+    //Avoid division by zero
+    const prevValue = allValues[i-1] || 0.0001;
+    const percentChange = ((allValues[i] - prevValue) / prevValue) * 100;
+    changes.push(percentChange);
+  }
+
+  // Average change
+  const avgChange = changes.reduce((sum, change) => sum + change, 0) / changes.length;
+
+  // Adjust thresholds based on indicator type
+  const thresholds = {
+    default: { slight: 2, moderate: 5, rapid: 10 },
+    percentage: { slight: 1, moderate: 3, rapid: 5 },
+    emissions: { slight: 3, moderate: 8, rapid: 15 }
+  };
+
+  const { slight, moderate, rapid } = thresholds[indicatorType as keyof typeof thresholds] || thresholds.default;
+
+  if (Math.abs(avgChange) < slight) return 'stable';
+  if (Math.abs(avgChange) < moderate) 
+    return avgChange > 0 ? 'slightly increasing' : 'slightly decreasing';
+  if (Math.abs(avgChange) < rapid) 
+    return avgChange > 0 ? 'increasing' : 'decreasing';
+  return avgChange > 0 ? 'rapidly increasing' : 'rapidly decreasing';
 }
 
 export function processChatData(

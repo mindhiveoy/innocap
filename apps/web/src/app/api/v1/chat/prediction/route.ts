@@ -8,12 +8,10 @@ const FLOWISE_HOST = 'https://bot.mindhive.fi';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    console.log('Prediction request body:', body);
     const headers = new Headers(req.headers);
     
     const contextResponse = await fetch(`${req.nextUrl.origin}/api/v1/chat/context`);
     const contextData = await contextResponse.json();
-    console.log('Context response:', contextData);
     
     if (!contextData.data?.selected) {
       console.warn('No indicator selected in context');
@@ -31,8 +29,6 @@ Question: ${body.question}`.trim();
       chatflowid: CHAT_CONFIG.CHATFLOW_ID,
       question: enrichedQuestion
     };
-
-    console.log('Enriched body:', enrichedBody);
     
     const response = await fetch(
       `${FLOWISE_HOST}/api/v1/prediction/${CHAT_CONFIG.CHATFLOW_ID}`,

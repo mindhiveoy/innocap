@@ -1,3 +1,5 @@
+/* 
+DEPRECATED! Keep it for reference.
 import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
@@ -184,4 +186,4 @@ const server = app.listen(PORT, () => {
   } else {
     console.error('Server error:', err);
   }
-});
+}); */

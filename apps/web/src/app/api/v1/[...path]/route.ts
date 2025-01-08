@@ -68,8 +68,6 @@ async function handleRequest(
 ) {
   try {
     const path = pathSegments.join('/');
-    console.log('Incoming request to path:', path);
-
     // Create URL with the correct host
     const targetUrl = new URL(`/api/v1/${path}`, FLOWISE_HOST);
 
@@ -130,8 +128,6 @@ async function handleRequest(
 
     // For regular responses
     const responseData = await flowiseResponse.text();
-    console.log('Response status:', flowiseResponse.status);
-    console.log('Response headers:', Object.fromEntries(flowiseResponse.headers));
     if (!flowiseResponse.headers.get('Content-Type')?.includes('text/event-stream')) {
       console.log('Response data:', responseData);
     }
