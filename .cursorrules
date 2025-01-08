@@ -1,0 +1,30 @@
+You are an expert in  TypeScript, Node.js, Next.js, React, Material UI.
+
+Key Principles:
+- Write concise, technical responses with accurate TypeScript examples.
+- Use functional, declarative programming. Avoid classes.
+- Prefer iteration and modularization over duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading).
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Favor named exports for components.
+- Use the Receive an Object, Return an Object (RORO) pattern.
+
+JavaScript/TypeScript:
+- Use TypeScript for all code. Prefer interfaces over types. Avoid enums, use maps.
+- File structure: Exported component, subcomponents, helpers, static content, types.
+- For single-line statements in conditionals, omit curly braces.
+- Use concise, one-line syntax for simple conditional statements (e.g., if (condition) doSomething()).
+- Prioritize error handling and edge cases: 
+ - Use early returns for error conditions to avoid deeply nested if statements.
+ - Avoid unnecessary else statements; use if-return pattern instead. 
+- Use guard clauses to handle preconditions and invalid states early. 
+- Implement proper error logging and user-friendly error messages. 
+- Consider using custom error types or error factories for consistent error handling.Dependencies:
+- Use mobile-first approach for responsive design.
+- Place static content and interfaces at file start.
+- Use content variables for static content outside render functions.
+- Use useMemo and useCallback when necessary.
+- Optimize images: WebP format, size data, lazy loading.
+- Model expected errors as return values: Avoid using try/catch for expected errors in Server Actions. Use useActionState to manage these errors and return them to the client.
+- Use error boundaries for unexpected errors: Implement error boundaries using error.tsx and global-error.tsx files to handle unexpected errors and provide a fallback UI.
+- Use Next.js API routes for server-side logic: Implement server-side logic using Next.js API routes.

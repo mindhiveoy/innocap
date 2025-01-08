@@ -44,8 +44,7 @@ const preloadImages = async (images: string[]): Promise<Record<string, string>> 
 // Constants
 const CHATBOT_CONFIG = {
   FLOW_ID: "104f68db-a8d6-4135-acfc-6bb496040981",
-  API_HOST: "http://localhost:3001",
-  MIDDLEWARE_URL: "http://localhost:3001",
+  API_HOST: '', // Empty string to use relative paths from root
   ASSETS: {
     BOT_AVATAR: '/innocap_logo.png',
     USER_AVATAR: '/user.png',
@@ -85,9 +84,7 @@ export const ChatBubble = () => {
         specialStats: processedData.specialStats
       };
 
-     // console.log('Full context data being sent:', JSON.stringify(contextData, null, 2));
-
-      const response = await fetch(`${CHATBOT_CONFIG.MIDDLEWARE_URL}/api/context`, {
+      const response = await fetch('/api/v1/chat/context', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +109,7 @@ export const ChatBubble = () => {
       const chatbot = await import('flowise-embed/dist/web');
       chatbot.default.init({
         chatflowid: CHATBOT_CONFIG.FLOW_ID,
-        apiHost: CHATBOT_CONFIG.API_HOST,
+        apiHost: `http://${location.hostname}:${location.port}`,  // Direct relative path
         chatflowConfig: {
           topK: 2
         },
