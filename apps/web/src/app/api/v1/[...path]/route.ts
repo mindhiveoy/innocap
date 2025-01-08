@@ -6,6 +6,10 @@ export const runtime = 'edge';
 // Define the Flowise host
 const FLOWISE_HOST = 'https://bot.mindhive.fi';
 
+// Type guard for origin check
+const isAllowedOrigin = (origin: string | null): origin is typeof CHAT_CONFIG.ALLOWED_ORIGINS[number] => 
+  origin !== null && (CHAT_CONFIG.ALLOWED_ORIGINS as readonly string[]).includes(origin);
+
 // Helper to forward relevant headers
 function getForwardHeaders(req: NextRequest): HeadersInit {
   const headers: HeadersInit = {
@@ -19,8 +23,9 @@ function getForwardHeaders(req: NextRequest): HeadersInit {
   }
 
   // Add CORS headers
-  if (CHAT_CONFIG.ALLOWED_ORIGINS.includes(req.headers.get('origin') || '')) {
-    headers['Access-Control-Allow-Origin'] = req.headers.get('origin') || '';
+  const origin = req.headers.get('origin');
+  if (isAllowedOrigin(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
     headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
     headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
   }
@@ -30,7 +35,8 @@ function getForwardHeaders(req: NextRequest): HeadersInit {
 
 export async function OPTIONS(req: NextRequest) {
   // Handle CORS preflight
-  if (CHAT_CONFIG.ALLOWED_ORIGINS.includes(req.headers.get('origin') || '')) {
+  const origin = req.headers.get('origin');
+  if (isAllowedOrigin(origin)) {
     return new Response(null, {
       status: 204,
       headers: getForwardHeaders(req),

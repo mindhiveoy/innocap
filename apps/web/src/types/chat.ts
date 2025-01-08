@@ -40,4 +40,19 @@ export interface MunicipalityData {
     value: number;
     year: number;
   };
+}
+
+export interface ChatRequest {
+  chatflowid: string;
+  question: string;
+  overrideConfig?: Record<string, unknown>;
+}
+
+export interface FlowiseResponse {
+  message: string;
+  type: string;
+}
+
+export interface TransformedResponse extends FlowiseResponse {
+  timestamp: number;
 } 
