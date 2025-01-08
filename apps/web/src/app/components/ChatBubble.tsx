@@ -108,7 +108,7 @@ export const ChatBubble = () => {
       const chatbot = await import('flowise-embed/dist/web');
       chatbot.default.init({
         chatflowid: CHATBOT_CONFIG.FLOW_ID,
-        apiHost: `http://${location.hostname}:${location.port}`,  // Direct relative path
+        apiHost: window.location.origin,
         chatflowConfig: {
           topK: 2
         },
