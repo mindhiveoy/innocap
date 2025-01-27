@@ -7,6 +7,8 @@ import { useTheme } from '@mui/material/styles'
 import { useIndicator } from '@/contexts/IndicatorContext';
 import { useData } from '@/contexts/DataContext';
 import { processChatData } from '@/utils/chatDataProcessor';
+import { ChatService } from '@/utils/chatClient';
+import { apiClient } from '@/utils/apiClient'
 //import WbIncandescentIcon from '@mui/icons-material/WbIncandescent';
 
 //Preload images and get data URLs
@@ -75,24 +77,16 @@ export const ChatBubble = () => {
         municipalityData,
         markerData,
         barChartData,
-        '' 
+        ''
       );
 
       const contextData = {
         selected: processedData.selected,
         pinned: processedData.pinned,
         specialStats: processedData.specialStats
-      };
+      } ;
 
-      const response = await fetch('/api/v1/chat/context', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contextData)
-      });
-
-      await response.json();
+      await ChatService.updateContext(contextData);
     } catch (error) {
       console.error('Failed to update context:', error);
     }
@@ -110,7 +104,10 @@ export const ChatBubble = () => {
         chatflowid: CHATBOT_CONFIG.FLOW_ID,
         apiHost: window.location.origin,
         chatflowConfig: {
-          topK: 2
+          topK: 2,
+          overrideConfig: {
+            headers: apiClient.getSessionHeaders(),
+          }
         },
         theme: {
           button: {
