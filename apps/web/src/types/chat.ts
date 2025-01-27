@@ -91,4 +91,24 @@ export interface ProcessedIndicatorData extends IndicatorData {
       }>;
     }>;
   };
+}
+
+export interface IndicatorSelection {
+  indicator: {
+    id: string;
+    indicatorNameEn: string;
+    indicatorType: string;
+    group: string;
+  };
+  data: {
+    municipalityCode: string;
+    value: number;
+    year: number;
+  }[];
+}
+
+export interface SimpleIndicatorRequest {
+  selected?: IndicatorSelection;
+  pinned?: IndicatorSelection;
+  municipalityCode: string;
 } 

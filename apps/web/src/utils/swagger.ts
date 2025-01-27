@@ -13,8 +13,12 @@ export const getApiDocs = () => {
       servers: [
         {
           url: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
-          description: 'API Server',
+          description: 'Development API Server',
         },
+        {
+          url: 'http://localhost:3001',
+          description: 'Documentation Server',
+        }
       ],
     },
   });

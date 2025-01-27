@@ -82,10 +82,10 @@ export const ChatBubble = () => {
         } : undefined,
         municipalityCode: '' // TODO: Get municipality code from context
       });
-
       if (!response.success) {
         throw new Error(response.error || 'Failed to process indicators');
       }
+console.log('responssi ===> ', response)
 
       // Context is automatically updated on the server side
       // No need to call ChatService.updateContext() anymore

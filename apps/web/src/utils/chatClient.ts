@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiClient } from './apiClient';
-import { IndicatorContext, ProcessedIndicatorData } from '@/types/chat';
+import { 
+  IndicatorContext, 
+  ProcessedIndicatorData, 
+  SimpleIndicatorRequest 
+} from '@/types/chat';
 import { 
   Indicator, 
   MunicipalityLevelData, 
@@ -120,13 +124,43 @@ export const ChatService = {
   },
 
   processIndicators: async (data: IndicatorRequest) => {
+    // Transform to simpler format
+    const simplifiedData: SimpleIndicatorRequest = {
+      selected: data.selected ? {
+        indicator: {
+          id: data.selected.indicator.id,
+          indicatorNameEn: data.selected.indicator.indicatorNameEn,
+          indicatorType: data.selected.indicator.indicatorType,
+          group: data.selected.indicator.group
+        },
+        data: data.selected.municipalityData.map(d => ({
+          municipalityCode: d.municipalityCode,
+          value: d.value,
+          year: d.year
+        }))
+      } : undefined,
+      pinned: data.pinned ? {
+        indicator: {
+          id: data.pinned.indicator.id,
+          indicatorNameEn: data.pinned.indicator.indicatorNameEn,
+          indicatorType: data.pinned.indicator.indicatorType,
+          group: data.pinned.indicator.group
+        },
+        data: data.pinned.municipalityData.map(d => ({
+          municipalityCode: d.municipalityCode,
+          value: d.value,
+          year: d.year
+        }))
+      } : undefined,
+      municipalityCode: data.municipalityCode
+    };
+
     const currentSession = apiClient.getSessionId();
-    
     const headers = currentSession ? { 'x-session-id': currentSession } : undefined;
     
-    return apiClient.post<IndicatorResponse, IndicatorRequest>(
+    return apiClient.post<IndicatorResponse, SimpleIndicatorRequest>(
       '/api/v1/indicators',
-      data,
+      simplifiedData,
       headers ? { headers } : undefined
     );
   },
