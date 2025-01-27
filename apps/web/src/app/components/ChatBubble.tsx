@@ -6,7 +6,6 @@ import { useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useIndicator } from '@/contexts/IndicatorContext';
 import { useData } from '@/contexts/DataContext';
-import { processChatData } from '@/utils/chatDataProcessor';
 import { ChatService } from '@/utils/chatClient';
 import { apiClient } from '@/utils/apiClient'
 //import WbIncandescentIcon from '@mui/icons-material/WbIncandescent';
@@ -68,25 +67,29 @@ export const ChatBubble = () => {
         return;
       }
 
-      const processedData = processChatData(
-        selectedIndicator,
-        municipalityData,
-        markerData,
-        barChartData,
-        pinnedIndicator,
-        municipalityData,
-        markerData,
-        barChartData,
-        ''
-      );
+      const response = await ChatService.processIndicators({
+        selected: selectedIndicator ? {
+          indicator: selectedIndicator,
+          municipalityData,
+          markerData,
+          barChartData
+        } : undefined,
+        pinned: pinnedIndicator ? {
+          indicator: pinnedIndicator,
+          municipalityData,
+          markerData,
+          barChartData
+        } : undefined,
+        municipalityCode: '' // TODO: Get municipality code from context
+      });
 
-      const contextData = {
-        selected: processedData.selected,
-        pinned: processedData.pinned,
-        specialStats: processedData.specialStats
-      } ;
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to process indicators');
+      }
 
-      await ChatService.updateContext(contextData);
+      // Context is automatically updated on the server side
+      // No need to call ChatService.updateContext() anymore
+
     } catch (error) {
       console.error('Failed to update context:', error);
     }

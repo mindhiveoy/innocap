@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 
-// Define allowed API paths explicitly
+// Update protected paths to include the new indicators endpoint
 const PROTECTED_PATHS = [
   '/api/v1/chat/context',
-  '/api/v1/chat/prediction'
+  '/api/v1/chat/prediction',
+  '/api/v1/indicators'
 ];
 
 export async function sessionMiddleware(
@@ -40,6 +41,7 @@ export const config = {
   matcher: [
     // Only match exact chat endpoints that need session handling
     '/api/v1/chat/context',
-    '/api/v1/chat/prediction'
+    '/api/v1/chat/prediction',
+    '/api/v1/indicators'
   ]
 } 

@@ -431,7 +431,7 @@ function calculateTrend(values: number[][], indicatorType?: string): string {
   return avgChange > 0 ? 'rapidly increasing' : 'rapidly decreasing';
 }
 
-export function processChatData(
+function processChatData(
   selectedIndicator: Indicator | null,
   selectedMunicipalityData: MunicipalityLevelData[],
   selectedMarkerData: MarkerData[],
@@ -522,3 +522,10 @@ export function processChatData(
     specialStats
   };
 }
+
+export {
+  processChatData,
+  processIndicatorData,
+  calculateTrend,
+  processSpecialIndicators
+};

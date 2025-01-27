@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiClient } from './apiClient';
-import { IndicatorContext } from '@/types/chat';
+import { IndicatorContext, ProcessedIndicatorData } from '@/types/chat';
+import { 
+  Indicator, 
+  MunicipalityLevelData, 
+  MarkerData, 
+  BarChartData 
+} from '@repo/ui/types/indicators';
 
 interface PredictionRequest {
   question: string;
@@ -24,6 +30,32 @@ interface PredictionResponse {
 interface ContextResponse {
   success: boolean;
   data?: IndicatorContext;
+  error?: string;
+}
+
+interface IndicatorRequest {
+  selected?: {
+    indicator: Indicator;
+    municipalityData: MunicipalityLevelData[];
+    markerData: MarkerData[];
+    barChartData: BarChartData[];
+  };
+  pinned?: {
+    indicator: Indicator;
+    municipalityData: MunicipalityLevelData[];
+    markerData: MarkerData[];
+    barChartData: BarChartData[];
+  };
+  municipalityCode: string;
+}
+
+interface IndicatorResponse {
+  success: boolean;
+  data?: {
+    selected?: ProcessedIndicatorData;
+    pinned?: ProcessedIndicatorData;
+    specialStats?: string;
+  };
   error?: string;
 }
 
@@ -85,5 +117,17 @@ export const ChatService = {
   clearSession: () => {
     console.debug('💬 Clearing session');
     return apiClient.clearSession();
+  },
+
+  processIndicators: async (data: IndicatorRequest) => {
+    const currentSession = apiClient.getSessionId();
+    
+    const headers = currentSession ? { 'x-session-id': currentSession } : undefined;
+    
+    return apiClient.post<IndicatorResponse, IndicatorRequest>(
+      '/api/v1/indicators',
+      data,
+      headers ? { headers } : undefined
+    );
   },
 }; 
