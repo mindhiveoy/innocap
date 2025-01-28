@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 const PROTECTED_PATHS = [
   '/api/v1/chat/context',
   '/api/v1/chat/prediction',
-  '/api/v1/indicators'
 ];
 
 export async function sessionMiddleware(
@@ -42,6 +41,5 @@ export const config = {
     // Only match exact chat endpoints that need session handling
     '/api/v1/chat/context',
     '/api/v1/chat/prediction',
-    '/api/v1/indicators'
   ]
 } 

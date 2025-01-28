@@ -6,6 +6,11 @@ declare module 'flowise-embed/dist/web' {
       topK?: number;
       overrideConfig?: {
         headers?: Record<string, string>;
+        context?: {
+          selected?: ProcessedIndicatorData;
+          pinned?: ProcessedIndicatorData;
+          specialStats?: string;
+        };
       };
     };
     observersConfig?: {

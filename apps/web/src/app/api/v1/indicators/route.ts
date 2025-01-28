@@ -15,60 +15,33 @@ import { getDataFromContext } from '@/utils/dataContext';
  *           properties:
  *             indicator:
  *               type: object
+ *               required:
+ *                 - id
  *               properties:
  *                 id:
  *                   type: string
- *                 indicatorNameEn:
- *                   type: string
- *                 indicatorType:
- *                   type: string
- *                 group:
- *                   type: string
- *             data:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   municipalityCode:
- *                     type: string
- *                   value:
- *                     type: number
- *                   year:
- *                     type: number
+ *                   description: Unique identifier for the indicator (e.g., "GAS_VEHICLE_REFUELING")
  *         pinned:
  *           type: object
  *           properties:
  *             indicator:
  *               type: object
+ *               required:
+ *                 - id
  *               properties:
  *                 id:
  *                   type: string
- *                 indicatorNameEn:
- *                   type: string
- *                 indicatorType:
- *                   type: string
- *                 group:
- *                   type: string
- *             data:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   municipalityCode:
- *                     type: string
- *                   value:
- *                     type: number
- *                   year:
- *                     type: number
- *         municipalityCode:
- *           type: string
- *           description: Municipality code for context
+ *                   description: Unique identifier for the indicator (e.g., "ELECTRIC_REGISTRATION")
  * 
  *     ProcessedIndicatorData:
  *       type: object
  *       properties:
  *         indicator:
  *           type: object
+ *           required:
+ *             - name
+ *             - type
+ *             - group
  *           properties:
  *             name:
  *               type: string
@@ -87,6 +60,11 @@ import { getDataFromContext } from '@/utils/dataContext';
  *           properties:
  *             latest:
  *               type: object
+ *               required:
+ *                 - year
+ *                 - average
+ *                 - highest
+ *                 - lowest
  *               properties:
  *                 year:
  *                   type: number
@@ -108,9 +86,10 @@ import { getDataFromContext } from '@/utils/dataContext';
  *                       type: number
  *             trend:
  *               type: string
- *               description: "e.g., 'increasing', 'decreasing', 'stable'"
  *         data:
  *           type: object
+ *           required:
+ *             - byMunicipality
  *           properties:
  *             byMunicipality:
  *               type: object
@@ -153,6 +132,8 @@ import { getDataFromContext } from '@/utils/dataContext';
  * 
  *     IndicatorResponse:
  *       type: object
+ *       required:
+ *         - success
  *       properties:
  *         success:
  *           type: boolean
@@ -165,7 +146,6 @@ import { getDataFromContext } from '@/utils/dataContext';
  *               $ref: '#/components/schemas/ProcessedIndicatorData'
  *             specialStats:
  *               type: string
- *               description: Additional statistics for special indicators (Natura 2000, Organic Farming)
  * 
  * /api/v1/indicators:
  *   post:
@@ -177,6 +157,13 @@ import { getDataFromContext } from '@/utils/dataContext';
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/SimpleIndicatorRequest'
+ *           example:
+ *             selected:
+ *               indicator:
+ *                 id: "GAS_VEHICLE_REFUELING"
+ *             pinned:
+ *               indicator:
+ *                 id: "ELECTRIC_REGISTRATION"
  *     responses:
  *       200:
  *         description: Successfully processed indicators
@@ -184,6 +171,24 @@ import { getDataFromContext } from '@/utils/dataContext';
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/IndicatorResponse'
+ *       404:
+ *         description: No data found for the provided indicator IDs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *                 debug:
+ *                   type: object
+ *                   properties:
+ *                     selectedId:
+ *                       type: string
+ *                     pinnedId:
+ *                       type: string
  *       500:
  *         description: Server error
  *         content:
@@ -201,11 +206,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json() as SimpleIndicatorRequest;
     
-    // Get full data from context using indicator IDs
+    // Get full data using indicator IDs
     const {
       selectedData,
       pinnedData
     } = await getDataFromContext(body.selected?.indicator.id, body.pinned?.indicator.id);
+
+    if (!selectedData && !pinnedData) {
+      return Response.json({
+        success: false,
+        error: 'No data found for the provided indicator IDs',
+        debug: {
+          selectedId: body.selected?.indicator?.id,
+          pinnedId: body.pinned?.indicator?.id
+        }
+      }, { status: 404 });
+    }
 
     // Process the indicator data with full context data
     const processedData = processChatData(
@@ -229,7 +245,8 @@ export async function POST(request: NextRequest) {
     console.error('Error processing indicators:', error);
     return Response.json({
       success: false,
-      error: 'Failed to process indicators'
+      error: 'Failed to process indicators',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }

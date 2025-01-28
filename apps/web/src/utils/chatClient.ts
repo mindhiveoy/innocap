@@ -1,167 +1,62 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { apiClient } from './apiClient';
 import { 
-  IndicatorContext, 
-  ProcessedIndicatorData, 
-  SimpleIndicatorRequest 
+  ProcessedIndicatorData,  
 } from '@/types/chat';
-import { 
-  Indicator, 
-  MunicipalityLevelData, 
-  MarkerData, 
-  BarChartData 
-} from '@repo/ui/types/indicators';
 
 interface PredictionRequest {
   question: string;
-  streaming?: boolean;
-}
-
-interface PredictionData {
-  text: string;
-  sourceDocuments?: Array<{
-    pageContent: string;
-    metadata: Record<string, unknown>;
-  }>;
-}
-
-interface PredictionResponse {
-  success: boolean;
-  data?: PredictionData;
-  error?: string;
-}
-
-interface ContextResponse {
-  success: boolean;
-  data?: IndicatorContext;
-  error?: string;
-}
-
-interface IndicatorRequest {
-  selected?: {
-    indicator: Indicator;
-    municipalityData: MunicipalityLevelData[];
-    markerData: MarkerData[];
-    barChartData: BarChartData[];
-  };
-  pinned?: {
-    indicator: Indicator;
-    municipalityData: MunicipalityLevelData[];
-    markerData: MarkerData[];
-    barChartData: BarChartData[];
-  };
-  municipalityCode: string;
-}
-
-interface IndicatorResponse {
-  success: boolean;
-  data?: {
+  context?: {
     selected?: ProcessedIndicatorData;
     pinned?: ProcessedIndicatorData;
     specialStats?: string;
   };
+}
+
+interface PredictionResponse {
+  success: boolean;
+  data?: {
+    text: string;
+    sourceDocuments?: Array<{
+      pageContent: string;
+      metadata: Record<string, unknown>;
+    }>;
+  };
   error?: string;
 }
 
+interface SimpleIndicatorData {
+  indicator: {
+    id: string;
+    indicatorNameEn: string;
+    indicatorType: string;
+    group: string;
+  };
+}
+
+interface SimpleIndicatorRequest {
+  selected?: SimpleIndicatorData;
+  pinned?: SimpleIndicatorData;
+  municipalityCode?: string;
+}
+
 export const ChatService = {
-  prediction: async (data: PredictionRequest, headers?: Record<string, string>) => {
-    const currentSession = apiClient.getSessionId();
-    console.debug('💬 Making prediction request:', { 
-      data, 
-      headers,
-      currentSession
-    });
-    
-
-    alert(JSON.stringify({
-      data,
-      headers,
-      currentSession
-    }));
-    const mergedHeaders = currentSession ? {
-      ...headers,
-      'x-session-id': currentSession
-    } : headers;
-
+  prediction: async (data: PredictionRequest) => {
+    console.debug('💬 Making prediction request:', data);
     return apiClient.post<PredictionResponse, PredictionRequest>(
       '/api/v1/chat/prediction', 
-      data, 
-      { headers: mergedHeaders, streaming: data.streaming }
+      data
     );
   },
 
-  updateContext: async (context: any) => {
-    const currentSession = apiClient.getSessionId();
-    console.debug('💬 Updating context:', {
-      context,
-      currentSession
+  processIndicators: async (request: SimpleIndicatorRequest) => {
+    const response = await fetch('/api/v1/indicators', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
     });
-    
-    const headers = currentSession ? { 'x-session-id': currentSession } : undefined;
-    
-    return apiClient.post<ContextResponse, Partial<IndicatorContext>>(
-      '/api/v1/chat/context', 
-      context,
-      headers ? { headers } : undefined
-    );
-  },
-
-  getContext: async () => {
-    const currentSession = apiClient.getSessionId();
-    console.debug('💬 Getting context:', { currentSession });
-    
-    const headers = currentSession ? { 'x-session-id': currentSession } : undefined;
-    
-    return apiClient.get<ContextResponse>(
-      '/api/v1/chat/context',
-      headers ? { headers } : undefined
-    );
-  },
-
-  clearSession: () => {
-    console.debug('💬 Clearing session');
-    return apiClient.clearSession();
-  },
-
-  processIndicators: async (data: IndicatorRequest) => {
-    // Transform to simpler format
-    const simplifiedData: SimpleIndicatorRequest = {
-      selected: data.selected ? {
-        indicator: {
-          id: data.selected.indicator.id,
-          indicatorNameEn: data.selected.indicator.indicatorNameEn,
-          indicatorType: data.selected.indicator.indicatorType,
-          group: data.selected.indicator.group
-        },
-        data: data.selected.municipalityData.map(d => ({
-          municipalityCode: d.municipalityCode,
-          value: d.value,
-          year: d.year
-        }))
-      } : undefined,
-      pinned: data.pinned ? {
-        indicator: {
-          id: data.pinned.indicator.id,
-          indicatorNameEn: data.pinned.indicator.indicatorNameEn,
-          indicatorType: data.pinned.indicator.indicatorType,
-          group: data.pinned.indicator.group
-        },
-        data: data.pinned.municipalityData.map(d => ({
-          municipalityCode: d.municipalityCode,
-          value: d.value,
-          year: d.year
-        }))
-      } : undefined,
-      municipalityCode: data.municipalityCode
-    };
-
-    const currentSession = apiClient.getSessionId();
-    const headers = currentSession ? { 'x-session-id': currentSession } : undefined;
-    
-    return apiClient.post<IndicatorResponse, SimpleIndicatorRequest>(
-      '/api/v1/indicators',
-      simplifiedData,
-      headers ? { headers } : undefined
-    );
-  },
+    return response.json();
+  }
 }; 
