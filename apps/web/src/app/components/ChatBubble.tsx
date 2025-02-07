@@ -5,9 +5,8 @@ import { theme } from '@repo/shared'
 import { useMediaQuery } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useIndicator } from '@/contexts/IndicatorContext';
-import { useData } from '@/contexts/DataContext';
-import { processChatData } from '@/utils/chatDataProcessor';
-//import WbIncandescentIcon from '@mui/icons-material/WbIncandescent';
+import { ChatService } from '@/utils/chatClient';
+import { apiClient } from '@/utils/apiClient'
 
 //Preload images and get data URLs
 const preloadImages = async (images: string[]): Promise<Record<string, string>> => {
@@ -56,7 +55,6 @@ export const ChatBubble = () => {
   const isMobile = useMediaQuery(muiTheme.breakpoints.down('md'))
   const preloadedImages = useRef<Record<string, string>>({})
   const { selectedIndicator, pinnedIndicator } = useIndicator();
-  const { municipalityData, markerData, barChartData } = useData();
   const chatInitialized = useRef(false);
 
   const updateContext = useCallback(async () => {
@@ -66,37 +64,34 @@ export const ChatBubble = () => {
         return;
       }
 
-      const processedData = processChatData(
-        selectedIndicator,
-        municipalityData,
-        markerData,
-        barChartData,
-        pinnedIndicator,
-        municipalityData,
-        markerData,
-        barChartData,
-        '' 
-      );
-
-      const contextData = {
-        selected: processedData.selected,
-        pinned: processedData.pinned,
-        specialStats: processedData.specialStats
-      };
-
-      const response = await fetch('/api/v1/chat/context', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(contextData)
+      const response = await ChatService.processIndicators({
+        selected: selectedIndicator ? {
+          indicator: {
+            id: selectedIndicator.id,
+            indicatorNameEn: selectedIndicator.indicatorNameEn,
+            indicatorType: selectedIndicator.indicatorType,
+            group: selectedIndicator.group
+          }
+        } : undefined,
+        pinned: pinnedIndicator ? {
+          indicator: {
+            id: pinnedIndicator.id,
+            indicatorNameEn: pinnedIndicator.indicatorNameEn,
+            indicatorType: pinnedIndicator.indicatorType,
+            group: pinnedIndicator.group
+          }
+        } : undefined
       });
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to process indicators');
+      }
 
-      await response.json();
+      return response;
+
     } catch (error) {
       console.error('Failed to update context:', error);
     }
-  }, [selectedIndicator, pinnedIndicator, municipalityData, markerData, barChartData]);
+  }, [selectedIndicator, pinnedIndicator]);
 
   const initChatbot = useCallback(async () => {
     try {
@@ -105,12 +100,43 @@ export const ChatBubble = () => {
         CHATBOT_CONFIG.ASSETS.USER_AVATAR
       ]);
 
+      // Get initial context if indicators are selected
+      let initialContext = {};
+      if (selectedIndicator || pinnedIndicator) {
+        const response = await ChatService.processIndicators({
+          selected: selectedIndicator ? {
+            indicator: {
+              id: selectedIndicator.id,
+              indicatorNameEn: selectedIndicator.indicatorNameEn,
+              indicatorType: selectedIndicator.indicatorType,
+              group: selectedIndicator.group
+            }
+          } : undefined,
+          pinned: pinnedIndicator ? {
+            indicator: {
+              id: pinnedIndicator.id,
+              indicatorNameEn: pinnedIndicator.indicatorNameEn,
+              indicatorType: pinnedIndicator.indicatorType,
+              group: pinnedIndicator.group
+            }
+          } : undefined
+        });
+
+        if (response.success && response.data) {
+          initialContext = response.data;
+        }
+      }
+
       const chatbot = await import('flowise-embed/dist/web');
       chatbot.default.init({
         chatflowid: CHATBOT_CONFIG.FLOW_ID,
         apiHost: window.location.origin,
         chatflowConfig: {
-          topK: 2
+          topK: 2,
+          overrideConfig: {
+            headers: apiClient.getSessionHeaders(),
+            context: initialContext
+          }
         },
         theme: {
           button: {
@@ -118,11 +144,6 @@ export const ChatBubble = () => {
             size: 'medium',
             bottom: isMobile ? 70 : 20,
             dragAndDrop: true,
-/*             customIconSrc: 'data:image/svg+xml;base64,' + btoa(`
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" style="transform: rotate(180deg)">
-                <path d="M3.55 18.54l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8zM11 22.45h2V19.5h-2v2.95zM4 10.5H1v2h3v-2zm11-4.19V1.5H9v4.81C7.21 7.35 6 9.28 6 11.5c0 3.31 2.69 6 6 6s6-2.69 6-6c0-2.22-1.21-4.15-3-5.19zm5 4.19v2h3v-2h-3zm-2.76 7.66l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4z"/>
-              </svg>
-            `), */
           },
           chatWindow: {
             welcomeMessage: 'Hi! How can I help you today with Mikkeli, Kangasniemi and Juva strategies?',
@@ -166,9 +187,22 @@ export const ChatBubble = () => {
           }
         },
         observersConfig: {
-          observeUserInput: () => {
+          observeUserInput: async () => {
             if (selectedIndicator || pinnedIndicator) {
-              updateContext();
+              const response = await updateContext();
+              if (response?.data) {
+                chatbot.default.init({
+                  chatflowid: CHATBOT_CONFIG.FLOW_ID,
+                  apiHost: window.location.origin,
+                  chatflowConfig: {
+                    topK: 2,
+                    overrideConfig: {
+                      headers: apiClient.getSessionHeaders(),
+                      context: response.data
+                    }
+                  }
+                });
+              }
             }
           },
           observeLoading: (loading) => {
@@ -178,8 +212,6 @@ export const ChatBubble = () => {
       });
       
       chatInitialized.current = true;
-      // Initial context update after chat is initialized
-      updateContext();
     } catch (error) {
       console.error('Failed to load chatbot:', error);
     }

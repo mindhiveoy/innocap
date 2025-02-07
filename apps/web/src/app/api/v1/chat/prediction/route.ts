@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { CHAT_CONFIG } from '@/config/chat';
 import { IndicatorContext, IndicatorData, MunicipalityData } from '@/types/chat';
+import { contextCache } from '@/utils/contextCache';
+import { getSessionId } from '@/hooks/useSession';
 
 // Define the Flowise host
 const FLOWISE_HOST = 'https://bot.mindhive.fi';
@@ -10,17 +12,25 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const headers = new Headers(req.headers);
     
-    const contextResponse = await fetch(`${req.nextUrl.origin}/api/v1/chat/context`);
-    const contextData = await contextResponse.json();
-    
-    if (!contextData.data?.selected) {
-      console.warn('No indicator selected in context');
+    // Use session from header
+    const sessionId = await getSessionId(req);
+    console.debug('🤖 Prediction request for session:', sessionId);
+
+    if (!sessionId) {
+      console.warn('No session ID found in prediction request');
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'No session found' 
+      }), { status: 401 });
     }
 
-    const context = contextData.data as IndicatorContext;
+    const context = await contextCache.get(sessionId) || {};
     
-    const enrichedQuestion = `
-${generateContextDescription(context)}
+    if (!context?.selected) {
+      console.warn('No indicator selected in context');
+    }
+    
+    const enrichedQuestion = `${generateContextDescription(context)}
 
 Question: ${body.question}`.trim();
 
@@ -56,7 +66,10 @@ Question: ${body.question}`.trim();
 
     const data = await response.json();
     return new Response(JSON.stringify({ success: true, data }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-session-id': sessionId  // Echo back the session ID
+      }
     });
 
   } catch (error) {

@@ -4,7 +4,7 @@ import { Open_Sans } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import { DataProvider } from '@/contexts/DataContext';
 import { IndicatorProvider } from '@/contexts/IndicatorContext';
-import { ChatBubble } from './components/ChatBubble'
+//import { ChatBubble } from './components/ChatBubble'
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
 import { initCookieConsent } from '@/utils/cookieConsent';
@@ -42,7 +42,7 @@ export default function RootLayout({
           <DataProvider>
             <IndicatorProvider>
               {children}
-              <ChatBubble />
+             {/*// <ChatBubble /> */}
             </IndicatorProvider>
           </DataProvider>
         </Providers>

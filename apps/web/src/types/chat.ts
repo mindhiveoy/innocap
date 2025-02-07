@@ -55,4 +55,60 @@ export interface FlowiseResponse {
 
 export interface TransformedResponse extends FlowiseResponse {
   timestamp: number;
+}
+
+export interface ProcessedIndicatorData extends IndicatorData {
+  indicator: {
+    name: string;
+    type: string;
+    group: string;
+    description?: string;
+    unit?: string;
+    year?: number;
+  };
+  summary?: {
+    latest: {
+      year: number;
+      average: number;
+      highest: { municipality: string; value: number };
+      lowest: { municipality: string; value: number };
+    };
+    trend?: string;
+  };
+  data: {
+    byMunicipality: Record<string, {
+      latest?: { value: number; year: number };
+      trend?: { 
+        values: number[];
+        years: number[];
+      };
+      details?: Array<{
+        name: string;
+        phase?: string;
+        info?: string;
+        value?: number;
+        year?: number;
+      }>;
+    }>;
+  };
+}
+
+export interface IndicatorSelection {
+  indicator: {
+    id: string;
+    indicatorNameEn: string;
+    indicatorType: string;
+    group: string;
+  };
+  data: {
+    municipalityCode: string;
+    value: number;
+    year: number;
+  }[];
+}
+
+export interface SimpleIndicatorRequest {
+  selected?: IndicatorSelection;
+  pinned?: IndicatorSelection;
+  municipalityCode: string;
 } 

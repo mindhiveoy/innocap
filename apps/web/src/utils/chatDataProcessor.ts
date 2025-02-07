@@ -194,48 +194,57 @@ function processIndicatorData(
     case IndicatorType.Marker: {
       const isChargingStation = indicator.id === 'ELECTRIC_CHARGING';
       
-      // Group by municipality and include additional info
+      // Group by municipality
       const byMunicipality: Record<string, {
         values: number[];
         years: number[];
-        count?: number;
-        items: Array<{
+        count: number;
+        details: Array<{
           name: string;
-          phase: string;
+          phase?: string;
           info?: string;
           value?: number;
           year?: number;
         }>;
       }> = {};
-      
+
+      // Track unique stations
+      const uniqueStations: Record<string, Set<string>> = {};
+
       markerData
         .filter(d => d.id === indicator.id)
         .forEach(d => {
           if (!byMunicipality[d.municipalityName]) {
-            byMunicipality[d.municipalityName] = { 
-              values: [], 
+            byMunicipality[d.municipalityName] = {
+              values: [],
               years: [],
               count: 0,
-              items: []
+              details: []
             };
+            uniqueStations[d.municipalityName] = new Set();
           }
-          
-          // Add detailed item info
-          byMunicipality[d.municipalityName].items.push({
+
+          // For charging stations, only count unique locations
+          if (isChargingStation) {
+            if (!uniqueStations[d.municipalityName].has(d.descriptionEn)) {
+              uniqueStations[d.municipalityName].add(d.descriptionEn);
+              byMunicipality[d.municipalityName].count++;
+              byMunicipality[d.municipalityName].values.push(1);
+              byMunicipality[d.municipalityName].years.push(d.year || 0);
+            }
+          } else {
+            byMunicipality[d.municipalityName].count++;
+            if (typeof d.value === 'number') {
+              byMunicipality[d.municipalityName].values.push(d.value);
+            }
+            byMunicipality[d.municipalityName].years.push(d.year || 0);
+          }
+
+          byMunicipality[d.municipalityName].details.push({
             name: d.descriptionEn,
             phase: d.phase,
-            info: d.info,
-            value: d.value,
-            year: d.year
+            info: d.info
           });
-          
-          if (isChargingStation) {
-            byMunicipality[d.municipalityName].count! += 1;
-            byMunicipality[d.municipalityName].values.push(1);
-          } else if (typeof d.value === 'number') {
-            byMunicipality[d.municipalityName].values.push(d.value);
-          }
-          byMunicipality[d.municipalityName].years.push(d.year || 0);
         });
 
       const firstMarker = markerData.find(d => d.id === indicator.id);
@@ -263,7 +272,7 @@ function processIndicatorData(
               values: data.values,
               years: data.years
             },
-            details: data.items // Add the detailed items
+            details: data.details // Add the detailed items
           };
         }
       });
@@ -280,23 +289,24 @@ function processIndicatorData(
       } : undefined;
 
       // Create enriched description
+      const statusBreakdown = Object.entries(
+        Object.values(byMunicipality)
+          .flatMap(m => m.details)
+          .reduce((acc, item) => {
+            const key = item.phase || 'Unknown';
+            if (!acc[key]) acc[key] = { count: 0 };
+            acc[key].count++;
+            return acc;
+          }, {} as Record<string, { count: number }>)
+      )
+        .map(([phase, data]) => `${phase}: ${data.count}`)
+        .join(', ');
+
       const description = firstMarker.descriptionEn + 
         (isChargingStation 
           ? ` (${Object.values(byMunicipality).reduce((sum, m) => sum + m.count!, 0)} stations in total)`
           : '') +
-        '\nStatus breakdown: ' +
-        Object.entries(
-          Object.values(byMunicipality)
-            .flatMap(m => m.items)
-            .reduce((acc, item) => {
-              const key = item.phase;
-              if (!acc[key]) acc[key] = { count: 0 };
-              acc[key].count++;
-              return acc;
-            }, {} as Record<string, { count: number }>)
-        )
-        .map(([phase, data]) => `${phase}: ${data.count}`)
-        .join(', ');
+        '\nStatus breakdown: ' + statusBreakdown;
 
       return {
         indicator: {
@@ -421,7 +431,7 @@ function calculateTrend(values: number[][], indicatorType?: string): string {
   return avgChange > 0 ? 'rapidly increasing' : 'rapidly decreasing';
 }
 
-export function processChatData(
+function processChatData(
   selectedIndicator: Indicator | null,
   selectedMunicipalityData: MunicipalityLevelData[],
   selectedMarkerData: MarkerData[],
@@ -512,3 +522,10 @@ export function processChatData(
     specialStats
   };
 }
+
+export {
+  processChatData,
+  processIndicatorData,
+  calculateTrend,
+  processSpecialIndicators
+};
