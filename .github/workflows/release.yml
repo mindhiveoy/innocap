@@ -33,11 +33,15 @@ jobs:
       - name: Verify Vercel CLI Installation
         run: vercel --version
 
+      - name: Build
+        run: yarn build
+
       - name: Deploy to Vercel
         run: |
           deploy_and_check() {
-            vercel $@ --build-env NEXT_PUBLIC_VERCEL_ENV=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} 2>&1 | tee deployment-url.txt
+           vercel $@ 2>&1 | tee deployment-url.txt
             if [ ${PIPESTATUS[0]} -eq 0 ]; then
+              # Look for the Preview: line specifically
               DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
               echo "Deployment URL: $DEPLOY_URL"
               return 0
