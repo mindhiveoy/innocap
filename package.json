@@ -16,7 +16,7 @@
     "ts-node": "^10.9.2",
     "turbo": "latest",
     "typescript": "^5.7.2",
-    "vercel": "40.1.0"
+    "vercel": "latest"
   },
   "engines": {
     "node": ">=18"
@@ -29,7 +29,7 @@
   "dependencies": {
     "@emotion/styled": "^11.13.0",
     "google-auth-library": "^9.14.2",
-    "next-swagger-doc": "^0.4.1",
+    "next-swagger-doc": "^0.4.0",
     "swagger-ui-react": "^5.18.2"
   }
 }
