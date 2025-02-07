@@ -192,10 +192,12 @@ export const ChatBubble = () => {
               const response = await updateContext();
               if (response?.data) {
                 chatbot.default.init({
-                  ...CHATBOT_CONFIG,
+                  chatflowid: CHATBOT_CONFIG.FLOW_ID,
+                  apiHost: window.location.origin,
                   chatflowConfig: {
-                    ...CHATBOT_CONFIG.chatflowConfig,
+                    topK: 2,
                     overrideConfig: {
+                      headers: apiClient.getSessionHeaders(),
                       context: response.data
                     }
                   }

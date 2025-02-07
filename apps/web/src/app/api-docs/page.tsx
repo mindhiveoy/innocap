@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import SwaggerUI from 'swagger-ui-react';
-import 'swagger-ui-react/swagger-ui.css';
+import dynamic from 'next/dynamic';
 import { SwaggerSpec } from '@/types/swagger';
+
+// @ts-expect-error - Known type issue with swagger-ui-react
+const SwaggerUI = dynamic(() => import('swagger-ui-react'), { ssr: false });
 
 export default function ApiDocs() {
   const [spec, setSpec] = useState<SwaggerSpec>();

@@ -104,7 +104,7 @@ export const createApiClient = ({ baseUrl = '', headers = {} }: ApiClientOptions
 
     getSessionHeaders: () => (globalSessionId ? {
       'x-session-id': globalSessionId
-    } : {} as any),
+    } : {} as Record<string, string>),
   };
 };
 
