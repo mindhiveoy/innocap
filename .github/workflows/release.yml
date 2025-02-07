@@ -39,7 +39,7 @@ jobs:
       - name: Deploy to Vercel
         run: |
           deploy_and_check() {
-           vercel $@ 2>&1 | tee deployment-url.txt
+            vercel $@ 2>&1 | tee deployment-url.txt
             if [ ${PIPESTATUS[0]} -eq 0 ]; then
               # Look for the Preview: line specifically
               DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
