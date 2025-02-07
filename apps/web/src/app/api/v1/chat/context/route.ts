@@ -1,41 +1,44 @@
 import { NextRequest } from 'next/server';
-import { IndicatorContext } from '@/types/chat';
+import { getSessionId } from '@/hooks/useSession';
+import { contextCache } from '@/utils/contextCache';
 
-let currentContext: IndicatorContext = {
-  selected: undefined,
-  pinned: undefined,
-  specialStats: undefined
-};
+export async function GET(req: NextRequest) {
+  const sessionId = await getSessionId(req);
+  const context = contextCache.get(sessionId) || {
+    selected: undefined,
+    pinned: undefined,
+    specialStats: undefined
+  };
 
-export async function POST(req: NextRequest) {
+  return Response.json({ 
+    success: true, 
+    data: context,
+    sessionId,
+    cacheStats: contextCache.getStats()
+  });
+}
+
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
-    currentContext = body;
+    const sessionId = await getSessionId(request);
+    const body = await request.json();
     
-    return new Response(JSON.stringify({ 
+    console.log('Context PERKELE: ' + sessionId);
+    console.log(body);
+
+    await contextCache.set(sessionId, body);
+    
+    return Response.json({ 
       success: true, 
       updated: Date.now(),
-      context: currentContext // Return current context for verification
-    }), {
-      headers: { 'Content-Type': 'application/json' }
+      context: contextCache.get(sessionId),
+      sessionId
     });
   } catch (error) {
     console.error('Error updating context:', error);
-    return new Response(JSON.stringify({ 
+    return Response.json({ 
       success: false, 
       error: 'Failed to update context' 
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
-}
-
-export async function GET() {
-  return new Response(JSON.stringify({ 
-    success: true, 
-    data: currentContext 
-  }), {
-    headers: { 'Content-Type': 'application/json' }
-  });
 } 
