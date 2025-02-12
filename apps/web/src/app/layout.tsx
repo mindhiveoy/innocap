@@ -4,7 +4,9 @@ import { Open_Sans } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import { DataProvider } from '@/contexts/DataContext';
 import { IndicatorProvider } from '@/contexts/IndicatorContext';
-//import { ChatBubble } from './components/ChatBubble'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+// import future chatbot component here
+// import { AIChat } from '@/components/AIChat';
 import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
 import { initCookieConsent } from '@/utils/cookieConsent';
@@ -24,7 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const hasAnalyticsConsent = useAnalyticsConsent();
-
+  const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
+  
   useEffect(() => {
     initCookieConsent();
   }, []);
@@ -42,7 +45,25 @@ export default function RootLayout({
           <DataProvider>
             <IndicatorProvider>
               {children}
-             {/*// <ChatBubble /> */}
+              {/* Changed condition to only check isEnabled */}
+              {isChatEnabled && (
+                <div 
+                  style={{ 
+                    position: 'fixed', 
+                    bottom: 20, 
+                    right: 20, 
+                    backgroundColor: 'white', 
+                    padding: '10px', 
+                    borderRadius: '5px', 
+                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                    opacity: isChatFlagLoading ? 0 : 1,
+                    transition: 'opacity 0.3s ease-in-out'
+                  }}
+                >
+                  Chat
+                </div>
+              )}
             </IndicatorProvider>
           </DataProvider>
         </Providers>
