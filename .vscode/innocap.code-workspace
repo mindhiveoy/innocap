@@ -44,6 +44,12 @@
       "✨ Innocap (root)",
       "🔧 ESLint Config",
       "📝 TypeScript Config"
+    ],
+    "i18n-ally.localesPaths": [
+      "packages/shared/src/i18n",
+      "apps/web/src/i18n",
+      "packages/shared/src/i18n/locales",
+      "apps/web/src/i18n/locales"
     ]
   }
 }
