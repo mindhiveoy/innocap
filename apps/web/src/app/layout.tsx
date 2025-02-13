@@ -12,6 +12,8 @@ import { initCookieConsent } from '@/utils/cookieConsent';
 import { initGA } from '@/utils/analytics';
 import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
 import '@/i18n/config';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { trackPageView } from '@/utils/analytics';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -24,18 +26,30 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const hasAnalyticsConsent = useAnalyticsConsent();
   const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
   
   useEffect(() => {
+    console.log('🔧 Initializing cookie consent');
     initCookieConsent();
   }, []);
 
   useEffect(() => {
+    console.log('📊 Analytics consent status:', hasAnalyticsConsent);
     if (hasAnalyticsConsent) {
+      console.log('📊 Initializing GA');
       initGA();
     }
   }, [hasAnalyticsConsent]);
+
+  useEffect(() => {
+    if (hasAnalyticsConsent) {
+      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+      trackPageView(url);
+    }
+  }, [pathname, searchParams, hasAnalyticsConsent]);
 
   return (
     <html lang="en" className={openSans.className}>

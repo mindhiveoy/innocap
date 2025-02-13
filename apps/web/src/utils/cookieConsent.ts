@@ -44,6 +44,18 @@ export const initCookieConsent = () => {
       }
     },
 
+    onConsent: () => {
+      document.dispatchEvent(new Event('cc:onChange'));
+    },
+
+    onFirstConsent: () => {
+      // Empty handler but kept for potential future use
+    },
+
+    onChange: () => {
+      document.dispatchEvent(new Event('cc:onChange'));
+    },
+
     guiOptions: {
       consentModal: {
         layout: 'box',
@@ -176,7 +188,18 @@ export const initCookieConsent = () => {
 };
 
 export const getConsentStatus = () => {
-  return CookieConsent.acceptedCategory();
+  return CookieConsent.getUserPreferences();
+};
+
+export const isAnalyticsAccepted = () => {
+  const preferences = CookieConsent.getUserPreferences();
+  return preferences?.acceptedCategories?.includes(COOKIE_CATEGORIES.ANALYTICS) || false;
+};
+
+// Remove the old onConsent helper since we're using the config callbacks
+export const onConsent = (callback: () => void) => {
+  // This can be removed since we're using the config callbacks
+  callback();
 };
 
 export const openPreferences = () => {

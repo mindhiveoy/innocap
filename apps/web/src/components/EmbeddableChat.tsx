@@ -50,7 +50,6 @@ export function EmbeddableChat() {
     script.src = `${botServerUrl}/embeddable-chat/embed.js`;
     script.onload = () => {
       if (window.mainioChat) {
-        console.log('Initializing chat with baseUrl:', botServerUrl);
         window.mainioChat.init({
           tenantId: "development",
           agentId: "cm71lffmn000225neheahlvda",
