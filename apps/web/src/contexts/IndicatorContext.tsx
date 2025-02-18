@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useData } from './DataContext';
 import type { Indicator } from '@repo/ui/types/indicators';
+import { trackEvent } from '@/utils/analytics';
 
 export interface IndicatorContextType {
   selectedIndicator: Indicator | null;
@@ -27,6 +28,11 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (indicators?.length > 0) {
       setSelectedIndicator(indicators[0]);
+      trackEvent({
+        category: 'Indicator',
+        action: 'select',
+        label: `${indicators[0].id} - ${indicators[0].indicatorNameFi}`
+      });
     }
   }, [indicators]);
 
@@ -37,6 +43,11 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
   const togglePin = useCallback((indicator: Indicator) => {
     setPinnedIndicator(current => {
       if (current?.id === indicator.id) {
+        trackEvent({
+          category: 'Indicator',
+          action: 'pin',
+          label: `${indicator.id} - ${indicator.indicatorNameFi}`
+        });
         setIsCompareMode(false);
         if (selectedIndicator?.id === indicator.id) {
           setSelectedIndicator(null);
@@ -44,6 +55,12 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
+      trackEvent({
+        category: 'Indicator',
+        action: 'pin',
+        label: `${indicator.id} - ${indicator.indicatorNameFi}`
+      });
+      
       const selectedYear = selectedIndicator?.id === indicator.id
         ? selectedIndicator.selectedYear
         : undefined;

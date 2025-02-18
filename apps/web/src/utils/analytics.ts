@@ -10,10 +10,16 @@ declare global {
 export const GA_MEASUREMENT_ID = 'G-YBHL457WSL';
 
 export const initGA = () => {
-  // Add the script tag dynamically
   const script = document.createElement('script');
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  script.onload = () => {
+    window.gtag('config', GA_MEASUREMENT_ID, {
+      page_location: window.location.href,
+      page_path: window.location.pathname
+    });
+  };
+  script.onerror = (e) => console.error('🔍 GA script failed:', e);
   document.head.appendChild(script);
 
   // Initialize the data layer
@@ -35,7 +41,13 @@ export const trackPageView = (url: string) => {
   }
 };
 
-export const trackEvent = (category: string, action: string, label?: string) => {
+interface Event {
+  category: string;
+  action: string;
+  label: string;
+}
+
+export const trackEvent = ({ category, action, label }: Event) => {
   if (window.gtag) {
     window.gtag('event', action, {
       event_category: category,
@@ -43,16 +55,3 @@ export const trackEvent = (category: string, action: string, label?: string) => 
     });
   }
 };
-
-// Helper functions for common events
-export const trackIndicatorSelection = (indicatorId: string, indicatorName: string) => {
-  trackEvent('Indicator', 'select', `${indicatorId} - ${indicatorName}`);
-};
-
-export const trackIndicatorPin = (indicatorId: string, indicatorName: string) => {
-  trackEvent('Indicator', 'pin', `${indicatorId} - ${indicatorName}`);
-};
-
-export const trackMapInteraction = (action: 'zoom' | 'pan' | 'click', details: string) => {
-  trackEvent('Map', action, details);
-}; 
