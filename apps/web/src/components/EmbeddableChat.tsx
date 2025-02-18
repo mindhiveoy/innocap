@@ -30,12 +30,14 @@ export function EmbeddableChat() {
 
   const updateChatVariables = useCallback(() => {
     if (window.mainioChat?.setCustomVariables) {
-      // Convert the nested object structure to a flattened string record
-      // to match the embed.ts implementation
-      window.mainioChat.setCustomVariables({
-        'selected.indicator.id': selectedIndicator?.id || '',
-        'pinned.indicator.id': pinnedIndicator?.id || ''
-      });
+      try {
+        window.mainioChat.setCustomVariables({
+          'selected.indicator.id': selectedIndicator?.id || '',
+          'pinned.indicator.id': pinnedIndicator?.id || ''
+        });
+      } catch (error) {
+        console.warn('Failed to update chat variables:', error);
+      }
     }
   }, [selectedIndicator, pinnedIndicator]);
 
