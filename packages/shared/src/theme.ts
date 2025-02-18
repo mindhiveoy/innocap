@@ -65,6 +65,9 @@ export const theme = createTheme({
     secondary: {
       main: '#E68939',
     },
+    error: {
+      main: '#E74C3C',
+    },
     indicator: {
       blue: '#0A81B2',
       green: '#0AB28E',

@@ -1,7 +1,9 @@
 'use client';
 
 import { useIndicator } from '@/contexts/IndicatorContext';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
+import { Snackbar, Alert } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 
 interface MainioChat {
   init: (config: {
@@ -23,6 +25,8 @@ declare global {
 
 export function EmbeddableChat() {
   const { selectedIndicator, pinnedIndicator } = useIndicator();
+  const { t } = useTranslation();
+  const [error, setError] = useState<string | null>(null);
 
   const updateChatVariables = useCallback(() => {
     if (window.mainioChat?.setCustomVariables) {
@@ -59,8 +63,8 @@ export function EmbeddableChat() {
         });
       }
     };
-    script.onerror = (e) => {
-      console.error("Failed to load the chat module:", e);
+    script.onerror = () => {
+      setError(t('errors.chatLoadFailed'));
     };
     document.body.appendChild(script);
 
@@ -69,11 +73,33 @@ export function EmbeddableChat() {
       container.remove();
       script.remove();
     };
-  }, [updateChatVariables]);
+  }, [updateChatVariables, t]);
 
   useEffect(() => {
     updateChatVariables();
   }, [updateChatVariables]);
 
-  return null;
+  return (
+    <Snackbar 
+      open={!!error} 
+      autoHideDuration={6000} 
+      onClose={() => setError(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <Alert 
+        onClose={() => setError(null)} 
+        severity="error" 
+        variant="filled"
+        sx={{ 
+          width: '100%',
+          backgroundColor: '#E74C3C',
+          '& .MuiAlert-icon': {
+            color: '#fff'
+          }
+        }}
+      >
+        {error}
+      </Alert>
+    </Snackbar>
+  );
 }
