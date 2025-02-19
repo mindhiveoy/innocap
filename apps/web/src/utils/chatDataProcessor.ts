@@ -1,7 +1,7 @@
-import { 
-  Indicator, 
-  MunicipalityLevelData, 
-  MarkerData, 
+import {
+  Indicator,
+  MunicipalityLevelData,
+  MarkerData,
   BarChartData,
   IndicatorType,
   SPECIAL_INDICATORS
@@ -27,9 +27,9 @@ interface OrganicStatsType {
 }
 
 // Add type assertions when importing
-import { 
-  naturaStats as naturaStatsImport, 
-  organicStats as organicStatsImport 
+import {
+  naturaStats as naturaStatsImport,
+  organicStats as organicStatsImport
 } from '@repo/ui/components/map/data/natura-stats';
 
 const naturaStats = naturaStatsImport as NaturaStatsType;
@@ -56,7 +56,7 @@ interface ProcessedIndicatorData {
   data: {
     byMunicipality: Record<string, {
       latest?: { value: number; year: number };
-      trend?: { 
+      trend?: {
         values: number[];
         years: number[];
       };
@@ -84,6 +84,15 @@ function isNaturaStats(stats: NaturaStatsType | OrganicStatsType): stats is Natu
   return 'totalAreas' in stats;
 }
 
+/**
+ * Processes special indicators (NATURA_2000, ORGANIC_FARMING)
+ * Returns human-readable statistics about protected areas or organic farming
+ * in the specified municipality.
+ * 
+ * Example outputs:
+ * - "This municipality has 3 Natura 2000 protected areas, covering 1234.5 hectares."
+ * - "There are 45 organic fields in this municipality, with a total area of 567.8 hectares."
+ */
 function processSpecialIndicators(municipalityCode: string) {
   const result: string[] = [];
 
@@ -126,7 +135,7 @@ function processIndicatorData(
     case IndicatorType.MunicipalityLevel: {
       // Group data by municipality
       const byMunicipality: Record<string, { values: number[]; years: number[] }> = {};
-      
+
       municipalityData
         .filter(d => d.id === indicator.id)
         .forEach(d => {
@@ -148,7 +157,7 @@ function processIndicatorData(
           value: data.values[latestIdx],
           year: data.years[latestIdx]
         };
-        
+
         latestYear = Math.max(latestYear, latest.year);
         latestValues.push({ municipality, value: latest.value });
 
@@ -193,7 +202,7 @@ function processIndicatorData(
 
     case IndicatorType.Marker: {
       const isChargingStation = indicator.id === 'ELECTRIC_CHARGING';
-      
+
       // Group by municipality
       const byMunicipality: Record<string, {
         values: number[];
@@ -262,7 +271,7 @@ function processIndicatorData(
             value,
             year: Math.max(...data.years)
           };
-          
+
           latestYear = Math.max(latestYear, latest.year);
           latestValues.push({ municipality, value });
 
@@ -302,8 +311,8 @@ function processIndicatorData(
         .map(([phase, data]) => `${phase}: ${data.count}`)
         .join(', ');
 
-      const description = firstMarker.descriptionEn + 
-        (isChargingStation 
+      const description = firstMarker.descriptionEn +
+        (isChargingStation
           ? ` (${Object.values(byMunicipality).reduce((sum, m) => sum + m.count!, 0)} stations in total)`
           : '') +
         '\nStatus breakdown: ' + statusBreakdown;
@@ -331,16 +340,16 @@ function processIndicatorData(
           year: number;
         }>;
       }> = {};
-      
+
       barChartData
         .filter(d => d.id === indicator.id)
         .forEach(d => {
           if (!byMunicipality[d.municipalityName]) {
-            byMunicipality[d.municipalityName] = { 
+            byMunicipality[d.municipalityName] = {
               categories: []
             };
           }
-          
+
           // Add each category with its value
           byMunicipality[d.municipalityName].categories.push({
             label: d.labels[0], // Each row has one category
@@ -406,7 +415,7 @@ function calculateTrend(values: number[][], indicatorType?: string): string {
   const changes = [];
   for (let i = 1; i < allValues.length; i++) {
     //Avoid division by zero
-    const prevValue = allValues[i-1] || 0.0001;
+    const prevValue = allValues[i - 1] || 0.0001;
     const percentChange = ((allValues[i] - prevValue) / prevValue) * 100;
     changes.push(percentChange);
   }
@@ -424,13 +433,38 @@ function calculateTrend(values: number[][], indicatorType?: string): string {
   const { slight, moderate, rapid } = thresholds[indicatorType as keyof typeof thresholds] || thresholds.default;
 
   if (Math.abs(avgChange) < slight) return 'stable';
-  if (Math.abs(avgChange) < moderate) 
+  if (Math.abs(avgChange) < moderate)
     return avgChange > 0 ? 'slightly increasing' : 'slightly decreasing';
-  if (Math.abs(avgChange) < rapid) 
+  if (Math.abs(avgChange) < rapid)
     return avgChange > 0 ? 'increasing' : 'decreasing';
   return avgChange > 0 ? 'rapidly increasing' : 'rapidly decreasing';
 }
 
+/**
+ * Processes indicator data for AI analysis. The processor handles different types of indicators:
+ * 
+ * 1. Municipality Level Data: Simple numerical values per municipality
+ * 2. Markers: Location-based data with phases (e.g., investment projects)
+ * 3. Bar Charts: Multi-category data per municipality
+ * 4. Special: Specific indicators like NATURA_2000 and ORGANIC_FARMING
+ * 
+ * Data Structure Notes:
+ * - All numerical values maintain their original units (see indicator.unit)
+ * - Trends are calculated across all available years
+ * - Special indicators may include additional context in specialStats
+ * - "Region" in municipality data represents the entire area
+ * - Marker phases are ordered: 0.Preliminary -> 1.Planning -> 2.Decision -> 3.Initiation -> 4.Construction -> 5.In Use
+ * 
+ * @param selectedIndicator Primary indicator to process
+ * @param selectedMunicipalityData Municipality level data for selected indicator
+ * @param selectedMarkerData Marker data for selected indicator
+ * @param selectedBarChartData Bar chart data for selected indicator
+ * @param pinnedIndicator Secondary indicator for comparison
+ * @param pinnedMunicipalityData Municipality level data for pinned indicator
+ * @param pinnedMarkerData Marker data for pinned indicator
+ * @param pinnedBarChartData Bar chart data for pinned indicator
+ * @param municipalityCode Current municipality context
+ */
 function processChatData(
   selectedIndicator: Indicator | null,
   selectedMunicipalityData: MunicipalityLevelData[],
@@ -461,7 +495,7 @@ function processChatData(
         name: indicator.indicatorNameEn,
         type: indicator.indicatorType,
         group: indicator.group,
-        description: type === 'natura' 
+        description: type === 'natura'
           ? `Total of ${totalCount} protected areas covering ${totalArea} hectares in the region`
           : `Total of ${totalCount} organic fields covering ${totalArea} hectares in the region`,
         unit: 'hectares'
@@ -472,13 +506,13 @@ function processChatData(
           average: totalArea / totalCount,
           highest: {
             municipality: Object.entries(stats.municipalities)
-              .sort(([,a], [,b]) => b.totalArea - a.totalArea)[0][0],
+              .sort(([, a], [, b]) => b.totalArea - a.totalArea)[0][0],
             value: Object.values(stats.municipalities)
               .sort((a, b) => b.totalArea - a.totalArea)[0].totalArea
           },
           lowest: {
             municipality: Object.entries(stats.municipalities)
-              .sort(([,a], [,b]) => a.totalArea - b.totalArea)[0][0],
+              .sort(([, a], [, b]) => a.totalArea - b.totalArea)[0][0],
             value: Object.values(stats.municipalities)
               .sort((a, b) => a.totalArea - b.totalArea)[0].totalArea
           }
@@ -499,9 +533,9 @@ function processChatData(
   };
 
   // Process regular indicators only if they're not special
-  const selected = isNaturaSelected 
+  const selected = isNaturaSelected
     ? createSpecialIndicatorData(selectedIndicator, 'natura')
-    : isOrganicSelected 
+    : isOrganicSelected
       ? createSpecialIndicatorData(selectedIndicator, 'organic')
       : processIndicatorData(selectedIndicator, selectedMunicipalityData, selectedMarkerData, selectedBarChartData);
 
