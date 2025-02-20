@@ -32,14 +32,11 @@ export default function RootLayout({
   const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
   
   useEffect(() => {
-    console.log('🔧 Initializing cookie consent');
     initCookieConsent();
   }, []);
 
   useEffect(() => {
-    console.log('📊 Analytics consent status:', hasAnalyticsConsent);
     if (hasAnalyticsConsent) {
-      console.log('📊 Initializing GA');
       initGA();
     }
   }, [hasAnalyticsConsent]);

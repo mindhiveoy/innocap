@@ -1,9 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useIndicator } from '@/contexts/IndicatorContext';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+
+// Enforce chat configuration constants
+const CHAT_CONFIG = {
+  BASE_URL: 'https://innocap.mainio.app',
+  TENANT_ID: 'cm71il9xt010smk01yt5dln12',
+  AGENT_ID: 'cm71v5vek010umk01wl5ge6tm',
+} as const;
 
 interface MainioChat {
   init: (config: {
@@ -13,8 +21,7 @@ interface MainioChat {
     floating: boolean;
     initiallyOpen: boolean;
   }) => void;
-  // Update to match embed.ts type definition
-  setCustomVariables: (variables: Record<string, string>) => void;
+  setCustomVariables: (variables: Record<string, any>) => void;
 }
 
 declare global {
@@ -27,23 +34,46 @@ export function EmbeddableChat() {
   const { selectedIndicator, pinnedIndicator } = useIndicator();
   const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
+  const [isChatInitialized, setIsChatInitialized] = useState<boolean>(false);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
   const updateChatVariables = useCallback(() => {
-    if (window.mainioChat?.setCustomVariables) {
-      try {
-        window.mainioChat.setCustomVariables({
-          'selected.indicator.id': selectedIndicator?.id || '',
-          'pinned.indicator.id': pinnedIndicator?.id || ''
-        });
-      } catch (error) {
-        console.warn('Failed to update chat variables:', error);
-      }
+    if (!isChatInitialized || !window.mainioChat?.setCustomVariables) return;
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-  }, [selectedIndicator, pinnedIndicator]);
+
+    // Set a new timeout
+    timeoutRef.current = setTimeout(() => {
+      const variables = {
+        selected: selectedIndicator?.id || '',
+        pinned: pinnedIndicator?.id || ''
+      };
+
+      // Only update and log if we have actual values
+      if (variables.selected || variables.pinned) {
+        try {      
+          window.mainioChat?.setCustomVariables(variables);
+        } catch (error) {
+          console.warn('Failed to update chat variables:', error);
+          setError('Failed to update chat variables');
+        }
+      }
+    }, 100); // Small delay to batch updates
+  }, [selectedIndicator, pinnedIndicator, isChatInitialized]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    const botServerUrl = 'http://localhost:3000';
-    
     // Create container div
     const container = document.createElement('div');
     container.setAttribute('data-mainio-agent', '');
@@ -53,16 +83,17 @@ export function EmbeddableChat() {
     const script = document.createElement('script');
     script.type = 'module';
     script.crossOrigin = 'anonymous';
-    script.src = `${botServerUrl}/embeddable-chat/embed.js`;
+    script.src = `${CHAT_CONFIG.BASE_URL}/embeddable-chat/embed.js`;
     script.onload = () => {
       if (window.mainioChat) {
         window.mainioChat.init({
-          tenantId: "development",
-          agentId: "cm71lffmn000225neheahlvda",
-          baseUrl: botServerUrl,
+          tenantId: CHAT_CONFIG.TENANT_ID,
+          agentId: CHAT_CONFIG.AGENT_ID,
+          baseUrl: CHAT_CONFIG.BASE_URL,
           floating: true,
           initiallyOpen: false,
         });
+        setIsChatInitialized(true);
       }
     };
     script.onerror = () => {
@@ -74,8 +105,9 @@ export function EmbeddableChat() {
     return () => {
       container.remove();
       script.remove();
+      setIsChatInitialized(false);
     };
-  }, [updateChatVariables, t]);
+  }, [t]);
 
   useEffect(() => {
     updateChatVariables();
