@@ -1,14 +1,57 @@
-// Google Analytics configuration will go here
+/* eslint-disable @typescript-eslint/no-explicit-any */
+declare global {
+  interface Window {
+    dataLayer: any[];
+    gtag: (...args: any[]) => void;
+  }
+}
+
+// Google Analytics configuration
+export const GA_MEASUREMENT_ID = 'G-YBHL457WSL';
+
 export const initGA = () => {
-  // GA initialization code will go here
-  // Only initialize if consent is given
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+  script.onload = () => {
+    window.gtag('config', GA_MEASUREMENT_ID, {
+      page_location: window.location.href,
+      page_path: window.location.pathname
+    });
+  };
+  script.onerror = (e) => console.error('🔍 GA script failed:', e);
+  document.head.appendChild(script);
+
+  // Initialize the data layer
+  window.dataLayer = window.dataLayer || [];
+  function gtag(...args: any[]) {
+    window.dataLayer.push(args);
+  }
+  window.gtag = gtag;
+
+  gtag('js', new Date());
+  gtag('config', GA_MEASUREMENT_ID);
 };
 
-export const trackPageView = () => {
-  // Page view tracking code will go here
+export const trackPageView = (url: string) => {
+  if (window.gtag) {
+    window.gtag('config', GA_MEASUREMENT_ID, {
+      page_path: url,
+    });
+  }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const trackEvent = (category: string, action: string, label?: string) => {
-  // Event tracking code will go here
-}; 
+interface Event {
+  category: string;
+  action: string;
+  label: string;
+}
+
+export const trackEvent = ({ category, action, label }: Event) => {
+  if (window.gtag) {
+    window.gtag('event', action, {
+      event_category: category,
+      event_label: label,
+    });
+  }
+};

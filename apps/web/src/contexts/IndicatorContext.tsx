@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useData } from './DataContext';
 import type { Indicator } from '@repo/ui/types/indicators';
+import { trackEvent } from '@/utils/analytics';
 
 export interface IndicatorContextType {
   selectedIndicator: Indicator | null;
@@ -43,6 +44,12 @@ export function IndicatorProvider({ children }: { children: React.ReactNode }) {
         }
         return null;
       }
+
+      trackEvent({
+        category: 'Indicator',
+        action: 'pin',
+        label: `${indicator.id} - ${indicator.indicatorNameFi}`
+      });
 
       const selectedYear = selectedIndicator?.id === indicator.id
         ? selectedIndicator.selectedYear

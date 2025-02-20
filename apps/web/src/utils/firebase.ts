@@ -21,5 +21,6 @@ export const COLLECTIONS = {
   MUNICIPALITY_DATA: 'municipalityLevelData',
   MARKER_DATA: 'markerData',
   BAR_CHART_DATA: 'barChartData',
-  METADATA: 'metadata'
+  METADATA: 'metadata',
+  FEATURES: 'features'
 } as const;

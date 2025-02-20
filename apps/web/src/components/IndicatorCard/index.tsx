@@ -30,7 +30,7 @@ import DryCleaning from '@mui/icons-material/DryCleaning';
 import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
-
+import { trackEvent } from '@/utils/analytics';
 
 interface IndicatorCardProps {
   indicator: Indicator;
@@ -381,6 +381,11 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
       return;
     }
     setSelectedIndicator(isSelected ? null : indicator);
+    trackEvent({
+      category: 'Indicator',
+      action: 'select',
+      label: `${indicator.id} - ${indicator.indicatorNameFi}`
+    });
   }, [isSelected, indicator, setSelectedIndicator, pinned]);
 
   const handlePinClick = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {

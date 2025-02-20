@@ -115,5 +115,8 @@
         "privacyLink": "https://docs.google.com/document/d/1zxL0CTESSbYopzYJHEHfhzFv0q15LZVD2f8umtRG-Dg/edit?usp=sharing"
       }
     }
+  },
+  "errors": {
+    "chatLoadFailed": "Tekoälyavustajan lataus epäonnistui. Yritä myöhemmin uudelleen."
   }
 } 
