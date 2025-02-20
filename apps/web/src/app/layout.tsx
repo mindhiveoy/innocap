@@ -7,7 +7,7 @@ import { IndicatorProvider } from '@/contexts/IndicatorContext';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { EmbeddableChat } from '@/components/EmbeddableChat';
 import 'leaflet/dist/leaflet.css';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { initCookieConsent } from '@/utils/cookieConsent';
 import { initGA } from '@/utils/analytics';
 import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
@@ -21,13 +21,27 @@ const openSans = Open_Sans({
   weight: ['400', '500', '600', '700'],
 });
 
+// Separate component for analytics tracking
+function AnalyticsTracker() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const hasAnalyticsConsent = useAnalyticsConsent();
+
+  useEffect(() => {
+    if (hasAnalyticsConsent) {
+      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+      trackPageView(url);
+    }
+  }, [pathname, searchParams, hasAnalyticsConsent]);
+
+  return null;
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const hasAnalyticsConsent = useAnalyticsConsent();
   const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
   
@@ -41,13 +55,6 @@ export default function RootLayout({
     }
   }, [hasAnalyticsConsent]);
 
-  useEffect(() => {
-    if (hasAnalyticsConsent) {
-      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
-      trackPageView(url);
-    }
-  }, [pathname, searchParams, hasAnalyticsConsent]);
-
   return (
     <html lang="en" className={openSans.className}>
       <body>
@@ -56,6 +63,9 @@ export default function RootLayout({
             <IndicatorProvider>
               {children}
               {isChatEnabled && !isChatFlagLoading && <EmbeddableChat />}
+              <Suspense fallback={null}>
+                <AnalyticsTracker />
+              </Suspense>
             </IndicatorProvider>
           </DataProvider>
         </Providers>
