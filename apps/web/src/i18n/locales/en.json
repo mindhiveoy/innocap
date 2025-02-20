@@ -17,7 +17,7 @@
       "about": {
         "title": "Development",
         "innocapText": "INNOCAP project",
-        "text": "The service fosters regional cooperation and advances green transition activities in the region of South Savo. The green transition in South Savo service is developed in <innocapLink>{{innocapText}}</innocapLink> funded by the European Union’s Northern Periphery and Arctic programme. The service is designed and maintained by the <hidseLink>{{hidse}}</hidseLink> at the <ruraliaLink>{{ruralia}}</ruraliaLink>, the University of Helsinki in collaboration with <mindhiveLink>{{mindhive}}</mindhiveLink> company.",
+        "text": "The service fosters regional cooperation and advances green transition activities in the region of South Savo. The green transition in South Savo service is developed in <innocapLink>{{innocapText}}</innocapLink> funded by the European Union's Northern Periphery and Arctic programme. The service is designed and maintained by the <hidseLink>{{hidse}}</hidseLink> at the <ruraliaLink>{{ruralia}}</ruraliaLink>, the University of Helsinki in collaboration with <mindhiveLink>{{mindhive}}</mindhiveLink> company.",
         "links": {
           "innocap": "green transition in South Savo service",
           "innocapHref": "https://www.interreg-npa.eu/projects/innocap/",
@@ -120,5 +120,8 @@
         "privacyLink": "https://docs.google.com/document/d/1TBHHMFOwtu3wbeZEORglMAoGxNqkPlzxCUFyZJ8-xHU/edit?usp=sharing"
       }
     }
+  },
+  "errors": {
+    "chatLoadFailed": "Failed to load the AI assistant. Please try again later."
   }
 } 

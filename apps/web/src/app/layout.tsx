@@ -4,13 +4,16 @@ import { Open_Sans } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import { DataProvider } from '@/contexts/DataContext';
 import { IndicatorProvider } from '@/contexts/IndicatorContext';
-//import { ChatBubble } from './components/ChatBubble'
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { EmbeddableChat } from '@/components/EmbeddableChat';
 import 'leaflet/dist/leaflet.css';
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { initCookieConsent } from '@/utils/cookieConsent';
 import { initGA } from '@/utils/analytics';
 import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
 import '@/i18n/config';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { trackPageView } from '@/utils/analytics';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -18,13 +21,30 @@ const openSans = Open_Sans({
   weight: ['400', '500', '600', '700'],
 });
 
+// Separate component for analytics tracking
+function AnalyticsTracker() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const hasAnalyticsConsent = useAnalyticsConsent();
+
+  useEffect(() => {
+    if (hasAnalyticsConsent) {
+      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+      trackPageView(url);
+    }
+  }, [pathname, searchParams, hasAnalyticsConsent]);
+
+  return null;
+}
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const hasAnalyticsConsent = useAnalyticsConsent();
-
+  const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
+  
   useEffect(() => {
     initCookieConsent();
   }, []);
@@ -42,7 +62,10 @@ export default function RootLayout({
           <DataProvider>
             <IndicatorProvider>
               {children}
-             {/*// <ChatBubble /> */}
+              {isChatEnabled && !isChatFlagLoading && <EmbeddableChat />}
+              <Suspense fallback={null}>
+                <AnalyticsTracker />
+              </Suspense>
             </IndicatorProvider>
           </DataProvider>
         </Providers>
