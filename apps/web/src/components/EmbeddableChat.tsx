@@ -11,6 +11,8 @@ const CHAT_CONFIG = {
   BASE_URL: 'https://innocap.mainio.app',
   TENANT_ID: 'cm71il9xt010smk01yt5dln12',
   AGENT_ID: 'cm71v5vek010umk01wl5ge6tm',
+  SUPPORTED_LANGUAGES: ['en', 'fi', 'sv', 'de', 'es', 'fr'] as const,
+  DEFAULT_LANGUAGE: 'fi' as const,
 } as const;
 
 interface MainioChat {
@@ -20,6 +22,11 @@ interface MainioChat {
     baseUrl: string;
     floating: boolean;
     initiallyOpen: boolean;
+    initialLanguage?: string;
+    languages?: {
+      supported: string[];
+      default: string;
+    };
   }) => void;
   setCustomVariables: (variables: Record<string, any>) => void;
 }
@@ -32,7 +39,7 @@ declare global {
 
 export function EmbeddableChat() {
   const { selectedIndicator, pinnedIndicator } = useIndicator();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [isChatInitialized, setIsChatInitialized] = useState<boolean>(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
@@ -86,12 +93,24 @@ export function EmbeddableChat() {
     script.src = `${CHAT_CONFIG.BASE_URL}/embeddable-chat/embed.js`;
     script.onload = () => {
       if (window.mainioChat) {
+                // Get current language from i18n
+        const currentLang = i18n.language.split('-')[0]; // Handle cases like 'en-US' -> 'en'
+        
+        // Check if current language is supported, otherwise use default
+        const initialLanguage = CHAT_CONFIG.SUPPORTED_LANGUAGES.includes(currentLang as any) 
+          ? currentLang 
+          : CHAT_CONFIG.DEFAULT_LANGUAGE;
         window.mainioChat.init({
           tenantId: CHAT_CONFIG.TENANT_ID,
           agentId: CHAT_CONFIG.AGENT_ID,
           baseUrl: CHAT_CONFIG.BASE_URL,
           floating: true,
           initiallyOpen: false,
+          initialLanguage,
+          languages: {
+            supported: [...CHAT_CONFIG.SUPPORTED_LANGUAGES],
+            default: CHAT_CONFIG.DEFAULT_LANGUAGE,
+          },
         });
         setIsChatInitialized(true);
       }
@@ -107,7 +126,7 @@ export function EmbeddableChat() {
       script.remove();
       setIsChatInitialized(false);
     };
-  }, [t]);
+  }, [t, i18n.language]);
 
   useEffect(() => {
     updateChatVariables();
