@@ -1,0 +1,285 @@
+.info {
+  padding: 6px 8px;
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  min-width: 200px;
+}
+
+.info h4 {
+  margin: 0 0 5px;
+  color: #777;
+  font-weight: bold;
+}
+
+.municipality-tooltip-container {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  transition: opacity 0.2s ease-in-out;
+  font-size: 14px;
+  padding: 8px;
+}
+
+/* Remove the tooltip arrow */
+.municipality-tooltip-container:before {
+  display: none;
+}
+
+/* Remove default leaflet tooltip padding */
+.municipality-tooltip-container .leaflet-tooltip-content {
+  padding: 0;
+}
+
+.leaflet-interactive {
+  transition: all 0.2s ease-out;
+  will-change: transform;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer !important;
+  touch-action: none;
+  /* Prevents browser handling of touch events */
+}
+
+.municipality-tooltip-container {
+  transition: opacity 0.2s ease-out;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-marker-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: none !important;
+  border: none !important;
+}
+
+.custom-marker-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-marker-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: auto !important;
+  cursor: pointer;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: inherit;
+  width: auto !important;
+  position: relative;
+}
+
+.leaflet-popup-tip-container {
+  display: none;
+}
+
+.leaflet-popup {
+  margin-bottom: 0;
+  width: auto !important;
+  z-index: 600;
+  transition: z-index 0s;
+}
+
+.leaflet-popup-pane {
+  z-index: 600;
+}
+
+.leaflet-container {
+  -webkit-tap-highlight-color: transparent;
+  outline: none !important;
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.leaflet-pane {
+  outline: none !important;
+}
+
+/* Optimize GeoJSON rendering and prevent flickering */
+.geojson-feature {
+  transition: fill-opacity 0.2s ease-out;
+  will-change: transform;
+  transform-origin: center;
+}
+
+.leaflet-overlay-pane {
+  will-change: transform;
+}
+
+.leaflet-zoom-animated {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Bar chart popup drag styles */
+.draggable-popup .leaflet-popup-content-wrapper {
+  cursor: move;
+}
+
+.draggable-popup {
+  transition: none !important;
+  /* Disable transitions during drag */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.draggable-popup .leaflet-popup-content-wrapper:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.draggable-popup .leaflet-popup-content-wrapper {
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.draggable-popup.is-dragging {
+  opacity: 0.9;
+  transform-origin: bottom center;
+  cursor: grabbing !important;
+}
+
+.draggable-popup.is-dragging .leaflet-popup-content-wrapper {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Bring active popup to front */
+.draggable-popup:hover {
+  z-index: 1000 !important;
+}
+
+/* Remove default popup animations */
+.leaflet-fade-anim .leaflet-popup {
+  transition: none;
+}
+
+/* Default close button styles for bar charts */
+.draggable-popup:not(.municipality-popup) .leaflet-popup-close-button {
+  position: absolute !important;
+  right: 24px !important;
+  top: 30px !important;
+  z-index: 1000 !important;
+  color: #083553 !important;
+  font-size: 24px !important;
+  padding: 0 !important;
+  height: 24px !important;
+  width: 24px !important;
+  border-radius: 4px;
+}
+
+/* Municipality tooltip close button styles */
+.municipality-popup .leaflet-popup-close-button {
+  position: absolute !important;
+  right: 8px !important;
+  top: 8px !important;
+  z-index: 1000 !important;
+  color: #083553 !important;
+  font-size: 20px !important;
+  padding: 0 !important;
+  height: 20px !important;
+  width: 20px !important;
+  border-radius: 4px;
+}
+
+.leaflet-popup-close-button span {
+  margin-top: -2px;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #333 !important;
+  transform: scale(1.1);
+}
+
+.map-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.municipality-tooltip-container {
+  padding: 0;
+}
+
+/* Add/update these mobile-specific styles */
+@media (max-width: 600px) {
+  .leaflet-popup-content-wrapper {
+    margin: 0;
+    padding: 0;
+    min-width: 200px;
+  }
+
+  .leaflet-popup-content {
+    margin: 0;
+    min-width: 200px;
+  }
+
+  .leaflet-popup {
+    min-width: 200px;
+  }
+
+  .draggable-popup:not(.municipality-popup) .leaflet-popup-close-button {
+    right: 16px !important;
+    top: 20px !important;
+    font-size: 20px !important;
+  }
+
+  .municipality-popup .leaflet-popup-close-button {
+    right: 6px !important;
+    top: 6px !important;
+    font-size: 16px !important;
+  }
+
+  .recharts-default-tooltip {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+  }
+
+  .recharts-tooltip-label {
+    margin-bottom: 2px !important;
+  }
+
+  .recharts-tooltip-item {
+    padding: 2px 0 !important;
+    margin: 0 !important;
+  }
+}
+
+/* Add smooth transitions for tooltip */
+.recharts-tooltip-wrapper {
+  transition: transform 0.15s ease-out !important;
+}
+
+/* Specific optimizations for Natura layer */
+.natura-feature {
+  transition: none !important;
+  will-change: transform;
+  transform-origin: center;
+}
+
+/* For small areas, make sure the cursor is more precise */
+.luomupelto-feature {
+  cursor: pointer;
+  pointer-events: auto !important;
+}

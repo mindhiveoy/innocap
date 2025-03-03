@@ -1,0 +1,127 @@
+{
+  "global": {
+    "name": "Green transition in South Savo"
+  },
+  "welcome": {
+    "title": "Welcome",
+    "subtitle": "Green transition in South Savo",
+    "content": {
+      "intro": {
+        "title": "About the Service",
+        "text": "This digital and interactive service presents spatial data and illustrates green transition indicators in the South Savo region, Finland. The service visualises activities associated with green transition such as sustainable mobility, energy efficiency and greenhouse gas (GHG) emissions. An AI-based analysis and strategy-recommendation tool is also available for the most open-minded."
+      },
+      "purpose": {
+        "title": "Purpose",
+        "text": "The digital service allows easy comparisons between green transition indicators based on the local and regional spatial data. The visual presentation of these indicators improves understanding the current situation in sustainability transition, allows more accurate monitoring and show potential development targets for the municipalities in their journey towards the more sustainable future."
+      },
+      "about": {
+        "title": "Development",
+        "innocapText": "INNOCAP project",
+        "text": "The service fosters regional cooperation and advances green transition activities in the region of South Savo. The green transition in South Savo service is developed in <innocapLink>{{innocapText}}</innocapLink> funded by the European Union's Northern Periphery and Arctic programme. The service is designed and maintained by the <hidseLink>{{hidse}}</hidseLink> at the <ruraliaLink>{{ruralia}}</ruraliaLink>, the University of Helsinki in collaboration with <mindhiveLink>{{mindhive}}</mindhiveLink> company.",
+        "links": {
+          "innocap": "green transition in South Savo service",
+          "innocapHref": "https://www.interreg-npa.eu/projects/innocap/",
+          "hidse": "Human in Digital and Sustainable Economies research group",
+          "hidseHref": "https://www.helsinki.fi/en/researchgroups/human-in-digital-and-sustainable-economies",
+          "ruralia": "Ruralia Institute",
+          "ruraliaHref": "https://www2.helsinki.fi/en/ruralia-institute",
+          "mindhive": "Mindhive",
+          "mindhiveHref": "https://mindhive.fi"
+        }
+      }
+    }
+  },
+  "navigation": {
+    "welcome": "Welcome",
+    "indicators": "Indicators",
+    "about": "Info",
+    "settings": "Settings"
+  },
+  "settings": {
+    "privacy": {
+      "title": "Privacy",
+      "description": "Manage your cookie and privacy preferences.",
+      "cookiePreferences": "Cookie Preferences"
+    },
+    "title": "Settings",
+    "language": {
+      "title": "Language",
+      "select": "Select language"
+    }
+  },
+  "indicators": {
+    "pinToMap": "Pin to map",
+    "unpinFromMap": "Unpin from map",
+    "maxPinsReached": "Maximum pins reached",
+    "selectYear": "Select year for {{indicator}}",
+    "yearButton": "Year {{year}}",
+    "greenTransition": "Green transition",
+    "title": "Green Transition Indicators"
+  },
+  "cookieConsent": {
+    "modal": {
+      "title": "Privacy Settings",
+      "description": "This website uses cookies to analyze our traffic and improve user experience.",
+      "acceptAll": "Accept all",
+      "acceptNecessary": "Accept necessary only",
+      "showPreferences": "Manage preferences"
+    },
+    "preferences": {
+      "title": "Cookie Preferences",
+      "sections": {
+        "usage": {
+          "title": "How we use cookies",
+          "description": "We use cookies to ensure basic functionality and analyze our traffic with anonymized data."
+        },
+        "necessary": {
+          "title": "Necessary Cookies",
+          "description": "These cookies are essential for the website to function properly."
+        },
+        "analytics": {
+          "title": "Analytics Cookies",
+          "description": "These cookies help us understand how visitors interact with our website. All data is anonymized."
+        }
+      }
+    }
+  },
+  "information": {
+    "title": "Site Information",
+    "description": "Here is basic information about how to use the \"Green transition in South Savo\" service and understand the basics of the shown green transition indicators. The dashboard provides an interactive way to explore and compare different green transition indicators across municipalities in the South Savo region, Finland.",
+    "sections": {
+      "navigation": {
+        "title": "Basic Navigation",
+        "items": [
+          "Click on municipalities to see detailed information",
+          "Use the side navigation to switch between different indicator categories",
+          "Explore the map to understand regional patterns"
+        ]
+      },
+      "indicators": {
+        "title": "Working with Indicators",
+        "items": [
+          "Select an indicator to view it on the map",
+          "Pin an indicator to compare it with another indicator, open additional information associated with an indicator by clicking the icon on a map",
+          "The indicators are grouped in major green transition classes: protected areas, sustainable mobility, energy efficiency, sustainable investments, recycling and greenhouse gas (GHG) emissions"
+        ]
+      },
+      "ai": {
+        "title": "AI Assistant",
+        "items": [
+          "An AI assistant is available to answer your questions (lower right corner)",
+          "Please note that the AI assistant is in the development phase and may have limited knowledge",
+          "The AI has focal knowledge on the municipalities of South Savo (municipality strategies and climate programmes), open access research considering green and digital transitions, and European Union's green and digital transition policy documents"
+        ]
+      },
+      "terms": {
+        "title": "Terms and privacy",
+        "terms": "Terms of service",
+        "privacy": "Privacy policy",
+        "termsLink": "https://docs.google.com/document/d/1i4j8K3aIsMMXsRO05ZR2trJa_s4NJfwpZ2KOXDefq5o/edit?usp=sharing",
+        "privacyLink": "https://docs.google.com/document/d/1TBHHMFOwtu3wbeZEORglMAoGxNqkPlzxCUFyZJ8-xHU/edit?usp=sharing"
+      }
+    }
+  },
+  "errors": {
+    "chatLoadFailed": "Failed to load the AI assistant. Please try again later."
+  }
+} 

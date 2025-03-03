@@ -25,6 +25,14 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Install Vercel CLI
+        run: |
+          npm install --global vercel@latest
+          echo "$(npm root --global)/../bin" >> $GITHUB_PATH
+
+      - name: Verify Vercel CLI Installation
+        run: vercel --version
+
       - name: Build
         run: yarn build
 

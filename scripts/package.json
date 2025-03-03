@@ -1,0 +1,9 @@
+{
+  "name": "@repo/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "geofire-common": "^6.0.0",
+    "proj4": "^2.9.2"
+  }
+}

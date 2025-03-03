@@ -1,95 +1,97 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
+
+import dynamic from 'next/dynamic';
+import { Box } from '@mui/material';
+import { SideNav } from '@/components/SideNav';
+import { useData } from '@/contexts/DataContext';
+import { useIndicator } from '@/contexts/IndicatorContext';
+import type { LatLngTuple, LatLngBoundsExpression } from 'leaflet';
+import { NAV_WIDTH, NAV_HEIGHT } from '@/constants/layout';
+import { LoadingOverlay } from '@/components/LoadingOverlay';
+import { Indicator, IndicatorType } from '@repo/ui/types/indicators';
+import { useLanguage } from '@repo/shared';
+
+const Map = dynamic(
+  () => import('@repo/ui/components/map').then(mod => mod.LeafletMap),
+  { ssr: false }
+);
+
+const SplitMap = dynamic(
+  () => import('@repo/ui/components/map').then(mod => mod.SplitMapView),
+  { ssr: false }
+);
+
+// Adjusted bounds based on municipality data:
+// Most western point: ~26.22 (Kangasniemi)
+// Most eastern point: ~29.69 (Savonlinna)
+// Most southern point: ~61.15 (Mäntyharju)
+// Most northern point: ~62.65 (Heinävesi)
+const MAP_BOUNDS: LatLngBoundsExpression = [
+  [61.10, 25.70], // Southwest corner
+  [62.60, 29.75]  // Northeast corner
+];
+
+const isOverlayCompatibleType = (indicator: Indicator | null) => {
+  return indicator?.indicatorType === IndicatorType.MunicipalityLevel || 
+         indicator?.indicatorType === IndicatorType.Special;
+};
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const { municipalityData, markerData, barChartData, isLoading } = useData();
+  const { selectedIndicator, pinnedIndicator, isCompareMode } = useIndicator();
+  const center: LatLngTuple = [61.90, 27.70];
+  const zoom = 9;
+  const { currentLanguage } = useLanguage();
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+  const showSplitView = isCompareMode &&
+    isOverlayCompatibleType(pinnedIndicator) &&
+    isOverlayCompatibleType(selectedIndicator) &&
+    // Don't show split view when filtering pinned indicator
+    !(selectedIndicator?.id === pinnedIndicator?.id && 
+      selectedIndicator?.selectedYear !== pinnedIndicator?.selectedYear);
+
+  return (
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      pb: { xs: `${NAV_HEIGHT}px`, md: 0 },
+      pl: { xs: 0, md: `${NAV_WIDTH}px` },
+    }}>
+      <SideNav />
+      <Box component="main" sx={{ flexGrow: 1, position: 'relative' }}>
+        {isLoading && <LoadingOverlay />}
+
+        {showSplitView ? (
+          <SplitMap
+            pinnedIndicator={pinnedIndicator}
+            selectedIndicator={selectedIndicator}
+            municipalityData={municipalityData}
+            markerData={markerData}
+            barChartData={barChartData}
+            center={center}
+            zoom={zoom}
+            maxBounds={MAP_BOUNDS}
+            language={currentLanguage}
           />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+        ) : (
+            <Map
+              tabIndex={0}
+            center={center}
+            zoom={zoom}
+            maxBounds={MAP_BOUNDS}
+            minZoom={8}
+            maxZoom={13}
+            municipalityData={municipalityData}
+            markerData={markerData}
+            barChartData={barChartData}
+            selectedIndicator={selectedIndicator}
+            pinnedIndicator={pinnedIndicator}
+            isPinned={!!pinnedIndicator}
+            language={currentLanguage}
           />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        )}
+      </Box>
+    </Box>
   );
 }
