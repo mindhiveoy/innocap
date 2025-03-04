@@ -1,0 +1,64 @@
+'use client';
+
+import { Providers } from '@/components/Providers';
+import { DataProvider } from '@/contexts/DataContext';
+import { IndicatorProvider } from '@/contexts/IndicatorContext';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
+import { EmbeddableChat } from '@/components/EmbeddableChat';
+import 'leaflet/dist/leaflet.css';
+import { useEffect, Suspense } from 'react';
+import { initCookieConsent } from '@/utils/cookieConsent';
+import { initGA } from '@/utils/analytics';
+import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
+import '@/i18n/config';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { trackPageView } from '@/utils/analytics';
+
+// Separate component for analytics tracking
+function AnalyticsTracker() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const hasAnalyticsConsent = useAnalyticsConsent();
+
+  useEffect(() => {
+    if (hasAnalyticsConsent) {
+      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
+      trackPageView(url);
+    }
+  }, [pathname, searchParams, hasAnalyticsConsent]);
+
+  return null;
+}
+
+export function ClientLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const hasAnalyticsConsent = useAnalyticsConsent();
+  const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
+  
+  useEffect(() => {
+    initCookieConsent();
+  }, []);
+
+  useEffect(() => {
+    if (hasAnalyticsConsent) {
+      initGA();
+    }
+  }, [hasAnalyticsConsent]);
+
+  return (
+    <Providers>
+      <DataProvider>
+        <IndicatorProvider>
+          {children}
+          {isChatEnabled && !isChatFlagLoading && <EmbeddableChat />}
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
+        </IndicatorProvider>
+      </DataProvider>
+    </Providers>
+  );
+} 
