@@ -1,19 +1,6 @@
-'use client';
-
+import { Metadata } from 'next';
 import { Open_Sans } from 'next/font/google';
-import { Providers } from '@/components/Providers';
-import { DataProvider } from '@/contexts/DataContext';
-import { IndicatorProvider } from '@/contexts/IndicatorContext';
-import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { EmbeddableChat } from '@/components/EmbeddableChat';
-import 'leaflet/dist/leaflet.css';
-import { useEffect, Suspense } from 'react';
-import { initCookieConsent } from '@/utils/cookieConsent';
-import { initGA } from '@/utils/analytics';
-import { useAnalyticsConsent } from '@/hooks/useAnalyticsConsent';
-import '@/i18n/config';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { trackPageView } from '@/utils/analytics';
+import { ClientLayout } from './client-layout';
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -21,54 +8,32 @@ const openSans = Open_Sans({
   weight: ['400', '500', '600', '700'],
 });
 
-// Separate component for analytics tracking
-function AnalyticsTracker() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const hasAnalyticsConsent = useAnalyticsConsent();
-
-  useEffect(() => {
-    if (hasAnalyticsConsent) {
-      const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
-      trackPageView(url);
-    }
-  }, [pathname, searchParams, hasAnalyticsConsent]);
-
-  return null;
-}
+// Define and export metadata directly here
+export const metadata: Metadata = {
+  title: 'Green transition in South Savo',
+  description: 'Green and digital transition dashboard',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/innocap_logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/innocap_logo.png', sizes: '16x16', type: 'image/png' }
+    ],
+    apple: [
+      { url: '/innocap_logo.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/innocap_logo.png',
+  },
+};
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const hasAnalyticsConsent = useAnalyticsConsent();
-  const { isEnabled: isChatEnabled, isLoading: isChatFlagLoading } = useFeatureFlag('enableAIChat');
-  
-  useEffect(() => {
-    initCookieConsent();
-  }, []);
-
-  useEffect(() => {
-    if (hasAnalyticsConsent) {
-      initGA();
-    }
-  }, [hasAnalyticsConsent]);
-
   return (
     <html lang="en" className={openSans.className}>
       <body>
-        <Providers>
-          <DataProvider>
-            <IndicatorProvider>
-              {children}
-              {isChatEnabled && !isChatFlagLoading && <EmbeddableChat />}
-              <Suspense fallback={null}>
-                <AnalyticsTracker />
-              </Suspense>
-            </IndicatorProvider>
-          </DataProvider>
-        </Providers>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

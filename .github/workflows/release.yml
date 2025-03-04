@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    env: 
+    env:
       TURBO_TELEMETRY_DISABLED: 1
       TURBO_TEAM: ${{ vars.TURBO_TEAM_MH }}
       TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
