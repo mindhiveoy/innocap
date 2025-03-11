@@ -6,8 +6,7 @@ declare global {
   }
 }
 
-// Google Analytics configuration
-export const GA_MEASUREMENT_ID = 'G-YBHL457WSL';
+export const GA_MEASUREMENT_ID = 'G-MWVE99QN79'; // Production ID
 
 export const initGA = () => {
   const script = document.createElement('script');
