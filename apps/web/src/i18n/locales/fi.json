@@ -94,6 +94,7 @@
       "indicators": {
         "title": "Indikaattoreiden kanssa työskentely",
         "items": [
+          "Huomio: Pertunmaan ja Mäntyharjun kunnat yhdistyivät 1.1.2025 alkaen Mäntyharjun kunnaksi. Karttapalvelun avoimien lähteiden aineisto kattaa kuntaliitosta edeltävän ajan vuoteen 2024 saakka",
           "Valitse indikaattori, jotta näet sen kartalla",
           "Kiinnitä (\"pin\") haluamasi mittari, jotta voit verrata sitä toiseen. Kuvaketta painamalla avautuu lisätietoa",
           "Vihreän siirtymän mittarit on luokiteltu keskeisiin luokkiin: esim. suojellut alueet, kestävä liikkuminen, energiatehokkuus, kestävät investoinnit, kierrätys ja kasvihuonekaasupäästöt"
@@ -103,8 +104,9 @@
         "title": "Tekoälyavustaja",
         "items": [
           "Tekoälyavustaja vastaa tekstimuotoisiin kysymyksiin (kuvake oikeassa alakulmassa)",
-          "Huomaa, että tekoälyavustaja on kehitysvaiheessa ja sillä on vain rajallisesti tietoa käytössä",
-          "Tekoälyavustajalla on kuitenkin tarkkaa tietoa Etelä-Savon kunnista (kuntastrategiat ja ilmasto-ohjelmat), avoimesti saatavilla olevaa tieteellistä tutkimusta vihreästä ja digitaalisesta siirtymästä ja Euroopan Unionin siirtymiin liittyvistä politiikkadokumenteista"
+          "Tekoälyavustaja on kehitysvaiheessa ja sen toiminta on rajallista",
+          "Tekoälyavustaja hyödyntää tietoa Etelä-Savon kunnista (kuntastrategiat ja ilmasto-ohjelmat), avoimesti saatavilla olevaa tutkimusta vihreästä ja digitaalisesta siirtymästä sekä Euroopan Unionin politiikkadokumentteja",
+          "Käyttäjä voi antaa tekoälyavustajan vastauksista myönteistä tai kielteistä palautetta (ns. peukuttaminen). Lisäksi palautetta voi antaa kirjoittamalla."
         ]
       },
       "terms": {
@@ -119,4 +121,4 @@
   "errors": {
     "chatLoadFailed": "Tekoälyavustajan lataus epäonnistui. Yritä myöhemmin uudelleen."
   }
-} 
+}
