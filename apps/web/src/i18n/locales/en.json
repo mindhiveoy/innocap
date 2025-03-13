@@ -99,6 +99,7 @@
       "indicators": {
         "title": "Working with Indicators",
         "items": [
+          "Note: The municipalities of Pertunmaa and Mäntyharju merged into the Municipality of Mäntyharju as of January 1, 2025. The data from open sources in the map service covers the period before the municipal merger, up until the year 2024.",
           "Select an indicator to view it on the map",
           "Pin an indicator to compare it with another indicator, open additional information associated with an indicator by clicking the icon on a map",
           "The indicators are grouped in major green transition classes: protected areas, sustainable mobility, energy efficiency, sustainable investments, recycling and greenhouse gas (GHG) emissions"
@@ -107,9 +108,10 @@
       "ai": {
         "title": "AI Assistant",
         "items": [
-          "An AI assistant is available to answer your questions (lower right corner)",
-          "Please note that the AI assistant is in the development phase and may have limited knowledge",
-          "The AI has focal knowledge on the municipalities of South Savo (municipality strategies and climate programmes), open access research considering green and digital transitions, and European Union's green and digital transition policy documents"
+          "The AI Assistant responds to text-based questions (icon in the bottom right corner)",
+          "The AI Assistant is in development phase and its functionality is limited",
+          "The AI Assistant utilizes information about municipalities in South Savo (municipal strategies and climate programs), openly available research articles on green and digital transition, as well as European Union policy documents",
+          "Users can provide positive or negative feedback on the AI Assistant's responses (through \"thumbs up/down\" rating). Additionally, feedback can be provided in writing"
         ]
       },
       "terms": {
