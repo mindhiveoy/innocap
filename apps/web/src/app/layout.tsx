@@ -1,6 +1,9 @@
 import { Metadata } from 'next';
+import Script from 'next/script';
 import { Open_Sans } from 'next/font/google';
 import { ClientLayout } from './client-layout';
+
+const GA_MEASUREMENT_ID = "G-MWVE99QN79";
 
 const openSans = Open_Sans({
   subsets: ['latin'],
@@ -33,6 +36,24 @@ export default function RootLayout({
   return (
     <html lang="en" className={openSans.className}>
       <body>
+          <Script
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+            />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${GA_MEASUREMENT_ID}', {
+                    page_path: window.location.pathname,
+                  });
+                `,
+              }}
+            />
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
