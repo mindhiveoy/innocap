@@ -116,11 +116,12 @@ jobs:
           ln -sf apps/web/.next .next
           ls -la .next
 
-          # Create node_modules symlink at parent level for relative path resolution
-          # .next files have paths like ../../node_modules which resolve from symlink location
-          echo "=== Creating node_modules symlink at parent for path resolution ==="
-          ln -sf $(pwd)/node_modules ../node_modules
-          ls -la ../node_modules | head -5
+          # Create node_modules symlink at grandparent level for relative path resolution
+          # .next files have paths like ../../node_modules which resolve from ROOT .next symlink
+          # From ROOT/.next (symlinked), ../../node_modules = /home/runner/work/node_modules
+          echo "=== Creating node_modules symlink at grandparent for path resolution ==="
+          ln -sf $(pwd)/node_modules ../../node_modules
+          ls -la ../../node_modules | head -5
 
           # Create vercel.json at ROOT (no outputDirectory - use symlinked .next)
           echo "=== Creating vercel.json at ROOT ==="
