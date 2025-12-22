@@ -145,11 +145,16 @@ jobs:
           ls ../../turbo.json 2>/dev/null && echo "ERROR: turbo.json still visible!" || echo "turbo.json hidden (good)"
 
           echo ""
-          echo "=== Running vercel build ==="
+          echo "=== Checking monorepo root for any .vercel files ==="
+          ls -la ../../.vercel/ 2>/dev/null || echo "No .vercel at root"
+          cat ../../.vercel/repo.json 2>/dev/null || echo "No repo.json at root"
+
+          echo ""
+          echo "=== Running vercel build with debug ==="
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+            VERCEL_DEBUG=1 vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
+            VERCEL_DEBUG=1 vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
           fi
 
           echo ""
