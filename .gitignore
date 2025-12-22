@@ -75,3 +75,4 @@ keys
 **/*serviceaccount*.json
 *.json.key
 **/credentials.json
+.env*.local
