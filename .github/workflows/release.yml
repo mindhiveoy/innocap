@@ -27,7 +27,10 @@ jobs:
         run: yarn install
 
       - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+        run: |
+          npm install --global vercel@latest
+          echo "=== Vercel CLI Version ==="
+          vercel --version
 
       # Strategy 17: Run EVERYTHING from monorepo root with explicit paths
       # Previous attempts failed because running from apps/web always caused path doubling
@@ -61,6 +64,26 @@ jobs:
           echo ""
           echo "=== project.json after pull ==="
           cat .vercel/project.json
+
+          echo ""
+          echo "=== DEBUG: All .vercel directories after pull ==="
+          find . -name ".vercel" -type d 2>/dev/null || echo "No .vercel directories found"
+
+          echo ""
+          echo "=== DEBUG: All vercel.json files after pull ==="
+          find . -name "vercel.json" -type f 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+            echo ""
+          done
+
+          echo ""
+          echo "=== DEBUG: All repo.json files after pull ==="
+          find . -name "repo.json" -type f 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+            echo ""
+          done
 
       - name: Copy Vercel config to apps/web
         run: |
@@ -128,8 +151,15 @@ jobs:
           # Remove apps/web/vercel.json to prevent outputDirectory interference
           # The outputDirectory setting can cause Vercel to treat it as static export
           echo "=== Removing apps/web/vercel.json to prevent static export detection ==="
+          echo "BEFORE removal - checking if file exists:"
+          ls -la apps/web/vercel.json 2>&1 || echo "File does not exist before removal"
+          if [ -f apps/web/vercel.json ]; then
+            echo "Content before removal:"
+            cat apps/web/vercel.json
+          fi
           rm -f apps/web/vercel.json
-          echo "Removed: apps/web/vercel.json"
+          echo "AFTER removal - confirming file is gone:"
+          ls -la apps/web/vercel.json 2>&1 || echo "CONFIRMED: apps/web/vercel.json deleted"
 
           # Verify export-marker.json shows this is NOT a static export
           echo "=== Checking export-marker.json ==="
@@ -188,10 +218,100 @@ jobs:
           ls -la .vercel/
           cat .vercel/project.json
 
+      - name: Debug State Before Vercel Build
+        run: |
+          echo "========================================"
+          echo "=== COMPREHENSIVE DEBUG BEFORE VERCEL BUILD ==="
+          echo "========================================"
+
+          echo ""
+          echo "=== Current directory ==="
+          pwd
+          realpath .
+
+          echo ""
+          echo "=== All vercel.json files in entire project ==="
+          find . -name "vercel.json" -type f 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+            echo ""
+          done
+          echo "--- End of vercel.json files ---"
+
+          echo ""
+          echo "=== All .vercel directories ==="
+          find . -name ".vercel" -type d 2>/dev/null
+
+          echo ""
+          echo "=== Contents of ROOT .vercel/ ==="
+          ls -la .vercel/ 2>/dev/null || echo "No .vercel at ROOT"
+          if [ -f .vercel/project.json ]; then
+            echo "--- .vercel/project.json ---"
+            cat .vercel/project.json
+          fi
+          if [ -f .vercel/repo.json ]; then
+            echo "--- .vercel/repo.json ---"
+            cat .vercel/repo.json
+          else
+            echo "No .vercel/repo.json (good)"
+          fi
+
+          echo ""
+          echo "=== Contents of apps/web/.vercel/ ==="
+          ls -la apps/web/.vercel/ 2>/dev/null || echo "No apps/web/.vercel"
+          if [ -f apps/web/.vercel/project.json ]; then
+            echo "--- apps/web/.vercel/project.json ---"
+            cat apps/web/.vercel/project.json
+          fi
+          if [ -f apps/web/.vercel/repo.json ]; then
+            echo "--- apps/web/.vercel/repo.json ---"
+            cat apps/web/.vercel/repo.json
+          else
+            echo "No apps/web/.vercel/repo.json (good)"
+          fi
+
+          echo ""
+          echo "=== Checking apps/web/vercel.json exists ==="
+          ls -la apps/web/vercel.json 2>&1 || echo "CONFIRMED: apps/web/vercel.json does NOT exist"
+
+          echo ""
+          echo "=== ROOT vercel.json ==="
+          cat vercel.json 2>/dev/null || echo "No vercel.json at ROOT"
+
+          echo ""
+          echo "=== .next symlink check ==="
+          ls -la .next 2>/dev/null || echo "No .next at ROOT"
+          ls -la .next/ 2>/dev/null | head -5
+
+          echo ""
+          echo "=== export-marker.json content ==="
+          cat .next/export-marker.json 2>/dev/null || echo "No export-marker.json via symlink"
+          cat apps/web/.next/export-marker.json 2>/dev/null || echo "No export-marker.json in apps/web"
+
+          echo ""
+          echo "=== .next/server directory exists? (indicates NOT static export) ==="
+          ls -la .next/server/ 2>/dev/null | head -5 || echo "No .next/server"
+
+          echo ""
+          echo "=== next.config.js at ROOT ==="
+          cat next.config.js 2>/dev/null || echo "No next.config.js at ROOT"
+
+          echo ""
+          echo "=== Environment variables related to Vercel ==="
+          env | grep -i vercel | grep -v TOKEN | grep -v SECRET || echo "No VERCEL env vars"
+
+          echo ""
+          echo "========================================"
+          echo "=== END DEBUG BEFORE VERCEL BUILD ==="
+          echo "========================================"
+
       - name: Create Vercel Build Output
+        env:
+          VERCEL_DEBUG: "1"
         run: |
           echo "=== Creating Vercel build output from ROOT ==="
           echo "Current directory: $(pwd)"
+          echo "VERCEL_DEBUG is enabled for verbose output"
 
           echo ""
           echo "=== Running vercel build from ROOT ==="
@@ -206,6 +326,11 @@ jobs:
           ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output!"
           ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
           ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
+
+          echo ""
+          echo "=== DEBUG: State after vercel build attempt ==="
+          echo "Checking if any new files were created..."
+          find .vercel -type f -newer .vercel/project.json 2>/dev/null || echo "No new files in .vercel"
 
       - name: Deploy to Vercel
         run: |
