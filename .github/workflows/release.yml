@@ -29,16 +29,13 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Setup Vercel Project
+      - name: Link Vercel Project
         run: |
-          # Create .vercel directory at monorepo root
-          mkdir -p .vercel
-
-          # Create initial project.json with projectId and orgId
-          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
-
-          echo "=== Created .vercel/project.json ==="
-          cat .vercel/project.json
+          echo "=== Linking to Vercel project ==="
+          vercel link --yes --project=innocap-web --scope=${{ vars.TURBO_TEAM_MH }} --token=${{ secrets.VERCEL_TOKEN }}
+          echo "=== After vercel link ==="
+          cat .vercel/project.json || echo "No project.json created"
+          ls -la .vercel/
 
       - name: Pull Vercel Environment
         run: |
@@ -54,10 +51,11 @@ jobs:
         run: |
           echo "=== Before vercel build ==="
           echo "Working directory: $(pwd)"
+          echo "=== .vercel directory contents ==="
+          ls -la .vercel/
           echo "=== project.json content ==="
           cat .vercel/project.json
 
-          # Build using Vercel's rootDirectory setting from project.json
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
@@ -68,14 +66,10 @@ jobs:
           echo "Looking for .vercel/output:"
           ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output at root"
           ls -la apps/web/.vercel/output/ 2>/dev/null || echo "No apps/web/.vercel/output"
-          find . -path "*/node_modules" -prune -o -name "output" -type d -print 2>/dev/null | head -10
 
       - name: Deploy to Vercel
         run: |
           echo "=== Before vercel deploy ==="
-          echo "Working directory: $(pwd)"
-          echo "=== Looking for .vercel/output ==="
-          find . -path "*/node_modules" -prune -o -name "output" -type d -print 2>/dev/null | head -10
           ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output at root"
 
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
