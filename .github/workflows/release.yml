@@ -120,6 +120,16 @@ jobs:
           ln -sf apps/web/.next .next
           ls -la .next/
 
+          # The .next build has relative paths like ../../node_modules (from apps/web)
+          # When symlinked to root, this resolves to /home/runner/work/node_modules
+          # So we need to create that symlink too
+          echo ""
+          echo "=== Creating node_modules symlink for path resolution ==="
+          WORKSPACE_ROOT=$(dirname "$(pwd)")
+          echo "Creating: $WORKSPACE_ROOT/node_modules -> $(pwd)/node_modules"
+          ln -sf "$(pwd)/node_modules" "$WORKSPACE_ROOT/node_modules"
+          ls -la "$WORKSPACE_ROOT/node_modules" | head -5
+
           # Remove repo.json that vercel pull created (triggers monorepo project selection)
           echo ""
           echo "=== Removing repo.json to prevent monorepo mode ==="
