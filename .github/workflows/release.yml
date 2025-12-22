@@ -314,23 +314,53 @@ jobs:
           echo "VERCEL_DEBUG is enabled for verbose output"
 
           echo ""
-          echo "=== Running vercel build from ROOT ==="
+          echo "=== State of .next BEFORE vercel build ==="
+          ls -la .next/ | head -20
+          echo ""
+          echo "=== .next/server contents BEFORE ==="
+          ls -la .next/server/ 2>/dev/null | head -10 || echo "No server dir"
+          echo ""
+          echo "=== Check for any export* files BEFORE ==="
+          find .next -name "export*" -type f 2>/dev/null || echo "No export files found"
+
+          echo ""
+          echo "=== Running vercel build from ROOT (with full output capture) ==="
+          set +e  # Don't exit on error so we can capture state after
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /tmp/vercel-build-output.txt
+            BUILD_EXIT_CODE=${PIPESTATUS[0]}
           else
-            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
+            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /tmp/vercel-build-output.txt
+            BUILD_EXIT_CODE=${PIPESTATUS[0]}
           fi
+          set -e
 
           echo ""
-          echo "=== After vercel build ==="
-          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output!"
-          ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
-          ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
+          echo "=== Vercel build exit code: $BUILD_EXIT_CODE ==="
 
           echo ""
-          echo "=== DEBUG: State after vercel build attempt ==="
-          echo "Checking if any new files were created..."
-          find .vercel -type f -newer .vercel/project.json 2>/dev/null || echo "No new files in .vercel"
+          echo "=== State of .next AFTER vercel build attempt ==="
+          ls -la .next/ | head -20 || echo "No .next after build"
+
+          echo ""
+          echo "=== Check for any export* files AFTER ==="
+          find .next -name "export*" -type f 2>/dev/null || echo "No export files found"
+
+          echo ""
+          echo "=== .vercel directory AFTER vercel build ==="
+          ls -la .vercel/ || echo "No .vercel"
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output"
+
+          echo ""
+          echo "=== Full vercel build output from log file ==="
+          cat /tmp/vercel-build-output.txt
+
+          echo ""
+          echo "=== Searching for any clues about export-detail.json ==="
+          grep -i "export" /tmp/vercel-build-output.txt || echo "No export mentions in output"
+
+          # Exit with the original build exit code
+          exit $BUILD_EXIT_CODE
 
       - name: Deploy to Vercel
         run: |
