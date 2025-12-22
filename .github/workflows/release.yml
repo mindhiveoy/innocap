@@ -175,8 +175,11 @@ jobs:
           # This is a known issue: https://community.vercel.com/t/2007
           # The file is normally created by `next export`, not `next build`
           # Creating a minimal version allows the tar packaging to proceed
+          # IMPORTANT: outDirectory must be an absolute path
           echo "=== Creating export-detail.json workaround ==="
-          echo '{"version":1,"success":true,"outDirectory":"out"}' > apps/web/.next/export-detail.json
+          EXPORT_OUT_DIR="$(pwd)/apps/web/out"
+          mkdir -p "$EXPORT_OUT_DIR"
+          echo "{\"version\":1,\"success\":true,\"outDirectory\":\"$EXPORT_OUT_DIR\"}" > apps/web/.next/export-detail.json
           cat apps/web/.next/export-detail.json
 
           # Create .turbo directory with dummy log (Turborepo cache doesn't include .turbo)
