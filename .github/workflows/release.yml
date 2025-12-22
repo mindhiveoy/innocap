@@ -29,55 +29,45 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # Strategy 16: Use Vercel API to set rootDirectory to null BEFORE pulling
-      # This prevents double-concatenation (apps/web + apps/web) when running from apps/web
-      # Reference: https://vercel.com/docs/rest-api/reference/endpoints/projects/update-an-existing-project
+      # Strategy 17: Run EVERYTHING from monorepo root with explicit paths
+      # Previous attempts failed because running from apps/web always caused path doubling
+      # Solution: Stay at root, use explicit paths, and configure vercel.json for root-level build
       - name: Clear rootDirectory via Vercel API
         run: |
           echo "=== Clearing rootDirectory via Vercel API ==="
-          echo "This prevents double-concatenation when running from apps/web"
-
-          # PATCH the project to set rootDirectory to null (defaults to project root)
           HTTP_STATUS=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
             -X PATCH "https://api.vercel.com/v9/projects/${{ secrets.VERCEL_PROJECT_ID }}?teamId=${{ secrets.VERCEL_ORG_ID }}" \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"rootDirectory": null}')
-
           echo "API Response Status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
-            echo "SUCCESS: rootDirectory cleared"
-            cat /tmp/api_response.json | jq '.rootDirectory // "null (as expected)"' 2>/dev/null || cat /tmp/api_response.json
-          else
-            echo "WARNING: API call returned status $HTTP_STATUS"
-            cat /tmp/api_response.json
-            echo "Continuing anyway - local override may still work"
-          fi
+          [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ] && echo "SUCCESS" || echo "WARNING: $HTTP_STATUS"
 
-      - name: Create Vercel Project Link
+      - name: Create Vercel Project Link at ROOT
         run: |
-          echo "=== Creating project link in apps/web ==="
-          mkdir -p apps/web/.vercel
-          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > apps/web/.vercel/project.json
-          cat apps/web/.vercel/project.json
+          echo "=== Creating project link at MONOREPO ROOT ==="
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+          cat .vercel/project.json
 
-      - name: Pull Vercel Environment
-        working-directory: apps/web
+      - name: Pull Vercel Environment at ROOT
         run: |
-          echo "=== Pulling Vercel environment ==="
-          echo "Working directory: $(pwd)"
-
+          echo "=== Pulling Vercel environment at ROOT ==="
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           else
             vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           fi
-
           echo ""
-          echo "=== Verifying rootDirectory is null after pull ==="
+          echo "=== project.json after pull ==="
           cat .vercel/project.json
-          echo ""
-          grep -o '"rootDirectory"[^,}]*' .vercel/project.json || echo "rootDirectory: null (good!)"
+
+      - name: Copy env vars to apps/web for build
+        run: |
+          echo "=== Copying env vars to apps/web ==="
+          mkdir -p apps/web/.vercel
+          cp .vercel/.env.*.local apps/web/.vercel/ 2>/dev/null || echo "No env files to copy"
+          ls -la apps/web/.vercel/ 2>/dev/null || echo "No .vercel in apps/web"
 
       - name: Build with Turborepo
         run: |
@@ -109,80 +99,63 @@ jobs:
           echo "Checking for routes-manifest.json:"
           ls -la apps/web/.next/routes-manifest.json 2>/dev/null || echo "No routes-manifest.json!"
 
-      - name: Setup Vercel Build Environment
+      - name: Setup Vercel Build at ROOT
         run: |
-          echo "=== Setting up for vercel build ==="
+          echo "=== Setting up for vercel build at ROOT ==="
 
-          # CRITICAL: Hide turbo.json to prevent Vercel CLI from auto-detecting monorepo
-          # Even with rootDirectory=null in API, Vercel CLI infers paths from turbo.json
-          echo "Temporarily hiding turbo.json to disable monorepo auto-detection"
-          mv turbo.json turbo.json.bak
-
-          # Remove repo.json if created (triggers monorepo project selection prompt)
-          echo "=== Removing any repo.json files ==="
+          # Remove any repo.json files that might trigger monorepo mode
           rm -f .vercel/repo.json
           rm -f apps/web/.vercel/repo.json 2>/dev/null || true
-          ls -la apps/web/.vercel/
 
-      - name: Create Vercel Build Output
-        working-directory: apps/web
-        run: |
-          echo "=== Creating Vercel build output from apps/web ==="
-          echo "Current directory: $(pwd)"
-          echo "Absolute path: $(realpath .)"
+          # Create vercel.json at ROOT with explicit path to apps/web/.next
+          echo "=== Creating vercel.json at ROOT ==="
+          cat > vercel.json << 'EOF'
+          {
+            "$schema": "https://openapi.vercel.sh/vercel.json",
+            "framework": "nextjs",
+            "buildCommand": "echo 'Using pre-built .next from Turborepo'",
+            "outputDirectory": "apps/web/.next"
+          }
+          EOF
+          cat vercel.json
 
           echo ""
-          echo "=== Verify .next exists ==="
-          ls -la .next/ | head -10
-          ls -la .next/routes-manifest.json || echo "No routes-manifest.json!"
+          echo "=== Verify apps/web/.next exists ==="
+          ls -la apps/web/.next/ | head -10
+          ls -la apps/web/.next/routes-manifest.json
 
           echo ""
-          echo "=== project.json content (rootDirectory should be null) ==="
+          echo "=== .vercel directory at root ==="
+          ls -la .vercel/
           cat .vercel/project.json
 
-          echo ""
-          echo "=== Verify turbo.json is hidden ==="
-          ls ../../turbo.json 2>/dev/null && echo "ERROR: turbo.json still visible!" || echo "turbo.json hidden (good)"
+      - name: Create Vercel Build Output
+        run: |
+          echo "=== Creating Vercel build output from ROOT ==="
+          echo "Current directory: $(pwd)"
 
           echo ""
-          echo "=== Checking monorepo root for any .vercel files ==="
-          ls -la ../../.vercel/ 2>/dev/null || echo "No .vercel at root"
-          cat ../../.vercel/repo.json 2>/dev/null || echo "No repo.json at root"
-
-          echo ""
-          echo "=== Running vercel build with debug ==="
+          echo "=== Running vercel build from ROOT ==="
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            VERCEL_DEBUG=1 vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
+            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            VERCEL_DEBUG=1 vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
+            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
           fi
 
           echo ""
           echo "=== After vercel build ==="
-          echo "Looking for .vercel/output:"
           ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output!"
-
-          echo ""
-          echo "=== Output directory contents ==="
           ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
           ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
 
-      - name: Restore turbo.json
-        if: always()
-        run: |
-          mv turbo.json.bak turbo.json 2>/dev/null || true
-
       - name: Deploy to Vercel
-        working-directory: apps/web
         run: |
-          echo "=== Deploying from apps/web ==="
+          echo "=== Deploying from ROOT ==="
           echo "Deploy directory: $(pwd)"
 
           echo ""
           echo "=== .vercel/output contents ==="
           ls -la .vercel/output/ 2>/dev/null || echo "No output directory!"
-          ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
-          ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
 
           echo ""
           echo "=== Deploying ==="
