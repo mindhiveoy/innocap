@@ -145,11 +145,9 @@ jobs:
           echo "=== Copying config files to ROOT ==="
           cp apps/web/next.config.js ./
           cp apps/web/.eslintrc.json ./
-          echo "next.config.js:"
-          cat next.config.js
-          echo ""
-          echo ".eslintrc.json:"
-          cat .eslintrc.json
+          cp apps/web/next-env.d.ts ./
+          echo "Files copied:"
+          ls -la next.config.js .eslintrc.json next-env.d.ts
 
           echo ""
           echo "=== Verify .next symlink works ==="
