@@ -111,10 +111,12 @@ jobs:
           rm -f .vercel/repo.json
           rm -f apps/web/.vercel/repo.json 2>/dev/null || true
 
-          # Symlink .next to ROOT (Vercel expects it here when rootDirectory is null)
-          echo "=== Symlinking .next to ROOT ==="
+          # Symlink .next and .turbo to ROOT (Vercel traces these)
+          echo "=== Symlinking .next and .turbo to ROOT ==="
           ln -sf apps/web/.next .next
+          ln -sf apps/web/.turbo .turbo
           ls -la .next
+          ls -la .turbo
 
           # Create node_modules symlink at grandparent level for relative path resolution
           # .next files have paths like ../../node_modules which resolve from ROOT .next symlink
