@@ -29,23 +29,43 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      # Strategy: Create project.json MANUALLY (avoid vercel link which creates repo.json)
-      # Then pull env vars, build locally with Turborepo, and use vercel build from apps/web
-      - name: Create Vercel Project Link (Manual)
+      # Strategy 16: Use Vercel API to set rootDirectory to null BEFORE pulling
+      # This prevents double-concatenation (apps/web + apps/web) when running from apps/web
+      # Reference: https://vercel.com/docs/rest-api/reference/endpoints/projects/update-an-existing-project
+      - name: Clear rootDirectory via Vercel API
         run: |
-          echo "=== Creating manual project link (avoiding repo.json) ==="
-          echo "MONOREPO_ROOT: $(pwd)"
+          echo "=== Clearing rootDirectory via Vercel API ==="
+          echo "This prevents double-concatenation when running from apps/web"
+
+          # PATCH the project to set rootDirectory to null (defaults to project root)
+          HTTP_STATUS=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
+            -X PATCH "https://api.vercel.com/v9/projects/${{ secrets.VERCEL_PROJECT_ID }}?teamId=${{ secrets.VERCEL_ORG_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"rootDirectory": null}')
+
+          echo "API Response Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "SUCCESS: rootDirectory cleared"
+            cat /tmp/api_response.json | jq '.rootDirectory // "null (as expected)"' 2>/dev/null || cat /tmp/api_response.json
+          else
+            echo "WARNING: API call returned status $HTTP_STATUS"
+            cat /tmp/api_response.json
+            echo "Continuing anyway - local override may still work"
+          fi
+
+      - name: Create Vercel Project Link
+        run: |
+          echo "=== Creating project link in apps/web ==="
           mkdir -p apps/web/.vercel
           echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > apps/web/.vercel/project.json
-          echo "=== Created apps/web/.vercel/project.json ==="
           cat apps/web/.vercel/project.json
 
       - name: Pull Vercel Environment
         working-directory: apps/web
         run: |
-          echo "=== Pulling Vercel environment from apps/web ==="
-          echo "Current directory: $(pwd)"
-          echo "Absolute path: $(realpath .)"
+          echo "=== Pulling Vercel environment ==="
+          echo "Working directory: $(pwd)"
 
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
@@ -53,32 +73,11 @@ jobs:
             vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           fi
 
-          echo "=== After vercel pull ==="
-          echo "=== .vercel directory contents ==="
-          ls -la .vercel/
-          echo "=== project.json content ==="
+          echo ""
+          echo "=== Verifying rootDirectory is null after pull ==="
           cat .vercel/project.json
           echo ""
-          echo "=== Checking for rootDirectory setting ==="
-          grep -o '"rootDirectory"[^,}]*' .vercel/project.json || echo "No rootDirectory found"
-
-      - name: Strip rootDirectory from settings
-        working-directory: apps/web
-        run: |
-          echo "=== Setting rootDirectory to empty string to avoid double-concatenation ==="
-          echo "Before:"
-          cat .vercel/project.json
-
-          # Set rootDirectory to empty string (not null) to override dashboard setting
-          if command -v jq &> /dev/null; then
-            jq 'if .settings then .settings.rootDirectory = "" else . end' .vercel/project.json > tmp.json && mv tmp.json .vercel/project.json
-          else
-            # Fallback: use sed if jq not available
-            sed -i 's/"rootDirectory":"[^"]*"/"rootDirectory":""/g' .vercel/project.json
-          fi
-
-          echo "After:"
-          cat .vercel/project.json
+          grep -o '"rootDirectory"[^,}]*' .vercel/project.json || echo "rootDirectory: null (good!)"
 
       - name: Build with Turborepo
         run: |
@@ -114,14 +113,8 @@ jobs:
         run: |
           echo "=== Setting up for vercel build ==="
 
-          # IMPORTANT: Hide turbo.json to prevent Vercel CLI monorepo detection
-          # This makes Vercel treat apps/web as a standalone project
-          echo "Temporarily hiding turbo.json to disable monorepo detection"
-          mv turbo.json turbo.json.bak
-
-          # Remove repo.json that vercel pull created (triggers monorepo project selection)
-          echo ""
-          echo "=== Removing repo.json to prevent monorepo mode ==="
+          # Remove repo.json if created (triggers monorepo project selection prompt)
+          echo "=== Removing any repo.json files ==="
           rm -f .vercel/repo.json
           rm -f apps/web/.vercel/repo.json 2>/dev/null || true
           ls -la apps/web/.vercel/
@@ -139,13 +132,8 @@ jobs:
           ls -la .next/routes-manifest.json || echo "No routes-manifest.json!"
 
           echo ""
-          echo "=== Verify turbo.json is hidden ==="
-          ls -la ../../turbo.json 2>/dev/null && echo "ERROR: turbo.json still visible!" || echo "turbo.json hidden (good)"
-          ls -la ../../turbo.json.bak 2>/dev/null || echo "No turbo.json.bak found"
-
-          echo ""
-          echo "=== .vercel directory before build ==="
-          ls -la .vercel/
+          echo "=== project.json content (rootDirectory should be null) ==="
+          cat .vercel/project.json
 
           echo ""
           echo "=== Running vercel build ==="
@@ -161,13 +149,9 @@ jobs:
           ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output!"
 
           echo ""
-          echo "=== Full .vercel directory tree ==="
-          find .vercel -type f 2>/dev/null | head -50 || echo "Cannot list .vercel"
-
-      - name: Restore turbo.json
-        if: always()
-        run: |
-          mv turbo.json.bak turbo.json 2>/dev/null || true
+          echo "=== Output directory contents ==="
+          ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
+          ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
 
       - name: Deploy to Vercel
         working-directory: apps/web
