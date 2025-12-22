@@ -134,11 +134,16 @@ jobs:
           EOF
           cat vercel.json
 
-          # Copy next.config.js to ROOT (Vercel needs it for framework detection)
+          # Copy config files to ROOT (Vercel traces these from .next)
           echo ""
-          echo "=== Copying next.config.js to ROOT ==="
+          echo "=== Copying config files to ROOT ==="
           cp apps/web/next.config.js ./
+          cp apps/web/.eslintrc.json ./
+          echo "next.config.js:"
           cat next.config.js
+          echo ""
+          echo ".eslintrc.json:"
+          cat .eslintrc.json
 
           echo ""
           echo "=== Verify .next symlink works ==="
