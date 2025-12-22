@@ -112,62 +112,36 @@ jobs:
 
       - name: Setup Vercel Build Environment
         run: |
-          echo "=== Setting up for vercel build from monorepo root ==="
+          echo "=== Setting up for vercel build ==="
 
-          # Vercel CLI looks for .next at monorepo root when it detects turbo.json
-          # So we need to symlink apps/web/.next to monorepo root
-          echo "Creating symlink: .next -> apps/web/.next"
-          ln -sf apps/web/.next .next
-          ls -la .next/
-
-          # The .next build has paths to node_modules that resolve to /home/runner/work/node_modules
-          # (several levels above checkout). Create symlinks at all needed parent levels.
-          echo ""
-          echo "=== Creating node_modules symlinks for path resolution ==="
-          echo "Current directory: $(pwd)"
-
-          # Create symlinks at parent directories
-          PARENT1=$(dirname "$(pwd)")
-          PARENT2=$(dirname "$PARENT1")
-          echo "Creating symlinks:"
-          echo "  $PARENT1/node_modules -> $(pwd)/node_modules"
-          echo "  $PARENT2/node_modules -> $(pwd)/node_modules"
-
-          ln -sf "$(pwd)/node_modules" "$PARENT1/node_modules" 2>/dev/null || echo "Could not create at $PARENT1"
-          ln -sf "$(pwd)/node_modules" "$PARENT2/node_modules" 2>/dev/null || echo "Could not create at $PARENT2"
-
-          ls -la "$PARENT1/node_modules" 2>/dev/null | head -3 || echo "No symlink at $PARENT1"
-          ls -la "$PARENT2/node_modules" 2>/dev/null | head -3 || echo "No symlink at $PARENT2"
+          # IMPORTANT: Hide turbo.json to prevent Vercel CLI monorepo detection
+          # This makes Vercel treat apps/web as a standalone project
+          echo "Temporarily hiding turbo.json to disable monorepo detection"
+          mv turbo.json turbo.json.bak
 
           # Remove repo.json that vercel pull created (triggers monorepo project selection)
           echo ""
           echo "=== Removing repo.json to prevent monorepo mode ==="
           rm -f .vercel/repo.json
-          ls -la .vercel/ 2>/dev/null || echo "No .vercel at root"
-
-          # Copy project.json and vercel.json from apps/web to root
-          echo ""
-          echo "=== Copying Vercel config files to root ==="
-          mkdir -p .vercel
-          cp apps/web/.vercel/project.json .vercel/project.json
-          cp apps/web/.vercel/.env.*.local .vercel/ 2>/dev/null || true
-          cp apps/web/vercel.json ./vercel.json
-          echo "project.json:"
-          cat .vercel/project.json
-          echo ""
-          echo "vercel.json:"
-          cat vercel.json
+          rm -f apps/web/.vercel/repo.json 2>/dev/null || true
+          ls -la apps/web/.vercel/
 
       - name: Create Vercel Build Output
+        working-directory: apps/web
         run: |
-          echo "=== Creating Vercel build output from monorepo root ==="
+          echo "=== Creating Vercel build output from apps/web ==="
           echo "Current directory: $(pwd)"
           echo "Absolute path: $(realpath .)"
 
           echo ""
-          echo "=== Verify .next symlink ==="
-          ls -la .next/
+          echo "=== Verify .next exists ==="
+          ls -la .next/ | head -10
           ls -la .next/routes-manifest.json || echo "No routes-manifest.json!"
+
+          echo ""
+          echo "=== Verify turbo.json is hidden ==="
+          ls -la ../../turbo.json 2>/dev/null && echo "ERROR: turbo.json still visible!" || echo "turbo.json hidden (good)"
+          ls -la ../../turbo.json.bak 2>/dev/null || echo "No turbo.json.bak found"
 
           echo ""
           echo "=== .vercel directory before build ==="
@@ -190,9 +164,15 @@ jobs:
           echo "=== Full .vercel directory tree ==="
           find .vercel -type f 2>/dev/null | head -50 || echo "Cannot list .vercel"
 
-      - name: Deploy to Vercel
+      - name: Restore turbo.json
+        if: always()
         run: |
-          echo "=== Deploying from monorepo root ==="
+          mv turbo.json.bak turbo.json 2>/dev/null || true
+
+      - name: Deploy to Vercel
+        working-directory: apps/web
+        run: |
+          echo "=== Deploying from apps/web ==="
           echo "Deploy directory: $(pwd)"
 
           echo ""
