@@ -170,6 +170,15 @@ jobs:
           ln -sf apps/web/.next .next
           ls -la .next
 
+          # WORKAROUND: Create export-detail.json
+          # Vercel CLI's tar.x operation expects this file to exist even for non-static exports
+          # This is a known issue: https://community.vercel.com/t/2007
+          # The file is normally created by `next export`, not `next build`
+          # Creating a minimal version allows the tar packaging to proceed
+          echo "=== Creating export-detail.json workaround ==="
+          echo '{"version":1,"success":true,"outDirectory":"out"}' > apps/web/.next/export-detail.json
+          cat apps/web/.next/export-detail.json
+
           # Create .turbo directory with dummy log (Turborepo cache doesn't include .turbo)
           echo "=== Creating .turbo directory with dummy log ==="
           mkdir -p .turbo
