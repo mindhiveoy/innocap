@@ -113,6 +113,11 @@ jobs:
         run: |
           echo "=== Setting up for vercel build ==="
 
+          # CRITICAL: Hide turbo.json to prevent Vercel CLI from auto-detecting monorepo
+          # Even with rootDirectory=null in API, Vercel CLI infers paths from turbo.json
+          echo "Temporarily hiding turbo.json to disable monorepo auto-detection"
+          mv turbo.json turbo.json.bak
+
           # Remove repo.json if created (triggers monorepo project selection prompt)
           echo "=== Removing any repo.json files ==="
           rm -f .vercel/repo.json
@@ -136,6 +141,10 @@ jobs:
           cat .vercel/project.json
 
           echo ""
+          echo "=== Verify turbo.json is hidden ==="
+          ls ../../turbo.json 2>/dev/null && echo "ERROR: turbo.json still visible!" || echo "turbo.json hidden (good)"
+
+          echo ""
           echo "=== Running vercel build ==="
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
@@ -152,6 +161,11 @@ jobs:
           echo "=== Output directory contents ==="
           ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
           ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
+
+      - name: Restore turbo.json
+        if: always()
+        run: |
+          mv turbo.json.bak turbo.json 2>/dev/null || true
 
       - name: Deploy to Vercel
         working-directory: apps/web
