@@ -140,17 +140,19 @@ jobs:
           EOF
           cat vercel.json
 
-          # Copy/symlink config and source files to ROOT (Vercel traces these from .next)
+          # Copy/symlink all source files to ROOT (Vercel traces these from .next)
           echo ""
-          echo "=== Copying/symlinking files to ROOT ==="
+          echo "=== Copying/symlinking all web source files to ROOT ==="
           cp apps/web/next.config.js ./
           cp apps/web/.eslintrc.json ./
           cp apps/web/next-env.d.ts ./
-          # Symlink public and src directories (Vercel traces static assets and source)
+          cp apps/web/tsconfig.json ./
+          cp apps/web/package.json ./package.web.json  # Keep for reference but not main
+          # Symlink directories (Vercel traces static assets and source)
           ln -sf apps/web/public public
           ln -sf apps/web/src src
-          echo "Files set up:"
-          ls -la next.config.js .eslintrc.json next-env.d.ts public src
+          echo "Files set up at ROOT:"
+          ls -la next.config.js .eslintrc.json next-env.d.ts tsconfig.json public src
 
           echo ""
           echo "=== Verify .next symlink works ==="
