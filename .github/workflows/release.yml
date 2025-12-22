@@ -32,42 +32,15 @@ jobs:
 
       - name: Verify Vercel CLI Installation
         run: vercel --version
-
-      - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token $VERCEL_TOKEN --cwd apps/web
-
-      - name: Build with Vercel
-        run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel build --prod --token $VERCEL_TOKEN --cwd apps/web
-          else
-            vercel build --token $VERCEL_TOKEN --cwd apps/web
-          fi
+      - name: Link Vercel Project
+        run: vercel link --yes --token $VERCEL_TOKEN --cwd apps/web
 
       - name: Deploy to Vercel
         run: |
-          deploy_prebuilt() {
-            vercel deploy --prebuilt $@ 2>&1 | tee deployment-url.txt
-            if [ ${PIPESTATUS[0]} -eq 0 ]; then
-              DEPLOY_URL=$(tail -1 deployment-url.txt)
-              echo "Deployment URL: $DEPLOY_URL"
-              return 0
-            else
-              echo "Deployment failed! Error log:"
-              cat deployment-url.txt
-              return 1
-            fi
-          }
-
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            if ! deploy_prebuilt --prod --token $VERCEL_TOKEN --cwd apps/web; then
-              exit 1
-            fi
+            vercel --prod --yes --force --token $VERCEL_TOKEN --cwd apps/web
           else
-            if deploy_prebuilt --token $VERCEL_TOKEN --cwd apps/web; then
-              DEPLOY_URL=$(tail -1 deployment-url.txt)
-              vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
-            else
-              exit 1
-            fi
+            DEPLOY_URL=$(vercel --yes --force --token $VERCEL_TOKEN --cwd apps/web)
+            echo "Deployed to: $DEPLOY_URL"
+            vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
           fi
