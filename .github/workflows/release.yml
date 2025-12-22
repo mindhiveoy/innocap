@@ -62,12 +62,16 @@ jobs:
           echo "=== project.json after pull ==="
           cat .vercel/project.json
 
-      - name: Copy env vars to apps/web for build
+      - name: Copy Vercel config to apps/web
         run: |
-          echo "=== Copying env vars to apps/web ==="
+          echo "=== Copying Vercel config to apps/web ==="
           mkdir -p apps/web/.vercel
+          # Copy project.json (Vercel CLI looks for it in apps/web even when running from root)
+          cp .vercel/project.json apps/web/.vercel/
+          # Copy env files
           cp .vercel/.env.*.local apps/web/.vercel/ 2>/dev/null || echo "No env files to copy"
-          ls -la apps/web/.vercel/ 2>/dev/null || echo "No .vercel in apps/web"
+          echo "=== apps/web/.vercel contents ==="
+          ls -la apps/web/.vercel/
 
       - name: Build with Turborepo
         run: |
