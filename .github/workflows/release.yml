@@ -29,61 +29,12 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Link Vercel Project
-        run: |
-          # Link to specific project using --project and --scope flags
-          # This avoids --cwd conflicts with rootDirectory setting
-          # See: https://community.vercel.com/t/deploy-app-in-monorepo-via-vercel-cli-in-github-actions/4039
-          vercel link --yes --project=${{ secrets.VERCEL_PROJECT_ID }} --scope=${{ vars.TURBO_TEAM_MH }} --token=${{ secrets.VERCEL_TOKEN }}
-          echo "=== DEBUG: After vercel link ==="
-          echo "Current directory: $(pwd)"
-          echo "Root .vercel contents:"
-          ls -la .vercel/ 2>/dev/null || echo "No .vercel at root"
-          echo "apps/web/.vercel contents:"
-          ls -la apps/web/.vercel/ 2>/dev/null || echo "No .vercel in apps/web"
-
-      - name: Pull Vercel Environment
-        run: |
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          else
-            vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-          fi
-          echo "=== DEBUG: After vercel pull ==="
-          echo "Root .vercel contents:"
-          ls -la .vercel/ 2>/dev/null || echo "No .vercel at root"
-          cat .vercel/project.json 2>/dev/null || echo "No project.json at root"
-          echo "apps/web/.vercel contents:"
-          ls -la apps/web/.vercel/ 2>/dev/null || echo "No .vercel in apps/web"
-          cat apps/web/.vercel/project.json 2>/dev/null || echo "No project.json in apps/web"
-
-      - name: Build Project
-        run: |
-          echo "=== DEBUG: Before vercel build ==="
-          echo "Current directory: $(pwd)"
-          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
-          else
-            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
-          fi
-          echo "=== DEBUG: After vercel build ==="
-          echo "Root .vercel/output contents:"
-          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output at root"
-          echo "apps/web/.vercel/output contents:"
-          ls -la apps/web/.vercel/output/ 2>/dev/null || echo "No .vercel/output in apps/web"
-          echo "apps/web/.next contents:"
-          ls -la apps/web/.next/ 2>/dev/null | head -20 || echo "No .next in apps/web"
-
       - name: Deploy to Vercel
         run: |
-          echo "=== DEBUG: Before vercel deploy ==="
-          echo "Current directory: $(pwd)"
-          echo "Looking for prebuilt output..."
-          find . -name "output" -type d 2>/dev/null | head -10
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+            vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+            DEPLOY_URL=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
             echo "Deployed to: $DEPLOY_URL"
             vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ vars.TURBO_TEAM_MH }}
           fi
