@@ -120,15 +120,24 @@ jobs:
           ln -sf apps/web/.next .next
           ls -la .next/
 
-          # The .next build has relative paths like ../../node_modules (from apps/web)
-          # When symlinked to root, this resolves to /home/runner/work/node_modules
-          # So we need to create that symlink too
+          # The .next build has paths to node_modules that resolve to /home/runner/work/node_modules
+          # (several levels above checkout). Create symlinks at all needed parent levels.
           echo ""
-          echo "=== Creating node_modules symlink for path resolution ==="
-          WORKSPACE_ROOT=$(dirname "$(pwd)")
-          echo "Creating: $WORKSPACE_ROOT/node_modules -> $(pwd)/node_modules"
-          ln -sf "$(pwd)/node_modules" "$WORKSPACE_ROOT/node_modules"
-          ls -la "$WORKSPACE_ROOT/node_modules" | head -5
+          echo "=== Creating node_modules symlinks for path resolution ==="
+          echo "Current directory: $(pwd)"
+
+          # Create symlinks at parent directories
+          PARENT1=$(dirname "$(pwd)")
+          PARENT2=$(dirname "$PARENT1")
+          echo "Creating symlinks:"
+          echo "  $PARENT1/node_modules -> $(pwd)/node_modules"
+          echo "  $PARENT2/node_modules -> $(pwd)/node_modules"
+
+          ln -sf "$(pwd)/node_modules" "$PARENT1/node_modules" 2>/dev/null || echo "Could not create at $PARENT1"
+          ln -sf "$(pwd)/node_modules" "$PARENT2/node_modules" 2>/dev/null || echo "Could not create at $PARENT2"
+
+          ls -la "$PARENT1/node_modules" 2>/dev/null | head -3 || echo "No symlink at $PARENT1"
+          ls -la "$PARENT2/node_modules" 2>/dev/null | head -3 || echo "No symlink at $PARENT2"
 
           # Remove repo.json that vercel pull created (triggers monorepo project selection)
           echo ""
