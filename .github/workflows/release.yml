@@ -111,22 +111,32 @@ jobs:
           rm -f .vercel/repo.json
           rm -f apps/web/.vercel/repo.json 2>/dev/null || true
 
-          # Create vercel.json at ROOT with explicit path to apps/web/.next
+          # Symlink .next to ROOT (Vercel expects it here when rootDirectory is null)
+          echo "=== Symlinking .next to ROOT ==="
+          ln -sf apps/web/.next .next
+          ls -la .next
+
+          # Create vercel.json at ROOT (no outputDirectory - use symlinked .next)
           echo "=== Creating vercel.json at ROOT ==="
           cat > vercel.json << 'EOF'
           {
             "$schema": "https://openapi.vercel.sh/vercel.json",
             "framework": "nextjs",
-            "buildCommand": "echo 'Using pre-built .next from Turborepo'",
-            "outputDirectory": "apps/web/.next"
+            "buildCommand": "echo 'Using pre-built .next from Turborepo'"
           }
           EOF
           cat vercel.json
 
+          # Copy next.config.js to ROOT (Vercel needs it for framework detection)
           echo ""
-          echo "=== Verify apps/web/.next exists ==="
-          ls -la apps/web/.next/ | head -10
-          ls -la apps/web/.next/routes-manifest.json
+          echo "=== Copying next.config.js to ROOT ==="
+          cp apps/web/next.config.js ./
+          cat next.config.js
+
+          echo ""
+          echo "=== Verify .next symlink works ==="
+          ls -la .next/ | head -10
+          ls -la .next/routes-manifest.json
 
           echo ""
           echo "=== .vercel directory at root ==="
