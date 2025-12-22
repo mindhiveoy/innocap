@@ -125,6 +125,16 @@ jobs:
           rm -f .vercel/repo.json
           rm -f apps/web/.vercel/repo.json 2>/dev/null || true
 
+          # Remove apps/web/vercel.json to prevent outputDirectory interference
+          # The outputDirectory setting can cause Vercel to treat it as static export
+          echo "=== Removing apps/web/vercel.json to prevent static export detection ==="
+          rm -f apps/web/vercel.json
+          echo "Removed: apps/web/vercel.json"
+
+          # Verify export-marker.json shows this is NOT a static export
+          echo "=== Checking export-marker.json ==="
+          cat apps/web/.next/export-marker.json
+
           # Symlink .next to ROOT (Vercel traces these)
           echo "=== Symlinking .next to ROOT ==="
           ln -sf apps/web/.next .next
