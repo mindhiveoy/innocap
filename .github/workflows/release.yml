@@ -103,6 +103,20 @@ jobs:
           echo "Checking for routes-manifest.json:"
           ls -la apps/web/.next/routes-manifest.json 2>/dev/null || echo "No routes-manifest.json!"
 
+          # Ensure .next/cache/.rscinfo exists (Vercel CLI traces this file)
+          # If restored from old cache without it, create a placeholder
+          echo ""
+          echo "=== Checking .next/cache/.rscinfo ==="
+          if [ ! -f apps/web/.next/cache/.rscinfo ]; then
+            echo "Creating .next/cache/.rscinfo (not in cache)"
+            mkdir -p apps/web/.next/cache
+            # Generate a fresh RSC encryption key
+            KEY=$(openssl rand -base64 32)
+            EXPIRE=$(($(date +%s) * 1000 + 86400000))
+            echo "{\"encryption.key\":\"$KEY\",\"encryption.expire_at\":$EXPIRE}" > apps/web/.next/cache/.rscinfo
+          fi
+          cat apps/web/.next/cache/.rscinfo
+
       - name: Setup Vercel Build at ROOT
         run: |
           echo "=== Setting up for vercel build at ROOT ==="
