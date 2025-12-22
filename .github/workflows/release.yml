@@ -110,18 +110,49 @@ jobs:
           echo "Checking for routes-manifest.json:"
           ls -la apps/web/.next/routes-manifest.json 2>/dev/null || echo "No routes-manifest.json!"
 
-      - name: Create Vercel Build Output
-        working-directory: apps/web
+      - name: Setup Vercel Build Environment
         run: |
-          echo "=== Creating Vercel build output ==="
+          echo "=== Setting up for vercel build from monorepo root ==="
+
+          # Vercel CLI looks for .next at monorepo root when it detects turbo.json
+          # So we need to symlink apps/web/.next to monorepo root
+          echo "Creating symlink: .next -> apps/web/.next"
+          ln -sf apps/web/.next .next
+          ls -la .next/
+
+          # Remove repo.json that vercel pull created (triggers monorepo project selection)
+          echo ""
+          echo "=== Removing repo.json to prevent monorepo mode ==="
+          rm -f .vercel/repo.json
+          ls -la .vercel/ 2>/dev/null || echo "No .vercel at root"
+
+          # Copy project.json and vercel.json from apps/web to root
+          echo ""
+          echo "=== Copying Vercel config files to root ==="
+          mkdir -p .vercel
+          cp apps/web/.vercel/project.json .vercel/project.json
+          cp apps/web/.vercel/.env.*.local .vercel/ 2>/dev/null || true
+          cp apps/web/vercel.json ./vercel.json
+          echo "project.json:"
+          cat .vercel/project.json
+          echo ""
+          echo "vercel.json:"
+          cat vercel.json
+
+      - name: Create Vercel Build Output
+        run: |
+          echo "=== Creating Vercel build output from monorepo root ==="
           echo "Current directory: $(pwd)"
           echo "Absolute path: $(realpath .)"
 
+          echo ""
+          echo "=== Verify .next symlink ==="
+          ls -la .next/
+          ls -la .next/routes-manifest.json || echo "No routes-manifest.json!"
+
+          echo ""
           echo "=== .vercel directory before build ==="
           ls -la .vercel/
-          echo ""
-          echo "=== Checking NO repo.json at monorepo root ==="
-          ls -la ../../.vercel/ 2>/dev/null || echo "No .vercel at monorepo root (expected)"
 
           echo ""
           echo "=== Running vercel build ==="
@@ -133,63 +164,23 @@ jobs:
 
           echo ""
           echo "=== After vercel build ==="
-          echo "Looking for .vercel/output in apps/web:"
-          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output in apps/web!"
-
-          echo ""
-          echo "Looking for .vercel/output at monorepo root:"
-          ls -la ../../.vercel/output/ 2>/dev/null || echo "No .vercel/output at monorepo root"
+          echo "Looking for .vercel/output:"
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output!"
 
           echo ""
           echo "=== Full .vercel directory tree ==="
           find .vercel -type f 2>/dev/null | head -50 || echo "Cannot list .vercel"
 
-      - name: Verify Build Output Location
-        run: |
-          echo "=== DEBUGGING: Locating .vercel/output ==="
-          echo "Monorepo root: $(pwd)"
-          echo ""
-
-          echo "=== All .vercel directories in project ==="
-          find . -name ".vercel" -type d 2>/dev/null
-
-          echo ""
-          echo "=== All output directories ==="
-          find . -path "*/.vercel/output" -type d 2>/dev/null
-
-          echo ""
-          echo "=== Content of apps/web/.vercel ==="
-          ls -la apps/web/.vercel/ 2>/dev/null || echo "No apps/web/.vercel"
-
-          echo ""
-          echo "=== Content of .vercel at root ==="
-          ls -la .vercel/ 2>/dev/null || echo "No .vercel at root"
-
-          # Determine where output is
-          if [ -d "apps/web/.vercel/output" ]; then
-            echo ""
-            echo "OUTPUT_LOCATION: apps/web/.vercel/output"
-            echo "output_dir=apps/web" >> $GITHUB_ENV
-          elif [ -d ".vercel/output" ]; then
-            echo ""
-            echo "OUTPUT_LOCATION: .vercel/output"
-            echo "output_dir=." >> $GITHUB_ENV
-          else
-            echo ""
-            echo "ERROR: No .vercel/output found anywhere!"
-            exit 1
-          fi
-
       - name: Deploy to Vercel
         run: |
-          echo "=== Deploying from: ${{ env.output_dir }} ==="
-          cd "${{ env.output_dir }}"
+          echo "=== Deploying from monorepo root ==="
           echo "Deploy directory: $(pwd)"
-          echo "Absolute path: $(realpath .)"
 
           echo ""
           echo "=== .vercel/output contents ==="
           ls -la .vercel/output/ 2>/dev/null || echo "No output directory!"
+          ls -la .vercel/output/static/ 2>/dev/null | head -10 || echo "No static dir"
+          ls -la .vercel/output/functions/ 2>/dev/null | head -10 || echo "No functions dir"
 
           echo ""
           echo "=== Deploying ==="
