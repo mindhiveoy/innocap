@@ -1,7 +1,9 @@
+import './mui-augmentations';
+
 export { theme } from './theme';
-export { 
+export {
   LanguageContext,
-  useLanguage, 
+  useLanguage,
   type Language,
-  type LanguageContextType 
+  type LanguageContextType
 } from './contexts/LanguageContext';

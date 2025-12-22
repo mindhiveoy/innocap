@@ -12,7 +12,8 @@ jobs:
       TURBO_TELEMETRY_DISABLED: 1
       TURBO_TEAM: ${{ vars.TURBO_TEAM_MH }}
       TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Install Dependencies
         run: yarn install
@@ -28,39 +29,366 @@ jobs:
       - name: Install Vercel CLI
         run: |
           npm install --global vercel@latest
-          echo "$(npm root --global)/../bin" >> $GITHUB_PATH
+          echo "=== Vercel CLI Version ==="
+          vercel --version
 
-      - name: Verify Vercel CLI Installation
-        run: vercel --version
+      # Strategy 17: Run EVERYTHING from monorepo root with explicit paths
+      # Previous attempts failed because running from apps/web always caused path doubling
+      # Solution: Stay at root, use explicit paths, and configure vercel.json for root-level build
+      - name: Clear rootDirectory via Vercel API
+        run: |
+          echo "=== Clearing rootDirectory via Vercel API ==="
+          HTTP_STATUS=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
+            -X PATCH "https://api.vercel.com/v9/projects/${{ secrets.VERCEL_PROJECT_ID }}?teamId=${{ secrets.VERCEL_ORG_ID }}" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"rootDirectory": null}')
+          echo "API Response Status: $HTTP_STATUS"
+          [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ] && echo "SUCCESS" || echo "WARNING: $HTTP_STATUS"
 
-      - name: Build
-        run: yarn build
+      - name: Create Vercel Project Link at ROOT
+        run: |
+          echo "=== Creating project link at MONOREPO ROOT ==="
+          mkdir -p .vercel
+          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
+          cat .vercel/project.json
+
+      - name: Pull Vercel Environment at ROOT
+        run: |
+          echo "=== Pulling Vercel environment at ROOT ==="
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+          echo ""
+          echo "=== project.json after pull ==="
+          cat .vercel/project.json
+
+          echo ""
+          echo "=== DEBUG: All .vercel directories after pull ==="
+          find . -name ".vercel" -type d 2>/dev/null || echo "No .vercel directories found"
+
+          echo ""
+          echo "=== DEBUG: All vercel.json files after pull ==="
+          find . -name "vercel.json" -type f 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+            echo ""
+          done
+
+          echo ""
+          echo "=== DEBUG: All repo.json files after pull ==="
+          find . -name "repo.json" -type f 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+            echo ""
+          done
+
+      - name: Copy Vercel config to apps/web
+        run: |
+          echo "=== Copying Vercel config to apps/web ==="
+          mkdir -p apps/web/.vercel
+          # Copy project.json (Vercel CLI looks for it in apps/web even when running from root)
+          cp .vercel/project.json apps/web/.vercel/
+          # Copy env files
+          cp .vercel/.env.*.local apps/web/.vercel/ 2>/dev/null || echo "No env files to copy"
+          echo "=== apps/web/.vercel contents ==="
+          ls -la apps/web/.vercel/
+
+      - name: Build with Turborepo
+        run: |
+          echo "=== Building with Turborepo ==="
+          echo "Current directory: $(pwd)"
+          echo "Absolute path: $(realpath .)"
+
+          # Load Vercel env vars for the build
+          if [ -f apps/web/.vercel/.env.preview.local ]; then
+            echo "Loading preview env vars..."
+            set -a
+            source apps/web/.vercel/.env.preview.local
+            set +a
+          fi
+          if [ -f apps/web/.vercel/.env.production.local ]; then
+            echo "Loading production env vars..."
+            set -a
+            source apps/web/.vercel/.env.production.local
+            set +a
+          fi
+
+          # Build using Turborepo
+          yarn build --filter=web
+
+          echo "=== After yarn build ==="
+          echo "Checking apps/web/.next exists:"
+          ls -la apps/web/.next/ 2>/dev/null | head -20 || echo "No .next directory!"
+          echo ""
+          echo "Checking for routes-manifest.json:"
+          ls -la apps/web/.next/routes-manifest.json 2>/dev/null || echo "No routes-manifest.json!"
+
+          # Ensure .next/cache/.rscinfo exists (Vercel CLI traces this file)
+          # If restored from old cache without it, create a placeholder
+          echo ""
+          echo "=== Checking .next/cache/.rscinfo ==="
+          if [ ! -f apps/web/.next/cache/.rscinfo ]; then
+            echo "Creating .next/cache/.rscinfo (not in cache)"
+            mkdir -p apps/web/.next/cache
+            # Generate a fresh RSC encryption key
+            KEY=$(openssl rand -base64 32)
+            EXPIRE=$(($(date +%s) * 1000 + 86400000))
+            echo "{\"encryption.key\":\"$KEY\",\"encryption.expire_at\":$EXPIRE}" > apps/web/.next/cache/.rscinfo
+          fi
+          cat apps/web/.next/cache/.rscinfo
+
+      - name: Setup Vercel Build at ROOT
+        run: |
+          echo "=== Setting up for vercel build at ROOT ==="
+
+          # Remove any repo.json files that might trigger monorepo mode
+          rm -f .vercel/repo.json
+          rm -f apps/web/.vercel/repo.json 2>/dev/null || true
+
+          # Remove apps/web/vercel.json to prevent outputDirectory interference
+          # The outputDirectory setting can cause Vercel to treat it as static export
+          echo "=== Removing apps/web/vercel.json to prevent static export detection ==="
+          echo "BEFORE removal - checking if file exists:"
+          ls -la apps/web/vercel.json 2>&1 || echo "File does not exist before removal"
+          if [ -f apps/web/vercel.json ]; then
+            echo "Content before removal:"
+            cat apps/web/vercel.json
+          fi
+          rm -f apps/web/vercel.json
+          echo "AFTER removal - confirming file is gone:"
+          ls -la apps/web/vercel.json 2>&1 || echo "CONFIRMED: apps/web/vercel.json deleted"
+
+          # Verify export-marker.json shows this is NOT a static export
+          echo "=== Checking export-marker.json ==="
+          cat apps/web/.next/export-marker.json
+
+          # Symlink .next to ROOT (Vercel traces these)
+          echo "=== Symlinking .next to ROOT ==="
+          ln -sf apps/web/.next .next
+          ls -la .next
+
+          # WORKAROUND: Create export-detail.json
+          # Vercel CLI's tar.x operation expects this file to exist even for non-static exports
+          # This is a known issue: https://community.vercel.com/t/2007
+          # The file is normally created by `next export`, not `next build`
+          # Creating a minimal version allows the tar packaging to proceed
+          # IMPORTANT: outDirectory must be an absolute path
+          echo "=== Creating export-detail.json workaround ==="
+          EXPORT_OUT_DIR="$(pwd)/apps/web/out"
+          mkdir -p "$EXPORT_OUT_DIR"
+          echo "{\"version\":1,\"success\":true,\"outDirectory\":\"$EXPORT_OUT_DIR\"}" > apps/web/.next/export-detail.json
+          cat apps/web/.next/export-detail.json
+
+          # Create .turbo directory with dummy log (Turborepo cache doesn't include .turbo)
+          echo "=== Creating .turbo directory with dummy log ==="
+          mkdir -p .turbo
+          echo "Build completed via Turborepo remote cache" > .turbo/turbo-build.log
+          ls -la .turbo/
+
+          # Create node_modules symlink at grandparent level for relative path resolution
+          # .next files have paths like ../../node_modules which resolve from ROOT .next symlink
+          # From ROOT/.next (symlinked), ../../node_modules = /home/runner/work/node_modules
+          echo "=== Creating node_modules symlink at grandparent for path resolution ==="
+          ln -sf $(pwd)/node_modules ../../node_modules
+          ls -la ../../node_modules | head -5
+
+          # Create vercel.json at ROOT (no outputDirectory - use symlinked .next)
+          echo "=== Creating vercel.json at ROOT ==="
+          cat > vercel.json << 'EOF'
+          {
+            "$schema": "https://openapi.vercel.sh/vercel.json",
+            "framework": "nextjs",
+            "buildCommand": "echo 'Using pre-built .next from Turborepo'"
+          }
+          EOF
+          cat vercel.json
+
+          # Copy/symlink all source files to ROOT (Vercel traces these from .next)
+          echo ""
+          echo "=== Copying/symlinking all web source files to ROOT ==="
+          cp apps/web/next.config.js ./
+          cp apps/web/.eslintrc.json ./
+          cp apps/web/next-env.d.ts ./
+          cp apps/web/tsconfig.json ./
+          cp apps/web/package.json ./package.web.json  # Keep for reference but not main
+          # Symlink directories (Vercel traces static assets and source)
+          ln -sf apps/web/public public
+          ln -sf apps/web/src src
+          echo "Files set up at ROOT:"
+          ls -la next.config.js .eslintrc.json next-env.d.ts tsconfig.json public src
+
+          echo ""
+          echo "=== Verify .next symlink works ==="
+          ls -la .next/ | head -10
+          ls -la .next/routes-manifest.json
+
+          echo ""
+          echo "=== .vercel directory at root ==="
+          ls -la .vercel/
+          cat .vercel/project.json
+
+      - name: Debug State Before Vercel Build
+        run: |
+          echo "========================================"
+          echo "=== COMPREHENSIVE DEBUG BEFORE VERCEL BUILD ==="
+          echo "========================================"
+
+          echo ""
+          echo "=== Current directory ==="
+          pwd
+          realpath .
+
+          echo ""
+          echo "=== All vercel.json files in entire project ==="
+          find . -name "vercel.json" -type f 2>/dev/null | while read f; do
+            echo "--- $f ---"
+            cat "$f"
+            echo ""
+          done
+          echo "--- End of vercel.json files ---"
+
+          echo ""
+          echo "=== All .vercel directories ==="
+          find . -name ".vercel" -type d 2>/dev/null
+
+          echo ""
+          echo "=== Contents of ROOT .vercel/ ==="
+          ls -la .vercel/ 2>/dev/null || echo "No .vercel at ROOT"
+          if [ -f .vercel/project.json ]; then
+            echo "--- .vercel/project.json ---"
+            cat .vercel/project.json
+          fi
+          if [ -f .vercel/repo.json ]; then
+            echo "--- .vercel/repo.json ---"
+            cat .vercel/repo.json
+          else
+            echo "No .vercel/repo.json (good)"
+          fi
+
+          echo ""
+          echo "=== Contents of apps/web/.vercel/ ==="
+          ls -la apps/web/.vercel/ 2>/dev/null || echo "No apps/web/.vercel"
+          if [ -f apps/web/.vercel/project.json ]; then
+            echo "--- apps/web/.vercel/project.json ---"
+            cat apps/web/.vercel/project.json
+          fi
+          if [ -f apps/web/.vercel/repo.json ]; then
+            echo "--- apps/web/.vercel/repo.json ---"
+            cat apps/web/.vercel/repo.json
+          else
+            echo "No apps/web/.vercel/repo.json (good)"
+          fi
+
+          echo ""
+          echo "=== Checking apps/web/vercel.json exists ==="
+          ls -la apps/web/vercel.json 2>&1 || echo "CONFIRMED: apps/web/vercel.json does NOT exist"
+
+          echo ""
+          echo "=== ROOT vercel.json ==="
+          cat vercel.json 2>/dev/null || echo "No vercel.json at ROOT"
+
+          echo ""
+          echo "=== .next symlink check ==="
+          ls -la .next 2>/dev/null || echo "No .next at ROOT"
+          ls -la .next/ 2>/dev/null | head -5
+
+          echo ""
+          echo "=== export-marker.json content ==="
+          cat .next/export-marker.json 2>/dev/null || echo "No export-marker.json via symlink"
+          cat apps/web/.next/export-marker.json 2>/dev/null || echo "No export-marker.json in apps/web"
+
+          echo ""
+          echo "=== .next/server directory exists? (indicates NOT static export) ==="
+          ls -la .next/server/ 2>/dev/null | head -5 || echo "No .next/server"
+
+          echo ""
+          echo "=== next.config.js at ROOT ==="
+          cat next.config.js 2>/dev/null || echo "No next.config.js at ROOT"
+
+          echo ""
+          echo "=== Environment variables related to Vercel ==="
+          env | grep -i vercel | grep -v TOKEN | grep -v SECRET || echo "No VERCEL env vars"
+
+          echo ""
+          echo "========================================"
+          echo "=== END DEBUG BEFORE VERCEL BUILD ==="
+          echo "========================================"
+
+      - name: Create Vercel Build Output
+        env:
+          VERCEL_DEBUG: "1"
+        run: |
+          echo "=== Creating Vercel build output from ROOT ==="
+          echo "Current directory: $(pwd)"
+          echo "VERCEL_DEBUG is enabled for verbose output"
+
+          echo ""
+          echo "=== State of .next BEFORE vercel build ==="
+          ls -la .next/ | head -20
+          echo ""
+          echo "=== .next/server contents BEFORE ==="
+          ls -la .next/server/ 2>/dev/null | head -10 || echo "No server dir"
+          echo ""
+          echo "=== Check for any export* files BEFORE ==="
+          find .next -name "export*" -type f 2>/dev/null || echo "No export files found"
+
+          echo ""
+          echo "=== Running vercel build from ROOT (with full output capture) ==="
+          set +e  # Don't exit on error so we can capture state after
+          if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
+            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /tmp/vercel-build-output.txt
+            BUILD_EXIT_CODE=${PIPESTATUS[0]}
+          else
+            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tee /tmp/vercel-build-output.txt
+            BUILD_EXIT_CODE=${PIPESTATUS[0]}
+          fi
+          set -e
+
+          echo ""
+          echo "=== Vercel build exit code: $BUILD_EXIT_CODE ==="
+
+          echo ""
+          echo "=== State of .next AFTER vercel build attempt ==="
+          ls -la .next/ | head -20 || echo "No .next after build"
+
+          echo ""
+          echo "=== Check for any export* files AFTER ==="
+          find .next -name "export*" -type f 2>/dev/null || echo "No export files found"
+
+          echo ""
+          echo "=== .vercel directory AFTER vercel build ==="
+          ls -la .vercel/ || echo "No .vercel"
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output"
+
+          echo ""
+          echo "=== Full vercel build output from log file ==="
+          cat /tmp/vercel-build-output.txt
+
+          echo ""
+          echo "=== Searching for any clues about export-detail.json ==="
+          grep -i "export" /tmp/vercel-build-output.txt || echo "No export mentions in output"
+
+          # Exit with the original build exit code
+          exit $BUILD_EXIT_CODE
 
       - name: Deploy to Vercel
         run: |
-          deploy_and_check() {
-            vercel $@ 2>&1 | tee deployment-url.txt
-            if [ ${PIPESTATUS[0]} -eq 0 ]; then
-              # Look for the Preview: line specifically
-              DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
-              echo "Deployment URL: $DEPLOY_URL"
-              return 0
-            else
-              echo "Deployment failed! Error log:"
-              cat deployment-url.txt
-              return 1
-            fi
-          }
+          echo "=== Deploying from ROOT ==="
+          echo "Deploy directory: $(pwd)"
 
+          echo ""
+          echo "=== .vercel/output contents ==="
+          ls -la .vercel/output/ 2>/dev/null || echo "No output directory!"
+
+          echo ""
+          echo "=== Deploying ==="
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            if ! deploy_and_check --prod --token $VERCEL_TOKEN --cwd apps/web; then
-              exit 1
-            fi
+            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            if deploy_and_check --token $VERCEL_TOKEN --cwd apps/web; then
-              DEPLOY_URL=$(grep "Preview:" deployment-url.txt | awk '{print $2}')
-              vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
-            else
-              exit 1
-            fi
+            DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+            echo "Deployed to: $DEPLOY_URL"
+            vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ vars.TURBO_TEAM_MH }}
           fi

@@ -62,3 +62,17 @@ playwright/.cache/
 # Storybook logs
 *storybook.log
 storybook-static/
+
+logs
+agent-plan.json
+
+_process
+keys
+
+# Google Service Account Keys - NEVER commit these
+**/innocap-*.json
+**/*-service-account*.json
+**/*serviceaccount*.json
+*.json.key
+**/credentials.json
+.env*.local

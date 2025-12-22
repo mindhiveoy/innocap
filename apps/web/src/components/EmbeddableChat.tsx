@@ -6,11 +6,11 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
-// Enforce chat configuration constants
+// Chat configuration from environment variables
 const CHAT_CONFIG = {
-  BASE_URL: 'https://innocap.mainio.app',
-  TENANT_ID: 'cm71il9xt010smk01yt5dln12',
-  AGENT_ID: 'cm71v5vek010umk01wl5ge6tm',
+  BASE_URL: process.env.NEXT_PUBLIC_CHAT_BASE_URL || '',
+  TENANT_ID: process.env.NEXT_PUBLIC_CHAT_TENANT_ID || '',
+  AGENT_ID: process.env.NEXT_PUBLIC_CHAT_AGENT_ID || '',
   SUPPORTED_LANGUAGES: ['en', 'fi', 'sv', 'de', 'es', 'fr'] as const,
   DEFAULT_LANGUAGE: 'fi' as const,
 } as const;
@@ -42,10 +42,12 @@ export function EmbeddableChat() {
   const { t, i18n } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const [isChatInitialized, setIsChatInitialized] = useState<boolean>(false);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const updateChatVariables = useCallback(() => {
-    if (!isChatInitialized || !window.mainioChat?.setCustomVariables) return;
+    if (!isChatInitialized || !window.mainioChat?.setCustomVariables) {
+      return;
+    }
 
     // Clear any existing timeout
     if (timeoutRef.current) {
@@ -61,7 +63,7 @@ export function EmbeddableChat() {
 
       // Only update and log if we have actual values
       if (variables.selected || variables.pinned) {
-        try {      
+        try {
           window.mainioChat?.setCustomVariables(variables);
         } catch (error) {
           console.warn('Failed to update chat variables:', error);
@@ -93,12 +95,12 @@ export function EmbeddableChat() {
     script.src = `${CHAT_CONFIG.BASE_URL}/embeddable-chat/embed.js`;
     script.onload = () => {
       if (window.mainioChat) {
-                // Get current language from i18n
+        // Get current language from i18n
         const currentLang = i18n.language.split('-')[0]; // Handle cases like 'en-US' -> 'en'
-        
+
         // Check if current language is supported, otherwise use default
-        const initialLanguage = CHAT_CONFIG.SUPPORTED_LANGUAGES.includes(currentLang as any) 
-          ? currentLang 
+        const initialLanguage = CHAT_CONFIG.SUPPORTED_LANGUAGES.includes(currentLang as any)
+          ? currentLang
           : CHAT_CONFIG.DEFAULT_LANGUAGE;
         window.mainioChat.init({
           tenantId: CHAT_CONFIG.TENANT_ID,
@@ -133,17 +135,17 @@ export function EmbeddableChat() {
   }, [updateChatVariables]);
 
   return (
-    <Snackbar 
-      open={!!error} 
-      autoHideDuration={6000} 
+    <Snackbar
+      open={!!error}
+      autoHideDuration={6000}
       onClose={() => setError(null)}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
     >
-      <Alert 
-        onClose={() => setError(null)} 
-        severity="error" 
+      <Alert
+        onClose={() => setError(null)}
+        severity="error"
         variant="filled"
-        sx={{ 
+        sx={{
           width: '100%',
           backgroundColor: '#E74C3C',
           '& .MuiAlert-icon': {

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "echo 'Using pre-built .next from Turborepo'",
+  "outputDirectory": ".next"
+}

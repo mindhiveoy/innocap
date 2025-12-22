@@ -2,20 +2,33 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 import { NextResponse } from 'next/server';
-import credentials from '@/utils/innocap-f5563b67295e.json';
 import { type BarChartData, type MarkerData } from '@repo/ui/types/indicators';
 import { updateFirebaseData } from '@/utils/firebaseOperations';
 
-const SPREADSHEET_ID = '1gWZkBQ0LV9-u59B_BUTt0FuWSBo2FTW_-WZTMEhn-Jg';
+const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
 
-const serviceAccountAuth = new JWT({
-  email: credentials.client_email,
-  key: credentials.private_key,
-  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-});
+function getServiceAccountAuth() {
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!email || !privateKey) {
+    throw new Error('Missing Google service account credentials. Please set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY environment variables.');
+  }
+
+  return new JWT({
+    email,
+    key: privateKey,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+  });
+}
 
 async function getAuthenticatedDoc() {
+  if (!SPREADSHEET_ID) {
+    throw new Error('Missing GOOGLE_SPREADSHEET_ID environment variable.');
+  }
+
   try {
+    const serviceAccountAuth = getServiceAccountAuth();
     const doc = new GoogleSpreadsheet(SPREADSHEET_ID, serviceAccountAuth);
     await doc.loadInfo();
     return doc;
