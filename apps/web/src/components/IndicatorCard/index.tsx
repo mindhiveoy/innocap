@@ -31,6 +31,7 @@ import ShoppingBag from '@mui/icons-material/ShoppingBag';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { trackEvent } from '@/utils/analytics';
+import { useTheme } from '@emotion/react';
 
 interface IndicatorCardProps {
   indicator: Indicator;
@@ -139,7 +140,7 @@ const PinButtonContent = styled.button(({ theme }) => `
   &:focus-visible {
     outline: none;
     padding: ${theme.spacing(0, 1)};
-    margin: ${theme.spacing(2, 0, 3, -1 )};
+    margin: ${theme.spacing(2, 0, 3, -1)};
     box-shadow: 0 0 0 1px ${theme.palette.primary.main};
     border-radius: ${theme.shape.borderRadius}px;
     background-color: ${theme.palette.action.hover};
@@ -221,7 +222,7 @@ const lightenColor = (color: string, amount: number = 0.3): string => {
 const GradientIcon = ({ iconName, color = '#083553' }: { iconName: string; color?: string }) => {
   const cleanIconName = iconName.replace(/Icon$/, '') as IconName;
   const IconComponent = iconComponents[cleanIconName] || iconComponents.Home;
-  
+
   // Removetabs and extra spaces
   const cleanColor = color.trim().replace(/\t/g, '');
   const startColor = lightenColor(cleanColor);
@@ -318,6 +319,8 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
   /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   const { currentLanguage } = useLanguage();
 
+  const theme = useTheme();
+
   const isSelected = useMemo(() =>
     selectedIndicator?.id === indicator?.id,
     [selectedIndicator?.id, indicator?.id]
@@ -332,12 +335,12 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
 
   const years = useMemo(() => {
     if (!indicator) return [];
-    if (indicator.indicatorType !== IndicatorType.MunicipalityLevel && 
-        indicator.indicatorType !== IndicatorType.BarChart) return [];
+    if (indicator.indicatorType !== IndicatorType.MunicipalityLevel &&
+      indicator.indicatorType !== IndicatorType.BarChart) return [];
 
     //Data source based on indicator type
-    const data = indicator.indicatorType === IndicatorType.MunicipalityLevel 
-      ? municipalityData 
+    const data = indicator.indicatorType === IndicatorType.MunicipalityLevel
+      ? municipalityData
       : barChartData;
 
     const uniqueYears = new Set(
@@ -403,7 +406,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
     if (pinned) {
       const yearValue = newYear ? parseInt(newYear) : undefined;
       setPinnedIndicatorYear(yearValue);
-      
+
       // If this indicator is also selected, update its year too
       if (isSelected) {
         setSelectedIndicator({
@@ -457,7 +460,7 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
         }
       }}
     >
-      <CardHeader>
+      <CardHeader theme={theme}>
         <TitleSection>
           <Box display='flex' alignItems='center' gap={1}>
             <IndicatorTypeIcon iconName={indicator.indicatorTypeIcon} />
@@ -469,15 +472,15 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
             </IconWrapper>
           </Box>
           <TitleRow>
-            <Typography variant="label">
+            <Typography variant="h6" component="span">
               {currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn}
             </Typography>
           </TitleRow>
         </TitleSection>
       </CardHeader>
       {isTextTruncated ? (
-        <Tooltip 
-          title={currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn} 
+        <Tooltip
+          title={currentLanguage === 'fi' ? indicator.sourceFi : indicator.sourceEn}
           placement="right"
         >
           <SourceTextWrapper>
@@ -523,19 +526,19 @@ export const IndicatorCard = ({ indicator }: IndicatorCardProps): React.ReactNod
             </PinText>
           </PinButtonContent>
         </PinButton>
-        {(indicator.indicatorType ===  IndicatorType.MunicipalityLevel ||
+        {(indicator.indicatorType === IndicatorType.MunicipalityLevel ||
           indicator.indicatorType === IndicatorType.BarChart) && years.length > 0 && (
             <YearSelector
               value={selectedYear}
               exclusive
               onChange={handleYearChange}
-              aria-label={t('indicators.selectYear', { 
-                indicator: currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn 
+              aria-label={t('indicators.selectYear', {
+                indicator: currentLanguage === 'fi' ? indicator.indicatorNameFi : indicator.indicatorNameEn
               })}
             >
               {years.map((year) => (
-                <ToggleButton 
-                  key={year} 
+                <ToggleButton
+                  key={year}
                   value={year}
                   onKeyDown={(e) => handleYearKeyDown(e, year)}
                   aria-label={t('indicators.yearButton', { year })}
