@@ -1,6 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "nextjs",
-  "installCommand": "yarn install",
-  "buildCommand": "turbo run build --filter=web"
+  "framework": "nextjs"
 }
