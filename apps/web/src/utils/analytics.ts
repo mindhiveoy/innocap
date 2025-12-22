@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-export const GA_MEASUREMENT_ID = 'G-MWVE99QN79'; // Production ID
+export const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || '';
 
 export const initGA = () => {
   const script = document.createElement('script');
