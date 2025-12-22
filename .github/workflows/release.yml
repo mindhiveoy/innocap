@@ -51,9 +51,9 @@ jobs:
           echo "=== Before vercel build ==="
           echo "Working directory: $(pwd)"
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+            vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+            vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
           fi
           echo "=== After vercel build ==="
           echo "Looking for .vercel/output:"
