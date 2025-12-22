@@ -30,16 +30,14 @@ jobs:
         run: npm install --global vercel@latest
 
       - name: Link Vercel Project
-        working-directory: apps/web
-        run: vercel link --yes --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel link --yes --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Pull Vercel Environment
-        working-directory: apps/web
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+            vercel pull --yes --environment=production --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
           else
-            vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+            vercel pull --yes --environment=preview --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
           fi
 
       - name: Build Project
@@ -51,12 +49,11 @@ jobs:
           fi
 
       - name: Deploy to Vercel
-        working-directory: apps/web
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+            vercel deploy --prebuilt --prod --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }}
           else
-            DEPLOY_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+            DEPLOY_URL=$(vercel deploy --prebuilt --cwd apps/web --token=${{ secrets.VERCEL_TOKEN }})
             echo "Deployed to: $DEPLOY_URL"
             vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ vars.TURBO_TEAM_MH }}
           fi
