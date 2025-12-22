@@ -6,11 +6,11 @@ import { useEffect, useCallback, useState, useRef } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 
-// Enforce chat configuration constants
+// Chat configuration from environment variables
 const CHAT_CONFIG = {
-  BASE_URL: 'https://innocap.mainio.app',
-  TENANT_ID: 'cm71il9xt010smk01yt5dln12',
-  AGENT_ID: 'cm71v5vek010umk01wl5ge6tm',
+  BASE_URL: process.env.NEXT_PUBLIC_CHAT_BASE_URL || '',
+  TENANT_ID: process.env.NEXT_PUBLIC_CHAT_TENANT_ID || '',
+  AGENT_ID: process.env.NEXT_PUBLIC_CHAT_AGENT_ID || '',
   SUPPORTED_LANGUAGES: ['en', 'fi', 'sv', 'de', 'es', 'fr'] as const,
   DEFAULT_LANGUAGE: 'fi' as const,
 } as const;
