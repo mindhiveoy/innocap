@@ -31,17 +31,16 @@ jobs:
 
       - name: Setup Vercel Project
         run: |
-          # Create .vercel directory in apps/web (where we'll run vercel build)
-          mkdir -p apps/web/.vercel
+          # Create .vercel directory at monorepo root
+          mkdir -p .vercel
 
-          # Create project.json with NO rootDirectory to avoid double concatenation
-          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}","settings":{"framework":"nextjs","nodeVersion":"24.x"}}' > apps/web/.vercel/project.json
+          # Create initial project.json with projectId and orgId
+          echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
 
-          echo "=== Created apps/web/.vercel/project.json ==="
-          cat apps/web/.vercel/project.json
+          echo "=== Created .vercel/project.json ==="
+          cat .vercel/project.json
 
       - name: Pull Vercel Environment
-        working-directory: apps/web
         run: |
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
@@ -50,35 +49,35 @@ jobs:
           fi
           echo "=== After vercel pull ==="
           cat .vercel/project.json
-          echo "=== Stripping rootDirectory from project.json ==="
-          jq 'del(.settings.rootDirectory)' .vercel/project.json > .vercel/project.tmp && mv .vercel/project.tmp .vercel/project.json
-          echo "=== Final project.json ==="
-          cat .vercel/project.json
 
       - name: Build Project
-        working-directory: apps/web
         run: |
           echo "=== Before vercel build ==="
           echo "Working directory: $(pwd)"
           echo "=== project.json content ==="
           cat .vercel/project.json
+
+          # Build using Vercel's rootDirectory setting from project.json
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
             vercel build --yes --token=${{ secrets.VERCEL_TOKEN }}
           fi
+
           echo "=== After vercel build ==="
           echo "Looking for .vercel/output:"
-          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output"
-          find . -name "output" -type d 2>/dev/null | head -5
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output at root"
+          ls -la apps/web/.vercel/output/ 2>/dev/null || echo "No apps/web/.vercel/output"
+          find . -path "*/node_modules" -prune -o -name "output" -type d -print 2>/dev/null | head -10
 
       - name: Deploy to Vercel
-        working-directory: apps/web
         run: |
           echo "=== Before vercel deploy ==="
           echo "Working directory: $(pwd)"
-          ls -la .vercel/ || true
-          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output found"
+          echo "=== Looking for .vercel/output ==="
+          find . -path "*/node_modules" -prune -o -name "output" -type d -print 2>/dev/null | head -10
+          ls -la .vercel/output/ 2>/dev/null || echo "No .vercel/output at root"
+
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
