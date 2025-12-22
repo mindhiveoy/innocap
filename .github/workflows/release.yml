@@ -65,16 +65,16 @@ jobs:
       - name: Strip rootDirectory from settings
         working-directory: apps/web
         run: |
-          echo "=== Stripping rootDirectory to avoid double-concatenation ==="
+          echo "=== Setting rootDirectory to empty string to avoid double-concatenation ==="
           echo "Before:"
           cat .vercel/project.json
 
-          # Remove rootDirectory from settings to avoid path conflicts
+          # Set rootDirectory to empty string (not null) to override dashboard setting
           if command -v jq &> /dev/null; then
-            jq 'if .settings then .settings.rootDirectory = null else . end' .vercel/project.json > tmp.json && mv tmp.json .vercel/project.json
+            jq 'if .settings then .settings.rootDirectory = "" else . end' .vercel/project.json > tmp.json && mv tmp.json .vercel/project.json
           else
             # Fallback: use sed if jq not available
-            sed -i 's/"rootDirectory":"[^"]*"/"rootDirectory":null/g' .vercel/project.json
+            sed -i 's/"rootDirectory":"[^"]*"/"rootDirectory":""/g' .vercel/project.json
           fi
 
           echo "After:"
