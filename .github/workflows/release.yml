@@ -58,9 +58,9 @@ jobs:
           echo "This allows Turborepo remote cache to be used during Vercel's build"
 
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
-            vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+            vercel --prod --yes --force --token=${{ secrets.VERCEL_TOKEN }}
           else
-            DEPLOY_URL=$(vercel --yes --token=${{ secrets.VERCEL_TOKEN }})
+            DEPLOY_URL=$(vercel --yes --force --token=${{ secrets.VERCEL_TOKEN }})
             echo "Deployed to: $DEPLOY_URL"
             vercel alias set $DEPLOY_URL ${{ vars.STAGING_DOMAIN }} --token=${{ secrets.VERCEL_TOKEN }} --scope=${{ vars.TURBO_TEAM_MH }}
           fi
