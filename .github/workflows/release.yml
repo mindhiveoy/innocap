@@ -23,9 +23,6 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Install Dependencies
-        run: yarn install
-
       - name: Install Vercel CLI
         run: |
           npm install --global vercel@latest
@@ -49,7 +46,6 @@ jobs:
         run: |
           mkdir -p .vercel
           echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
-          # Also create in apps/web for safety
           mkdir -p apps/web/.vercel
           cp .vercel/project.json apps/web/.vercel/
 
@@ -61,34 +57,11 @@ jobs:
             vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
           fi
 
-      - name: Build with Turborepo
-        run: |
-          echo "=== Building with Turborepo ==="
-
-          # Load Vercel env vars
-          if [ -f .vercel/.env.preview.local ]; then
-            set -a && source .vercel/.env.preview.local && set +a
-          fi
-          if [ -f .vercel/.env.production.local ]; then
-            set -a && source .vercel/.env.production.local && set +a
-          fi
-
-          # Build using Turborepo (with remote caching)
-          yarn build --filter=web
-
-          echo "=== Build complete ==="
-          ls -la apps/web/.next/ | head -15
-
-      - name: Create Vercel Build Output
+      - name: Build with Vercel (uses Turborepo via vercel.json)
         working-directory: apps/web
         run: |
-          echo "=== Running vercel build from apps/web ==="
-
-          # WORKAROUND: Create export-detail.json
-          # Vercel CLI's tar.x expects this file even for non-static exports
-          # Setting success to null (not true/false) to try bypassing both failure modes
-          echo '{"version":1,"success":null}' > .next/export-detail.json
-          cat .next/export-detail.json
+          echo "=== Running vercel build ==="
+          echo "Turborepo remote cache enabled via TURBO_TEAM and TURBO_TOKEN env vars"
 
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
