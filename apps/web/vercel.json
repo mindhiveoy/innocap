@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd ../.. && yarn install",
-  "buildCommand": "cd ../.. && yarn build --filter=web"
+  "buildCommand": "cd ../.. && yarn build --filter=web && echo '{\"version\":1,\"success\":true,\"outDirectory\":\"out\"}' > apps/web/.next/export-detail.json"
 }
