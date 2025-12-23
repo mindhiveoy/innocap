@@ -46,7 +46,7 @@ jobs:
             if ! vercel deploy \
               --prod \
               --yes \
-              --project innocap-web \
+              --cwd apps/web \
               --scope ${{ secrets.TURBO_TEAM_MH }} \
               --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
               echo "Production deployment failed! Error log:"
@@ -58,7 +58,7 @@ jobs:
           else
             if ! vercel deploy \
               --yes \
-              --project innocap-web \
+              --cwd apps/web \
               --scope ${{ secrets.TURBO_TEAM_MH }} \
               --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
               echo "Staging deployment failed! Error log:"
