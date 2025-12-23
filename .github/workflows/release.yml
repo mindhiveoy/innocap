@@ -51,7 +51,7 @@ jobs:
       - name: Deploy to Vercel
         run: |
           deploy_prebuilt() {
-            vercel deploy --prebuilt $@ 2>&1 | tee deployment-url.txt
+            vercel deploy $@ 2>&1 | tee deployment-url.txt
             if [ ${PIPESTATUS[0]} -eq 0 ]; then
               DEPLOY_URL=$(tail -1 deployment-url.txt)
               echo "Deployment URL: $DEPLOY_URL"
