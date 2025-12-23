@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "echo 'Using pre-built .next from Turborepo'",
-  "outputDirectory": ".next"
+  "installCommand": "cd ../.. && yarn install",
+  "buildCommand": "cd ../.. && yarn build --filter=web && echo '{\"version\":1,\"success\":true,\"outDirectory\":\"/home/runner/work/innocap/innocap/apps/web/.next\"}' > apps/web/.next/export-detail.json"
 }
