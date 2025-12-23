@@ -32,29 +32,29 @@ jobs:
           echo "=== Vercel CLI Version ==="
           vercel --version
 
-      # Set rootDirectory to null and clear custom install command
-      - name: Configure Vercel Project via API
+      # Configure Vercel for monorepo - use apps/web as root
+      - name: Configure Vercel Project
         run: |
-          echo "=== Configuring Vercel project via API ==="
+          echo "=== Configuring Vercel project for monorepo ==="
           HTTP_STATUS=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
             -X PATCH "https://api.vercel.com/v9/projects/${{ secrets.VERCEL_PROJECT_ID }}?teamId=${{ secrets.VERCEL_ORG_ID }}" \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"rootDirectory": null, "installCommand": null, "buildCommand": null}')
+            -d '{"rootDirectory": "apps/web", "framework": "nextjs"}')
           echo "API Response Status: $HTTP_STATUS"
-          cat /tmp/api_response.json | head -20 || true
+          cat /tmp/api_response.json 2>/dev/null | head -50 || true
           [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ] && echo "SUCCESS" || echo "WARNING: $HTTP_STATUS"
 
       - name: Create Vercel Project Link
         run: |
-          echo "=== Creating project link at MONOREPO ROOT ==="
           mkdir -p .vercel
           echo '{"projectId":"${{ secrets.VERCEL_PROJECT_ID }}","orgId":"${{ secrets.VERCEL_ORG_ID }}"}' > .vercel/project.json
-          cat .vercel/project.json
+          # Also create in apps/web for safety
+          mkdir -p apps/web/.vercel
+          cp .vercel/project.json apps/web/.vercel/
 
       - name: Pull Vercel Environment
         run: |
-          echo "=== Pulling Vercel environment ==="
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           else
@@ -65,7 +65,7 @@ jobs:
         run: |
           echo "=== Building with Turborepo ==="
 
-          # Load Vercel env vars for the build
+          # Load Vercel env vars
           if [ -f .vercel/.env.preview.local ]; then
             set -a && source .vercel/.env.preview.local && set +a
           fi
@@ -73,43 +73,16 @@ jobs:
             set -a && source .vercel/.env.production.local && set +a
           fi
 
-          # Build using Turborepo
+          # Build using Turborepo (with remote caching)
           yarn build --filter=web
 
-          echo "=== Build output ==="
-          ls -la apps/web/.next/ | head -20
-
-      - name: Setup Vercel Build
-        run: |
-          echo "=== Setting up for vercel build ==="
-
-          # Remove any repo.json files that might trigger monorepo mode
-          rm -f .vercel/repo.json
-          rm -f apps/web/.vercel/repo.json 2>/dev/null || true
-
-          # Symlink .next to ROOT
-          ln -sf apps/web/.next .next
-
-          # Create vercel.json at ROOT
-          echo '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","buildCommand":"echo Using pre-built .next from Turborepo"}' > vercel.json
-          cat vercel.json
-
-          # Copy config files to ROOT (Vercel traces these)
-          cp apps/web/next.config.js ./
-          # Replace root package.json with web's package.json (Vercel needs to detect Next.js)
-          cp apps/web/package.json ./package.json
-          ln -sf apps/web/public public
-          ln -sf apps/web/src src
-
-          # Create node_modules symlink at grandparent for path resolution
-          ln -sf $(pwd)/node_modules ../../node_modules 2>/dev/null || true
-
-          echo "=== Setup complete ==="
-          ls -la .next/ | head -10
+          echo "=== Build complete ==="
+          ls -la apps/web/.next/ | head -15
 
       - name: Create Vercel Build Output
+        working-directory: apps/web
         run: |
-          echo "=== Running vercel build ==="
+          echo "=== Running vercel build from apps/web ==="
 
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
@@ -122,6 +95,7 @@ jobs:
           ls -la .vercel/output/functions/ 2>/dev/null || echo "No functions directory"
 
       - name: Deploy to Vercel
+        working-directory: apps/web
         run: |
           echo "=== Deploying ==="
 
