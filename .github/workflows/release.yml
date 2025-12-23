@@ -43,20 +43,29 @@ jobs:
       - name: Deploy to Vercel
         run: |
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-            if ! vercel deploy --prod --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
+            if ! vercel deploy \
+              --prod \
+              --yes \
+              --project innocap-web \
+              --scope ${{ secrets.TURBO_TEAM_MH }} \
+              --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
               echo "Production deployment failed! Error log:"
               cat deployment-url.txt
               exit 1
             fi
-            DEPLOY_URL=$(tail -1 deployment-url.txt)
+            DEPLOY_URL=$(grep -Eo 'https?://[^ ]+' deployment-url.txt | tail -1)
             echo "Production deployment URL: $DEPLOY_URL"
           else
-            if ! vercel deploy --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
+            if ! vercel deploy \
+              --yes \
+              --project innocap-web \
+              --scope ${{ secrets.TURBO_TEAM_MH }} \
+              --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
               echo "Staging deployment failed! Error log:"
               cat deployment-url.txt
               exit 1
             fi
-            DEPLOY_URL=$(tail -1 deployment-url.txt)
+            DEPLOY_URL=$(grep -Eo 'https?://[^ ]+' deployment-url.txt | tail -1)
             echo "Staging deployment URL: $DEPLOY_URL"
-            vercel alias set "$DEPLOY_URL" ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ vars.TURBO_TEAM_MH }}
+            vercel alias set "$DEPLOY_URL" ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ secrets.TURBO_TEAM_MH }}
           fi
