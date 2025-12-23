@@ -174,12 +174,12 @@ jobs:
           # Vercel CLI's tar.x operation expects this file to exist even for non-static exports
           # This is a known issue: https://community.vercel.com/t/2007
           # The file is normally created by `next export`, not `next build`
-          # Creating a minimal version allows the tar packaging to proceed
-          # IMPORTANT: success=false tells Vercel this is NOT a static export
+          # Previous attempts:
+          # - success: true → creates static-only output (no serverless functions)
+          # - success: false → "Export of Next.js app failed"
+          # New approach: Create file WITHOUT success field to avoid both failure modes
           echo "=== Creating export-detail.json workaround ==="
-          EXPORT_OUT_DIR="$(pwd)/apps/web/out"
-          mkdir -p "$EXPORT_OUT_DIR"
-          echo "{\"version\":1,\"success\":false,\"outDirectory\":\"$EXPORT_OUT_DIR\"}" > apps/web/.next/export-detail.json
+          echo '{"version":1}' > apps/web/.next/export-detail.json
           cat apps/web/.next/export-detail.json
 
           # Create .turbo directory with dummy log (Turborepo cache doesn't include .turbo)
