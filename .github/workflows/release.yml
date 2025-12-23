@@ -10,8 +10,8 @@ jobs:
   deploy:
     env:
       TURBO_TELEMETRY_DISABLED: 1
-      TURBO_TEAM: ${{ vars.TURBO_TEAM_MH }}
-      TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM_MH }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     runs-on: ubuntu-latest
     steps:
@@ -28,13 +28,17 @@ jobs:
       - name: Install Vercel CLI
         run: |
           npm install --global vercel@latest
-          echo "$(npm root --global)/../bin" >> $GITHUB_PATH
 
       - name: Verify Vercel CLI Installation
         run: vercel --version
 
       - name: Pull Vercel Environment
-        run: vercel pull --yes --environment=production --token $VERCEL_TOKEN --cwd apps/web
+        run: |
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            vercel pull --yes --environment=production --token $VERCEL_TOKEN --cwd apps/web
+          else
+            vercel pull --yes --environment=preview --token $VERCEL_TOKEN --cwd apps/web
+          fi
 
       - name: Build with Vercel
         run: |
