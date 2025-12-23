@@ -89,15 +89,9 @@ jobs:
           # Symlink .next to ROOT
           ln -sf apps/web/.next .next
 
-          # Create vercel.json at ROOT - use outputDirectory to point to symlinked .next
-          cat > vercel.json << 'EOF'
-          {
-            "$schema": "https://openapi.vercel.sh/vercel.json",
-            "framework": "nextjs",
-            "buildCommand": "echo 'Using pre-built .next from Turborepo'",
-            "outputDirectory": ".next"
-          }
-EOF
+          # Create vercel.json at ROOT
+          echo '{"$schema":"https://openapi.vercel.sh/vercel.json","framework":"nextjs","buildCommand":"echo Using pre-built .next from Turborepo"}' > vercel.json
+          cat vercel.json
 
           # Copy config files to ROOT (Vercel traces these)
           cp apps/web/next.config.js ./
