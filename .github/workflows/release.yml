@@ -84,6 +84,12 @@ jobs:
         run: |
           echo "=== Running vercel build from apps/web ==="
 
+          # WORKAROUND: Create export-detail.json
+          # Vercel CLI's tar.x expects this file even for non-static exports
+          # Setting success to null (not true/false) to try bypassing both failure modes
+          echo '{"version":1,"success":null}' > .next/export-detail.json
+          cat .next/export-detail.json
+
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel build --yes --prod --token=${{ secrets.VERCEL_TOKEN }}
           else
