@@ -74,9 +74,8 @@ jobs:
           ls -la .vercel/output/functions/ 2>/dev/null || echo "No functions directory"
 
       - name: Deploy to Vercel
-        working-directory: apps/web
         run: |
-          echo "=== Deploying ==="
+          echo "=== Deploying from repo root (rootDirectory handles apps/web) ==="
 
           if [[ ${{ github.ref }} == 'refs/heads/main' ]]; then
             vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
