@@ -32,16 +32,17 @@ jobs:
           echo "=== Vercel CLI Version ==="
           vercel --version
 
-      # Set rootDirectory to null so we can control paths from monorepo root
-      - name: Clear rootDirectory via Vercel API
+      # Set rootDirectory to null and clear custom install command
+      - name: Configure Vercel Project via API
         run: |
-          echo "=== Clearing rootDirectory via Vercel API ==="
+          echo "=== Configuring Vercel project via API ==="
           HTTP_STATUS=$(curl -s -o /tmp/api_response.json -w "%{http_code}" \
             -X PATCH "https://api.vercel.com/v9/projects/${{ secrets.VERCEL_PROJECT_ID }}?teamId=${{ secrets.VERCEL_ORG_ID }}" \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{"rootDirectory": null}')
+            -d '{"rootDirectory": null, "installCommand": null, "buildCommand": null}')
           echo "API Response Status: $HTTP_STATUS"
+          cat /tmp/api_response.json | head -20 || true
           [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ] && echo "SUCCESS" || echo "WARNING: $HTTP_STATUS"
 
       - name: Create Vercel Project Link
