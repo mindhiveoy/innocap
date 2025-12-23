@@ -95,7 +95,8 @@ jobs:
 
           # Copy config files to ROOT (Vercel traces these)
           cp apps/web/next.config.js ./
-          cp apps/web/package.json ./web-package.json
+          # Replace root package.json with web's package.json (Vercel needs to detect Next.js)
+          cp apps/web/package.json ./package.json
           ln -sf apps/web/public public
           ln -sf apps/web/src src
 
