@@ -5,7 +5,9 @@ async function main() {
   // This file is a workaround for a Vercel CLI packaging issue when using local/prebuilt builds.
   // When building *on Vercel* (Git integration / Vercel build machines), creating this file
   // causes the Next.js builder to treat the app as a `next export` and fail for dynamic apps.
-  if (process.env.VERCEL === '1') {
+  // Note: `vercel build` in CI also sets `VERCEL=1`, so we only skip on actual Vercel *Git*
+  // build machines (where `GITHUB_ACTIONS` is not set).
+  if (process.env.VERCEL === '1' && process.env.GITHUB_ACTIONS !== 'true') {
     console.log('Skipping export-detail.json generation on Vercel build environment');
     return;
   }
