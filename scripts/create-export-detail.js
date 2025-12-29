@@ -20,6 +20,7 @@ async function main() {
     : path.join(cwd, 'apps', 'web');
 
   const exportDetailPath = path.join(webRoot, '.next', 'export-detail.json');
+  const export404Path = path.join(webRoot, '.next', 'export', '404.html');
 
   const content = {
     // Match the shape Vercel expects but mark export as unsuccessful so the
@@ -39,6 +40,18 @@ async function main() {
     console.log(`Created ${exportDetailPath}`);
   } catch (error) {
     console.error('Failed to create export-detail.json', error);
+    process.exit(1);
+  }
+
+  // Some Vercel CLI / builder paths attempt to stat export artifacts under
+  // `.next/export/*` even for non-export Next.js apps. Provide a minimal file
+  // so the build can proceed (the app is still deployed as dynamic/SSR).
+  try {
+    await fs.mkdir(path.dirname(export404Path), { recursive: true });
+    await fs.writeFile(export404Path, '<!doctype html><html><head><meta charset="utf-8"><title>404</title></head><body>Not Found</body></html>');
+    console.log(`Created ${export404Path}`);
+  } catch (error) {
+    console.error('Failed to create .next/export/404.html', error);
     process.exit(1);
   }
 }
