@@ -2,18 +2,14 @@ const fs = require('fs').promises;
 const path = require('path');
 
 async function main() {
-  const exportDetailPath = path.join(
-    process.cwd(),
-    'apps',
-    'web',
-    '.next',
-    'export-detail.json',
-  );
+  const cwd = process.cwd();
+  const outDirectory = path.join(cwd, 'apps', 'web', 'out');
+  const exportDetailPath = path.join(cwd, 'apps', 'web', '.next', 'export-detail.json');
 
   const content = {
     version: 1,
     success: true,
-    outDirectory: 'out',
+    outDirectory,
   };
 
   try {
