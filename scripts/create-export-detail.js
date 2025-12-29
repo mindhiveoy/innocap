@@ -21,6 +21,7 @@ async function main() {
 
   const exportDetailPath = path.join(webRoot, '.next', 'export-detail.json');
   const export404Path = path.join(webRoot, '.next', 'export', '404.html');
+  const export500Path = path.join(webRoot, '.next', 'export', '500.html');
 
   const content = {
     // Match the shape Vercel expects but mark export as unsuccessful so the
@@ -50,8 +51,11 @@ async function main() {
     await fs.mkdir(path.dirname(export404Path), { recursive: true });
     await fs.writeFile(export404Path, '<!doctype html><html><head><meta charset="utf-8"><title>404</title></head><body>Not Found</body></html>');
     console.log(`Created ${export404Path}`);
+
+    await fs.writeFile(export500Path, '<!doctype html><html><head><meta charset="utf-8"><title>500</title></head><body>Server Error</body></html>');
+    console.log(`Created ${export500Path}`);
   } catch (error) {
-    console.error('Failed to create .next/export/404.html', error);
+    console.error('Failed to create .next/export/*.html', error);
     process.exit(1);
   }
 }
