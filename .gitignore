@@ -18,8 +18,8 @@ coverage
 # Turbo
 .turbo
 
-# Vercel
-# .vercel # needed for CI deployment
+# Vercel (do not commit local build output / project links)
+.vercel/
 
 # Build Outputs
 .next/
@@ -76,3 +76,4 @@ keys
 *.json.key
 **/credentials.json
 .env*.local
+.vercel
