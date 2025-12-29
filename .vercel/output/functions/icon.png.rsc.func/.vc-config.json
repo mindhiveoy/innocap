@@ -1,11 +1,10 @@
 {
-  "operationType": "Page",
+  "operationType": "API",
   "handler": "apps/web/___next_launcher.cjs",
   "runtime": "nodejs22.x",
   "architecture": "x86_64",
   "environment": {},
   "supportsMultiPayloads": true,
-  "supportsResponseStreaming": true,
   "framework": {
     "slug": "nextjs",
     "version": "15.0.7"
@@ -646,13 +645,16 @@
     "node_modules/react-dom/cjs/react-dom.development.js": "node_modules/react-dom/cjs/react-dom.development.js",
     "apps/web/.next/server/chunks/295.js": "apps/web/.next/server/chunks/295.js",
     "node_modules/next/dist/pages/_document.js": "node_modules/next/dist/pages/_document.js",
-    "apps/web/.next/server/chunks/56.js": "apps/web/.next/server/chunks/56.js",
+    "node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js": "node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js",
+    "apps/web/.next/server/chunks/48.js": "apps/web/.next/server/chunks/48.js",
     "apps/web/.next/server/chunks/79.js": "apps/web/.next/server/chunks/79.js",
-    "apps/web/.next/server/chunks/954.js": "apps/web/.next/server/chunks/954.js",
-    "apps/web/.next/server/app/_not-found/page_client-reference-manifest.js": "apps/web/.next/server/app/_not-found/page_client-reference-manifest.js",
-    "apps/web/.next/server/app/_not-found/page.js": "apps/web/.next/server/app/_not-found/page.js",
+    "apps/web/.next/server/app/icon.png/route.js": "apps/web/.next/server/app/icon.png/route.js",
     "apps/web/.next/server/pages/_app.js": "apps/web/.next/server/pages/_app.js",
     "apps/web/.next/server/pages/_error.js": "apps/web/.next/server/pages/_error.js",
-    "apps/web/.next/server/pages/_document.js": "apps/web/.next/server/pages/_document.js"
+    "apps/web/.next/server/pages/_document.js": "apps/web/.next/server/pages/_document.js",
+    "apps/web/.next/server/app/_not-found/page.js": "apps/web/.next/server/app/_not-found/page.js",
+    "apps/web/.next/server/chunks/56.js": "apps/web/.next/server/chunks/56.js",
+    "apps/web/.next/server/chunks/954.js": "apps/web/.next/server/chunks/954.js",
+    "apps/web/.next/server/app/_not-found/page_client-reference-manifest.js": "apps/web/.next/server/app/_not-found/page_client-reference-manifest.js"
   }
 }

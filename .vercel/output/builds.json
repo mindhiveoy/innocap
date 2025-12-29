@@ -18,7 +18,7 @@
       "config": {
         "zeroConfig": true,
         "framework": "nextjs",
-        "installCommand": "yarn install",
+        "installCommand": "cd ../.. && yarn install",
         "buildCommand": "yarn build && node ../../scripts/create-export-detail.js"
       }
     }
