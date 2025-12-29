@@ -5,6 +5,12 @@ const nextConfig = {
       enabled: true,
     },
   },
+  outputFileTracingExcludes: {
+    // Vercel bundles traced files per-serverless function. The webpack/swc caches inside
+    // `.next/cache` are huge and not needed at runtime, but can get pulled into the trace,
+    // pushing functions over the 250MB unzipped limit.
+    '*': ['.next/cache/webpack/**', '.next/cache/swc/**'],
+  },
   webpack(config) {
     config.module.rules.push({
       test: /\.svg$/,

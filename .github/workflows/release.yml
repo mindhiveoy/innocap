@@ -13,6 +13,8 @@ jobs:
       TURBO_TEAM: ${{ secrets.TURBO_TEAM_MH }}
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,35 +22,55 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
 
       - name: Install Dependencies
         run: yarn install
 
-      - name: Install Vercel CLI
-        run: |
-          npm install --global vercel@latest
+      - name: Verify Vercel CLI (workspace)
+        run: yarn vercel --version
 
-      - name: Verify Vercel CLI Installation
-        run: vercel --version
+      - name: Validate required secrets
+        run: |
+          set -euo pipefail
+          : "${VERCEL_TOKEN:?Missing secret VERCEL_TOKEN}"
+          : "${VERCEL_ORG_ID:?Missing secret VERCEL_ORG_ID}"
+          : "${VERCEL_PROJECT_ID:?Missing secret VERCEL_PROJECT_ID}"
 
       - name: Pull Vercel Environment
         run: |
+          set -euo pipefail
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-            vercel pull --yes --environment=production --token $VERCEL_TOKEN
+            yarn vercel pull --yes --environment=production --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           else
-            vercel pull --yes --environment=preview --token $VERCEL_TOKEN
+            yarn vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+          fi
+
+      - name: Remove repo.json to avoid monorepo project selection prompts
+        run: |
+          set -euo pipefail
+          rm -f .vercel/repo.json
+          rm -f apps/web/.vercel/repo.json
+
+      - name: Build with Vercel
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
+            yarn vercel build --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+          else
+            yarn vercel build --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           fi
 
       - name: Deploy to Vercel
         run: |
+          set -euo pipefail
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-            if ! vercel deploy \
+            if ! yarn vercel deploy \
+              --prebuilt \
               --prod \
               --yes \
-              --cwd apps/web \
-              --scope ${{ secrets.TURBO_TEAM_MH }} \
-              --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
+              --scope "$VERCEL_ORG_ID" \
+              --token "$VERCEL_TOKEN" 2>&1 | tee deployment-url.txt; then
               echo "Production deployment failed! Error log:"
               cat deployment-url.txt
               exit 1
@@ -56,16 +78,16 @@ jobs:
             DEPLOY_URL=$(grep -Eo 'https?://[^ ]+' deployment-url.txt | tail -1)
             echo "Production deployment URL: $DEPLOY_URL"
           else
-            if ! vercel deploy \
+            if ! yarn vercel deploy \
+              --prebuilt \
               --yes \
-              --cwd apps/web \
-              --scope ${{ secrets.TURBO_TEAM_MH }} \
-              --token $VERCEL_TOKEN 2>&1 | tee deployment-url.txt; then
+              --scope "$VERCEL_ORG_ID" \
+              --token "$VERCEL_TOKEN" 2>&1 | tee deployment-url.txt; then
               echo "Staging deployment failed! Error log:"
               cat deployment-url.txt
               exit 1
             fi
             DEPLOY_URL=$(grep -Eo 'https?://[^ ]+' deployment-url.txt | tail -1)
             echo "Staging deployment URL: $DEPLOY_URL"
-            vercel alias set "$DEPLOY_URL" ${{ vars.STAGING_DOMAIN }} --token $VERCEL_TOKEN --scope ${{ secrets.TURBO_TEAM_MH }}
+            yarn vercel alias set "$DEPLOY_URL" ${{ vars.STAGING_DOMAIN }} --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           fi
