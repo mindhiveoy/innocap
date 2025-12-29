@@ -2,6 +2,14 @@ const fs = require('fs').promises;
 const path = require('path');
 
 async function main() {
+  // This file is a workaround for a Vercel CLI packaging issue when using local/prebuilt builds.
+  // When building *on Vercel* (Git integration / Vercel build machines), creating this file
+  // causes the Next.js builder to treat the app as a `next export` and fail for dynamic apps.
+  if (process.env.VERCEL === '1') {
+    console.log('Skipping export-detail.json generation on Vercel build environment');
+    return;
+  }
+
   const cwd = process.cwd();
 
   // Support running from monorepo root OR from apps/web
