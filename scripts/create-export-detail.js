@@ -3,13 +3,19 @@ const path = require('path');
 
 async function main() {
   const cwd = process.cwd();
-  const outDirectory = path.join(cwd, 'apps', 'web', 'out');
-  const exportDetailPath = path.join(cwd, 'apps', 'web', '.next', 'export-detail.json');
+
+  // Support running from monorepo root OR from apps/web
+  const webRoot = cwd.endsWith(path.join('apps', 'web'))
+    ? cwd
+    : path.join(cwd, 'apps', 'web');
+
+  const exportDetailPath = path.join(webRoot, '.next', 'export-detail.json');
 
   const content = {
+    // Match the shape Vercel expects but mark export as unsuccessful so the
+    // platform doesn't treat this as a real `next export` output.
     version: 1,
-    success: true,
-    outDirectory,
+    success: false,
   };
 
   try {
