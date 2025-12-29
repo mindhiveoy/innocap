@@ -27,12 +27,8 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Install Vercel CLI
-        run: |
-          npm install --global vercel@50.1.3
-
-      - name: Verify Vercel CLI Installation
-        run: vercel --version
+      - name: Verify Vercel CLI (workspace)
+        run: yarn vercel --version
 
       - name: Validate required secrets
         run: |
@@ -45,9 +41,9 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-            vercel pull --yes --environment=production --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+            yarn vercel pull --yes --environment=production --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           else
-            vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+            yarn vercel pull --yes --environment=preview --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           fi
 
       - name: Remove repo.json to avoid monorepo project selection prompts
@@ -60,16 +56,16 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-            vercel build --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+            yarn vercel build --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           else
-            vercel build --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+            yarn vercel build --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           fi
 
       - name: Deploy to Vercel
         run: |
           set -euo pipefail
           if [[ "${{ github.ref }}" == 'refs/heads/main' ]]; then
-            if ! vercel deploy \
+            if ! yarn vercel deploy \
               --prebuilt \
               --prod \
               --yes \
@@ -82,7 +78,7 @@ jobs:
             DEPLOY_URL=$(grep -Eo 'https?://[^ ]+' deployment-url.txt | tail -1)
             echo "Production deployment URL: $DEPLOY_URL"
           else
-            if ! vercel deploy \
+            if ! yarn vercel deploy \
               --prebuilt \
               --yes \
               --scope "$VERCEL_ORG_ID" \
@@ -93,5 +89,5 @@ jobs:
             fi
             DEPLOY_URL=$(grep -Eo 'https?://[^ ]+' deployment-url.txt | tail -1)
             echo "Staging deployment URL: $DEPLOY_URL"
-            vercel alias set "$DEPLOY_URL" ${{ vars.STAGING_DOMAIN }} --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
+            yarn vercel alias set "$DEPLOY_URL" ${{ vars.STAGING_DOMAIN }} --token "$VERCEL_TOKEN" --scope "$VERCEL_ORG_ID"
           fi
