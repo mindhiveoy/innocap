@@ -76,3 +76,4 @@ keys
 *.json.key
 **/credentials.json
 .env*.local
+.vercel
